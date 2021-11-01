@@ -1,0 +1,17 @@
+module purge
+setenv JEDI_OPT /scratch1/NCEPDEV/jcsda/jedipara/opt/modules
+module use $JEDI_OPT/modulefiles/core
+
+module load jedi/intel-impi/2020.2
+
+#module purge
+#module load jedi/gnu-openmpi
+
+# not required
+#setenv JEDI_OPT2=/home/role.jedipara/opt/modules
+#module use $JEDI_OPT2/modulefiles/core
+#module load jedi/intel-impi/18
+
+setenv SLURM_ACCOUNT gsienkf
+setenv SALLOC_ACCOUNT $SLURM_ACCOUNT
+setenv SBATCH_ACCOUNT $SLURM_ACCOUNT

@@ -1,0 +1,102 @@
+geometry:
+  fms initialization:
+    namelist filename: Data/fv3files/fmsmpp.nml
+    field table filename: Data/fv3files/field_table
+  akbk: Data/fv3files/akbk64.nc4
+  npx: 49
+  npy: 49
+  npz: 64
+  fieldsets:
+    - fieldset: Data/fieldsets/land.yaml
+    - fieldset: Data/fieldsets/ufo.yaml
+    - fieldset: Data/fieldsets/oro_data.yaml
+  orography:
+    orography field name: orog_filt
+    datapath: Data/glopara_fix/C48/
+    filename_orog: C48_oro_data.nc
+
+window begin: XXYYYP-XXMP-XXDPTXXHP:00:00Z
+window length: PT6H
+
+background:
+ date: &date XXYYYY-XXMM-XXDDTXXHH:00:00Z
+ members:
+   - filetype: gfs
+     state variables: [snwdph,vtype,slmsk]
+     datapath: mem_pos/
+     filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
+     filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
+   - filetype: gfs
+     state variables: [snwdph,vtype,slmsk]
+     datapath: mem_neg/
+     filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
+     filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
+
+observations:
+- obs space:
+    name: Simulate
+    distribution: Halo
+    simulated variables: [totalSnowDepth]
+    obsdatain:
+      obsfile: ioda.ims_XXYYYYXXMMXXDD.nc
+#    obsdataout:
+#      obsfile: ../output/hofx_letkf_IMS.nc
+  obs operator:
+    name: Identity
+  obs error:
+    covariance model: diagonal
+  obs localization:
+    search method: kd_tree
+    lengthscale: 250e3
+    localization method: Brasnett99
+    soar horizontal decay: 0.000021
+    vertical lengthscale: 700
+    max nobs: 1
+  obs filters:
+  - filter: Bounds Check # negative / missing snow
+    filter variables:
+    - name: totalSnowDepth
+    minvalue: 0.0
+  - filter: Domain Check # land only
+    where:
+    - variable:
+        name: slmsk@GeoVaLs
+      minvalue: 0.5
+      maxvalue: 1.5
+  - filter: RejectList  # no land-ice
+    where:
+    - variable:
+        name: vtype@GeoVaLs
+      minvalue: 14.5
+      maxvalue: 15.5
+# note: for IMS, we do *not* want to QC out high elevation, 
+# or do a gross error check (later will discard obs 
+# of zero snow fraction, when model has full snow cover).
+
+driver:
+  save posterior mean: false
+  save posterior mean increment: true
+  save posterior ensemble: false
+
+local ensemble DA:
+  solver: LETKF
+  inflation:
+    rtps: 0.0
+    rtpp: 0.0
+    mult: 1.0
+
+prints:
+  frequency: PT3H
+
+output increment:
+  filetype: gfs
+  datapath: ../output/jedi_incr/
+  filename_sfcd: xainc.sfc_data.nc
+  first: PT0H
+  frequency: PT1H
+  date: *date
+
+#test:
+#  reference filename: testoutput/letkf_snow.ref
+#  float relative tolerance: 1.0e-2
+#  test output filename: testoutput/letkf_snow.test.out
