@@ -1,6 +1,6 @@
 #!/bin/bash
 #BATCH --job-name=landDA
-#SBATCH -t 00:05:00
+#SBATCH -t 00:30:00
 #SBATCH -A gsienkf
 ##SBATCH --qos=debug
 #SBATCH --qos=batch
@@ -38,7 +38,7 @@
 
 # user directories
 
-WORKDIR=/scratch2/BMC/gsienkf/Clara.Draper/workdir/
+WORKDIR=/scratch2/BMC/gsienkf/Clara.Draper/workdir/   
 SCRIPTDIR=/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/landDA_workflow/
 OBSDIR=/scratch2/BMC/gsienkf/Clara.Draper/data_RnR/
 OUTDIR=${SCRIPTDIR}/output/
@@ -48,7 +48,7 @@ RESTART_IN=/scratch2/BMC/gsienkf/Clara.Draper/DA_test_cases/20191215_C48/
 
 # executable directories
 
-FIMS_EXECDIR=/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/IMSobsproc/calcfIMS/exec/
+FIMS_EXECDIR=./IMSobsproc/calcfIMS/exec/   
 PYTHON2=/contrib/anaconda/anaconda2-4.4.0/bin/python2.7 
 
 # JEDI FV3 Bundle directories
@@ -56,10 +56,11 @@ PYTHON2=/contrib/anaconda/anaconda2-4.4.0/bin/python2.7
 JEDI_EXECDIR=/scratch2/BMC/gsienkf/Clara.Draper/jedi/build/bin/
 JEDI_STATICDIR=${SCRIPTDIR}/jedi/fv3-jedi/Data/
 
-# JED IODA-converter bundle directories
+# JEDI IODA-converter bundle directories
 
 IODA_BUILD_DIR=/scratch1/NCEPDEV/da/Youlong.Xia/ioda-bundle/build
 PYTHON3=/scratch2/NCEPDEV/marineda/Jong.Kim/anaconda3-save/bin/python
+# PYTHON3=/apps/intel/intelpython3/bin/python # from Henry
 
 # EXPERIMENT SETTINGS
 
@@ -146,14 +147,15 @@ cp -r $RESTART_IN $WORKDIR/mem_pos
 cp -r $RESTART_IN $WORKDIR/mem_neg
 
 # can use either python version here
-$PYTHON2 ${SCRIPTDIR}/letkf_create_ens.py $FILEDATE $B
+$PYTHON3 ${SCRIPTDIR}/letkf_create_ens.py $FILEDATE $B
+
 
 ################################################
 # RUN LETKF
 ################################################
 
 # prepare namelist
-cp ${SCRIPTDIR}/jedi/fv3-jedi/letkf/letkf_snow_IMS_C${RES}.yaml ${WORKDIR}/letkf_snow.yaml
+cp ${SCRIPTDIR}/jedi/fv3-jedi/letkf/letkf_snow_IMS_GHCN_C${RES}.yaml ${WORKDIR}/letkf_snow.yaml
 
 sed -i -e "s/XXYYYY/${YYYY}/g" letkf_snow.yaml
 sed -i -e "s/XXMM/${MM}/g" letkf_snow.yaml
