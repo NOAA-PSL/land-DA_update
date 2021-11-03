@@ -1,4 +1,4 @@
 [submodule "IMSobsproc"]
 	path = IMSobsproc
 	url = https://github.com/ClaraDraper-NOAA/IMSobsproc.git
-        branch = noah
+        branch = main
