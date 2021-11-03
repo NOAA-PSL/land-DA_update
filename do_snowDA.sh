@@ -6,8 +6,8 @@
 #SBATCH --qos=batch
 #SBATCH -o landDA.out
 #SBATCH -e landDA.out
-#SBATCH --nodes=1
-#SBATCH --tasks-per-node=6
+#SBATCH --nodes=4
+#SBATCH --tasks-per-node=24
 
 # C48
 ##SBATCH --nodes=1
@@ -43,8 +43,8 @@ SCRIPTDIR=/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/landDA_workflow/
 OBSDIR=/scratch2/BMC/gsienkf/Clara.Draper/data_RnR/
 OUTDIR=${SCRIPTDIR}/output/
 LOGDIR=${OUTDIR}/logs/
-RESTART_IN=/scratch2/BMC/gsienkf/Clara.Draper/DA_test_cases/20191215_C48/
-#RESTART_IN=/scratch2/BMC/gsienkf/Clara.Draper/jedi/create_ens/mem_base/
+#RESTART_IN=/scratch2/BMC/gsienkf/Clara.Draper/DA_test_cases/20191215_C48/
+RESTART_IN=/scratch2/BMC/gsienkf/Clara.Draper/jedi/create_ens/mem_base/
 
 # executable directories
 
@@ -64,7 +64,7 @@ PYTHON3=/scratch2/NCEPDEV/marineda/Jong.Kim/anaconda3-save/bin/python
 
 # EXPERIMENT SETTINGS
 
-RES=48
+RES=768
 B=30  # back ground error std.
 
 # STORAGE SETTINGS 
@@ -170,10 +170,10 @@ sed -i -e "s/XXHP/${HP}/g" letkf_snow.yaml
 ln -s $JEDI_STATICDIR Data 
 
 # C768
-#srun -n 96 ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
+srun -n 96 ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
 
 # C48
-srun -n 6 ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
+#srun -n 6 ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
 
 ################################################
 # APPLY INCREMENT TO UFS RESTARTS 
