@@ -43,8 +43,8 @@ SCRIPTDIR=/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/landDA_workflow/
 OBSDIR=/scratch2/BMC/gsienkf/Clara.Draper/data_RnR/
 OUTDIR=${SCRIPTDIR}/output/
 LOGDIR=${OUTDIR}/logs/
-#RESTART_IN=/scratch2/BMC/gsienkf/Clara.Draper/DA_test_cases/20191215_C48/
-RESTART_IN=/scratch2/BMC/gsienkf/Clara.Draper/jedi/create_ens/mem_base/
+RESTART_IN=/scratch2/BMC/gsienkf/Clara.Draper/DA_test_cases/20191215_C48/
+#RESTART_IN=/scratch2/BMC/gsienkf/Clara.Draper/jedi/create_ens/mem_base/
 
 # executable directories
 
@@ -63,7 +63,7 @@ PYTHON3=/scratch2/NCEPDEV/marineda/Jong.Kim/anaconda3-save/bin/python
 
 # EXPERIMENT SETTINGS
 
-RES=768
+RES=48
 B=30  # back ground error std.
 
 # STORAGE SETTINGS 

@@ -3,8 +3,8 @@ geometry:
     namelist filename: Data/fv3files/fmsmpp.nml
     field table filename: Data/fv3files/field_table
   akbk: Data/fv3files/akbk64.nc4
-  npx: 769
-  npy: 769
+  npx: 49
+  npy: 49
   npz: 64
   fieldsets:
     - fieldset: Data/fieldsets/land.yaml
@@ -12,9 +12,8 @@ geometry:
     - fieldset: Data/fieldsets/oro_data.yaml
   orography:
     orography field name: orog_filt
-    datapath: Data/glopara_fix/C768/
-    filename_orog: C768_oro_data.nc
-  layout: [4,4]
+    datapath: Data/glopara_fix/C48/
+    filename_orog: C48_oro_data.nc
 
 window begin: XXYYYP-XXMP-XXDPTXXHP:00:00Z
 window length: PT6H
@@ -73,6 +72,51 @@ observations:
 # note: for IMS, we do *not* want to QC out high elevation, 
 # or do a gross error check (later will discard obs 
 # of zero snow fraction, when model has full snow cover).
+- obs space:
+    name: Simulate
+    distribution: Halo
+    simulated variables: [totalSnowDepth]
+    obsdatain:
+      obsfile: ghcn_XXYYYYXXMMXXDDUTCXXHH.nc
+  obs operator:
+    name: Identity
+  obs error:
+    covariance model: diagonal
+  obs localization:
+    search method: kd_tree
+    lengthscale: 250e3
+    localization method: Brasnett99
+    soar horizontal decay: 0.000021
+    vertical lengthscale: 700
+    max nobs: 50
+  obs filters:
+  - filter: Bounds Check # negative / missing snow
+    filter variables:
+    - name: totalSnowDepth
+    minvalue: 0.0
+  - filter: Domain Check # missing station elevation (-999.9)
+    where:
+    - variable:
+        name: altitude@MetaData
+      minvalue: -999.0
+  - filter: Domain Check # land only
+    where:
+    - variable:
+        name: slmsk@GeoVaLs
+      minvalue: 0.5
+      maxvalue: 1.5
+  - filter: RejectList  # no land-ice
+    where:
+    - variable:
+        name: vtype@GeoVaLs
+      minvalue: 14.5
+      maxvalue: 15.5
+  - filter: Background Check # gross error check
+    filter variables:
+    - name: totalSnowDepth
+    threshold: 6.25
+    action:
+      name: reject
 
 driver:
   save posterior mean: false

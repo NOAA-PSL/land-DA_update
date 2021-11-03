@@ -40,7 +40,7 @@ observations:
     obsdatain:
       obsfile: ioda.ims_XXYYYYXXMMXXDD.nc
 #    obsdataout:
-#      obsfile: ../output/hofx_letkf_IMS.nc
+#      obsfile: output/hofx_letkf_IMS.nc
   obs operator:
     name: Identity
   obs error:
@@ -90,7 +90,7 @@ prints:
 
 output increment:
   filetype: gfs
-  datapath: ../output/jedi_incr/
+  datapath: output/jedi_incr/
   filename_sfcd: xainc.sfc_data.nc
   first: PT0H
   frequency: PT1H
