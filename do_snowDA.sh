@@ -1,13 +1,13 @@
 #!/bin/bash
 #BATCH --job-name=landDA
-#SBATCH -t 00:05:00
+#SBATCH -t 00:30:00
 #SBATCH -A gsienkf
 ##SBATCH --qos=debug
 #SBATCH --qos=batch
 #SBATCH -o landDA.out
 #SBATCH -e landDA.out
-#SBATCH --nodes=1
-#SBATCH --tasks-per-node=6
+#SBATCH --nodes=4
+#SBATCH --tasks-per-node=24
 
 # C48
 ##SBATCH --nodes=1
@@ -38,17 +38,17 @@
 
 # user directories
 
-WORKDIR=/scratch2/BMC/gsienkf/Clara.Draper/workdir/
+WORKDIR=/scratch2/BMC/gsienkf/Clara.Draper/workdir/   
 SCRIPTDIR=/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/landDA_workflow/
 OBSDIR=/scratch2/BMC/gsienkf/Clara.Draper/data_RnR/
 OUTDIR=${SCRIPTDIR}/output/
 LOGDIR=${OUTDIR}/logs/
-RESTART_IN=/scratch2/BMC/gsienkf/Clara.Draper/DA_test_cases/20191215_C48/
-#RESTART_IN=/scratch2/BMC/gsienkf/Clara.Draper/jedi/create_ens/mem_base/
+#RESTART_IN=/scratch2/BMC/gsienkf/Clara.Draper/DA_test_cases/20191215_C48/
+RESTART_IN=/scratch2/BMC/gsienkf/Clara.Draper/jedi/create_ens/mem_base/
 
 # executable directories
 
-FIMS_EXECDIR=/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/IMSobsproc/calcfIMS/exec/
+FIMS_EXECDIR=./IMSobsproc/calcfIMS/exec/   
 PYTHON2=/contrib/anaconda/anaconda2-4.4.0/bin/python2.7 
 
 # JEDI FV3 Bundle directories
@@ -63,7 +63,7 @@ PYTHON3=/scratch2/NCEPDEV/marineda/Jong.Kim/anaconda3-save/bin/python
 
 # EXPERIMENT SETTINGS
 
-RES=48
+RES=768
 B=30  # back ground error std.
 
 # STORAGE SETTINGS 
@@ -146,14 +146,15 @@ cp -r $RESTART_IN $WORKDIR/mem_pos
 cp -r $RESTART_IN $WORKDIR/mem_neg
 
 # can use either python version here
-$PYTHON2 ${SCRIPTDIR}/letkf_create_ens.py $FILEDATE $B
+$PYTHON3 ${SCRIPTDIR}/letkf_create_ens.py $FILEDATE $B
+
 
 ################################################
 # RUN LETKF
 ################################################
 
 # prepare namelist
-cp ${SCRIPTDIR}/jedi/fv3-jedi/letkf/letkf_snow_IMS_C${RES}.yaml ${WORKDIR}/letkf_snow.yaml
+cp ${SCRIPTDIR}/jedi/fv3-jedi/letkf/letkf_snow_IMS_GHCN_C${RES}.yaml ${WORKDIR}/letkf_snow.yaml
 
 sed -i -e "s/XXYYYY/${YYYY}/g" letkf_snow.yaml
 sed -i -e "s/XXMM/${MM}/g" letkf_snow.yaml
@@ -168,10 +169,10 @@ sed -i -e "s/XXHP/${HP}/g" letkf_snow.yaml
 ln -s $JEDI_STATICDIR Data 
 
 # C768
-#srun -n 96 ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
+srun -n 96 ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
 
 # C48
-srun -n 6 ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
+#srun -n 6 ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
 
 ################################################
 # APPLY INCREMENT TO UFS RESTARTS 
