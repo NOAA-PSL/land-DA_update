@@ -1,13 +1,13 @@
 #!/bin/bash
 #BATCH --job-name=landDA
-#SBATCH -t 00:30:00
+#SBATCH -t 00:05:00
 #SBATCH -A gsienkf
 ##SBATCH --qos=debug
 #SBATCH --qos=batch
 #SBATCH -o landDA.out
 #SBATCH -e landDA.out
-#SBATCH --nodes=4
-#SBATCH --tasks-per-node=24
+#SBATCH --nodes=1
+#SBATCH --tasks-per-node=6
 
 # C48
 ##SBATCH --nodes=1
@@ -33,8 +33,9 @@
 # remove hardwired path from IMS IODA converter 
 # use Henry's python path
 
-# optional:
-# add QC to JEDI so can pre-process IMS data.
+# question: 
+# Do we need to do anything regarding fractional grids? Currently screening DA update according to slmsk.
+
 
 # user directories
 
@@ -43,12 +44,13 @@ SCRIPTDIR=/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/landDA_workflow/
 OBSDIR=/scratch2/BMC/gsienkf/Clara.Draper/data_RnR/
 OUTDIR=${SCRIPTDIR}/output/
 LOGDIR=${OUTDIR}/logs/
-#RESTART_IN=/scratch2/BMC/gsienkf/Clara.Draper/DA_test_cases/20191215_C48/
-RESTART_IN=/scratch2/BMC/gsienkf/Clara.Draper/jedi/create_ens/mem_base/
+#RESTART_IN=/scratch2/BMC/gsienkf/Clara.Draper/DA_test_cases/20191215_C48/ #C48
+#RESTART_IN=/scratch2/BMC/gsienkf/Clara.Draper/jedi/create_ens/mem_base/  #C768 
+RESTART_IN=/scratch2/BMC/gsienkf/Clara.Draper/data_RnR/example_restarts/
 
 # executable directories
 
-FIMS_EXECDIR=./IMSobsproc/calcfIMS/exec/   
+FIMS_EXECDIR=${SCRIPTDIR}/IMSobsproc/exec/   
 PYTHON2=/contrib/anaconda/anaconda2-4.4.0/bin/python2.7 
 
 # JEDI FV3 Bundle directories
@@ -60,11 +62,13 @@ JEDI_STATICDIR=${SCRIPTDIR}/jedi/fv3-jedi/Data/
 
 IODA_BUILD_DIR=/scratch1/NCEPDEV/da/Youlong.Xia/ioda-bundle/build
 PYTHON3=/scratch2/NCEPDEV/marineda/Jong.Kim/anaconda3-save/bin/python
-# PYTHON3=/apps/intel/intelpython3/bin/python # from Henry
+#PYTHON3=/apps/intel/intelpython3/bin/python # from Henry
+
+#setenv PYTHONPATH ${PYTHONPATH}:/home/Clara.Draper/.local/lib/python3.6/site-packages
 
 # EXPERIMENT SETTINGS
 
-RES=768
+RES=96
 B=30  # back ground error std.
 
 # STORAGE SETTINGS 
@@ -170,10 +174,10 @@ sed -i -e "s/XXHP/${HP}/g" letkf_snow.yaml
 ln -s $JEDI_STATICDIR Data 
 
 # C768
-srun -n 96 ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
+#srun -n 96 ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
 
-# C48
-#srun -n 6 ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
+# C48 and C96
+srun -n 6 ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
 
 ################################################
 # APPLY INCREMENT TO UFS RESTARTS 
