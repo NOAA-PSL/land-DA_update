@@ -30,11 +30,7 @@
 # to do: 
 # get/write program to deal with julian day
 # add program to update the restarts with the increments 
-# remove hardwired path from IMS IODA converter 
-# use Henry's python path
-
-# question: 
-# Do we need to do anything regarding fractional grids? Currently screening DA update according to slmsk.
+# switch IMS back to Brasnett once Youlong's PR is accepted.
 
 
 # user directories
@@ -60,11 +56,9 @@ JEDI_STATICDIR=${SCRIPTDIR}/jedi/fv3-jedi/Data/
 
 # JEDI IODA-converter bundle directories
 
-IODA_BUILD_DIR=/scratch1/NCEPDEV/da/Youlong.Xia/ioda-bundle/build
+IODA_BUILD_DIR=/scratch2/BMC/gsienkf/Clara.Draper/jedi/src/ioda-bundle/build/
 PYTHON3=/scratch2/NCEPDEV/marineda/Jong.Kim/anaconda3-save/bin/python
 #PYTHON3=/apps/intel/intelpython3/bin/python # from Henry
-
-#setenv PYTHONPATH ${PYTHONPATH}:/home/Clara.Draper/.local/lib/python3.6/site-packages
 
 # EXPERIMENT SETTINGS
 
@@ -126,22 +120,16 @@ cat >> fims.nml << EOF
   idim=$RES, jdim=$RES,
   jdate=${YYYY}${JDAY},
   yyyymmdd=${YYYY}${MM}${DD},
-  IMS_OBS_PATH="${OBSDIR}/IMS/${YYYY}/",
+  IMS_OBS_PATH="${OBSDIR}/IMS/data_in/${YYYY}/",
   IMS_IND_PATH="${OBSDIR}/IMS/index_files/"
   /
 EOF
 
 ${FIMS_EXECDIR}/calcfIMS
 
-# ioda converter
-IODAPY=$IODA_BUILD_DIR/lib/python3.7/
-PYTHONPATH=${PYTHONPATH}:${IODAPY}
-IODALIB=$IODA_BUILD_DIR/lib
-#LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${IODALIB} # doesn't seem to be needed, breaks fv3-bundle
+cp ${SCRIPTDIR}/jedi/ioda/imsfv3_scf2ioda.py $WORKDIR
 
-cp ${SCRIPTDIR}/jedi/ioda/imsFV3_scf2ioda_newV2.py $WORKDIR
-
-$PYTHON3 imsFV3_scf2ioda_newV2.py -i IMSscf.${YYYY}${MM}${DD}.C${RES}.nc -o ${WORKDIR}ioda.ims_${YYYY}${MM}${DD}.nc 
+$PYTHON3 imsfv3_scf2ioda.py -i IMSscf.${YYYY}${MM}${DD}.C${RES}.nc -o ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc 
 
 ################################################
 # CREATE PSEUDO-ENSEMBLE
@@ -189,6 +177,6 @@ srun -n 6 ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.l
 
 # keep IMS IODA file
 if [ $SAVE_IMS == "YES" ]; then
-        cp ${WORKDIR}ioda.ims_${YYYY}${MM}${DD}.nc ${OUTDIR}/IMSproc/
+        cp ${WORKDIR}ioda.ims_${YYYY}${MM}${DD}.C${RES}.nc ${OUTDIR}/IMSproc/
 fi 
 
