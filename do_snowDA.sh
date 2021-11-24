@@ -9,7 +9,7 @@
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=6
 
-# C48
+# C48 or C96 
 ##SBATCH --nodes=1
 ##SBATCH --tasks-per-node=6
 
@@ -30,8 +30,10 @@
 # to do: 
 # get/write program to deal with julian day
 # add program to update the restarts with the increments 
-# switch IMS back to Brasnett once Youlong's PR is accepted.
-
+# IODA converters have replaced altitude with heigh in metadata. Once fv3-bundle updated: 
+# * switch IMS back to Brasnett once fv3-bundle is updated for altitude/height
+# * process GHCN obs to have height, and change QC in letkf.yaml
+# check that slmsk is always taken from the forecast file (oro files has a different definition)
 
 # user directories
 
@@ -47,7 +49,7 @@ RESTART_IN=/scratch2/BMC/gsienkf/Clara.Draper/data_RnR/example_restarts/
 # executable directories
 
 FIMS_EXECDIR=${SCRIPTDIR}/IMSobsproc/exec/   
-PYTHON2=/contrib/anaconda/anaconda2-4.4.0/bin/python2.7 
+INCR_EXECDIR=${SCRIPTDIR}/AddJediIncr/exec/   
 
 # JEDI FV3 Bundle directories
 
@@ -57,8 +59,6 @@ JEDI_STATICDIR=${SCRIPTDIR}/jedi/fv3-jedi/Data/
 # JEDI IODA-converter bundle directories
 
 IODA_BUILD_DIR=/scratch2/BMC/gsienkf/Clara.Draper/jedi/src/ioda-bundle/build/
-PYTHON3=/scratch2/NCEPDEV/marineda/Jong.Kim/anaconda3-save/bin/python
-#PYTHON3=/apps/intel/intelpython3/bin/python # from Henry
 
 # EXPERIMENT SETTINGS
 
@@ -74,6 +74,9 @@ JDAY=350 # CSD sort out.
 
 ############################################################################################
 # SHOULD NOT HAVE TO CHANGE ANYTHING BELOW HERE (except srun call for different resolutions)
+
+source workflow_mods_bash
+module list 
 
 ################################################
 # FORMAT DATE STRINGS
@@ -106,8 +109,12 @@ ln -s $OUTDIR ${WORKDIR}/output
 # PREPARE OBS FILES
 ################################################
 
+
+# SET IODA PYTHON PATHS
+export PYTHONPATH="${IODA_BUILD_DIR}/lib/pyiodaconv":"${IODA_BUILD_DIR}/lib/python3.6/pyioda"
+
 # stage GHCN
-ln -s $OBSDIR/GHCN/ghcn_snod2iodaV2_${YYYY}${MM}${DD}UTC${HH}.nc ghcn_${YYYY}${MM}${DD}UTC${HH}.nc
+ln -s $OBSDIR/GHCN/data_proc/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc_altitude ghcn_${YYYY}${MM}${DD}.nc
 
 # prepare IMS
 for tile in 1 2 3 4 5 6 
@@ -125,11 +132,18 @@ cat >> fims.nml << EOF
   /
 EOF
 
+echo 'snowDA: calling fIMS'
+
 ${FIMS_EXECDIR}/calcfIMS
 
 cp ${SCRIPTDIR}/jedi/ioda/imsfv3_scf2ioda.py $WORKDIR
 
-$PYTHON3 imsfv3_scf2ioda.py -i IMSscf.${YYYY}${MM}${DD}.C${RES}.nc -o ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc 
+echo 'snowDA: calling ioda converter' 
+
+# use a different version of python for ioda converter (keep for create_ensemble, as latter needs netCDF4)
+module load intelpython/3.6.8 
+
+python imsfv3_scf2ioda.py -i IMSscf.${YYYY}${MM}${DD}.C${RES}.nc -o ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc 
 
 ################################################
 # CREATE PSEUDO-ENSEMBLE
@@ -138,13 +152,15 @@ $PYTHON3 imsfv3_scf2ioda.py -i IMSscf.${YYYY}${MM}${DD}.C${RES}.nc -o ${WORKDIR}
 cp -r $RESTART_IN $WORKDIR/mem_pos
 cp -r $RESTART_IN $WORKDIR/mem_neg
 
-# can use either python version here
-$PYTHON3 ${SCRIPTDIR}/letkf_create_ens.py $FILEDATE $B
+echo 'snowDA: calling create ensemble' 
 
+python ${SCRIPTDIR}/letkf_create_ens.py $FILEDATE $B
 
 ################################################
 # RUN LETKF
 ################################################
+# switch back to orional python for fv3-jedi
+module load intelpython/2021.3.0
 
 # prepare namelist
 cp ${SCRIPTDIR}/jedi/fv3-jedi/letkf/letkf_snow_IMS_GHCN_C${RES}.yaml ${WORKDIR}/letkf_snow.yaml
@@ -161,6 +177,8 @@ sed -i -e "s/XXHP/${HP}/g" letkf_snow.yaml
 
 ln -s $JEDI_STATICDIR Data 
 
+echo 'snowDA: calling fv3-jedi' 
+
 # C768
 #srun -n 96 ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
 
@@ -170,6 +188,19 @@ srun -n 6 ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.l
 ################################################
 # APPLY INCREMENT TO UFS RESTARTS 
 ################################################
+
+cat << EOF > apply_incr_nml
+&noahmp_snow
+ date_str=${YYYY}${MM}${DD}
+ hour_str=$HH
+ res=$RES
+/
+EOF
+
+echo 'snowDA: calling apply increment'
+
+# (n=6) -> this is fixed, at one task per tile (with minor code change, could run on a single proc). 
+srun '--export=ALL' -n 6 ${INCR_EXECDIR}/apply_incr ${LOGDIR}/apply_incr.log
 
 ################################################
 # CLEAN UP

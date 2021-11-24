@@ -1,18 +1,21 @@
+
 module purge
 
-# fv3-bundle:
+######################################
+# JEDI FV3-bundle mods 
 setenv JEDI_OPT /scratch1/NCEPDEV/jcsda/jedipara/opt/modules
 module use $JEDI_OPT/modulefiles/core
 
 module load jedi/intel-impi/2020.2
 
+#  additional, needed for JEDI IODA converter 
+module load intelpython/3.6.8 
+
 setenv SLURM_ACCOUNT gsienkf
 setenv SALLOC_ACCOUNT $SLURM_ACCOUNT
 setenv SBATCH_ACCOUNT $SLURM_ACCOUNT
 
-# extra modules from Youlong, for IODA
-module load pybind11/2.5.0
-module use -a /scratch2/NCEPDEV/marineda/Jong.Kim/save/modulefiles/
-module load anaconda/3.15.1 # this is in Jong's modules, above.
+######################################
 
-# move into script
+# needed for AddJediIncr
+module load netcdf

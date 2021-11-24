@@ -11,7 +11,9 @@ geometry:
     - fieldset: Data/fieldsets/ufo.yaml
     - fieldset: Data/fieldsets/oro_data.yaml
   orography:
-    orography field name: orog_filt
+    filetype: gfs
+    skip coupler file: true
+    state variables: [orog_filt]
     datapath: Data/glopara_fix/C96/
     filename_orog: C96_oro_data.nc
 
@@ -78,7 +80,7 @@ observations:
     distribution: Halo
     simulated variables: [totalSnowDepth]
     obsdatain:
-      obsfile: ghcn_XXYYYYXXMMXXDDUTCXXHH.nc
+      obsfile: ghcn_XXYYYYXXMMXXDD.nc
   obs operator:
     name: Identity
   obs error:
@@ -138,9 +140,6 @@ output increment:
   filetype: gfs
   datapath: output/jedi_incr/
   filename_sfcd: xainc.sfc_data.nc
-  first: PT0H
-  frequency: PT1H
-  date: *date
 
 #test:
 #  reference filename: testoutput/letkf_snow.ref
