@@ -29,11 +29,12 @@
 
 # to do: 
 # get/write program to deal with julian day
-# add program to update the restarts with the increments 
-# IODA converters have replaced altitude with heigh in metadata. Once fv3-bundle updated: 
+
+# IODA converters have replaced altitude with height in metadata. Once fv3-bundle updated: 
 # * switch IMS back to Brasnett once fv3-bundle is updated for altitude/height
 # * process GHCN obs to have height, and change QC in letkf.yaml
 # check that slmsk is always taken from the forecast file (oro files has a different definition)
+# make sure documentation is updated.
 
 # user directories
 
@@ -68,6 +69,7 @@ B=30  # back ground error std.
 # STORAGE SETTINGS 
 
 SAVE_IMS="YES" # "YES" to save processed IMS IODA file
+SAVE_DATA="YES" # "YES" to save increment (add others?) JEDI output
 
 THISDATE=2019121518 
 JDAY=350 # CSD sort out.
@@ -99,6 +101,9 @@ export HP=`echo $PREVDATE | cut -c9-10`
 
 FILEDATE=${YYYY}${MM}${DD}.${HH}0000
 
+cd $WORKDIR 
+
+if [ 1 == 1 ]; then 
 # establish temporary work directory
 rm -rf $WORKDIR
 mkdir $WORKDIR
@@ -188,6 +193,7 @@ srun -n 6 ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.l
 ################################################
 # APPLY INCREMENT TO UFS RESTARTS 
 ################################################
+fi 
 
 cat << EOF > apply_incr_nml
 &noahmp_snow
@@ -208,6 +214,11 @@ srun '--export=ALL' -n 6 ${INCR_EXECDIR}/apply_incr ${LOGDIR}/apply_incr.log
 
 # keep IMS IODA file
 if [ $SAVE_IMS == "YES" ]; then
-        cp ${WORKDIR}ioda.ims_${YYYY}${MM}${DD}.C${RES}.nc ${OUTDIR}/IMSproc/
+        cp ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ${OUTDIR}/IMSproc/
 fi 
 
+# keep data
+if [ $SAVE_DATA == "YES" ]; then
+        # increments
+        cp ${WORKDIR}/${FILEDATE}.xainc.sfc_data.tile*.nc  ${OUTDIR}/jedi_incr/
+fi 

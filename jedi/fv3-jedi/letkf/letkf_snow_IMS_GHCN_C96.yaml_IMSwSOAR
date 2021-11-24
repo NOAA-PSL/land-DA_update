@@ -138,7 +138,6 @@ prints:
 
 output increment:
   filetype: gfs
-  datapath: output/jedi_incr/
   filename_sfcd: xainc.sfc_data.nc
 
 #test:
