@@ -27,10 +27,7 @@
 
 # Clara Draper, Oct 2021.
 
-# to do: 
-# get/write program to deal with julian day
-
-# IODA converters have replaced altitude with height in metadata. Once fv3-bundle updated: 
+# to-do: 
 # * switch IMS back to Brasnett once fv3-bundle is updated for altitude/height
 # * process GHCN obs to have height, and change QC in letkf.yaml
 # check that slmsk is always taken from the forecast file (oro files has a different definition)
@@ -72,7 +69,6 @@ SAVE_IMS="YES" # "YES" to save processed IMS IODA file
 SAVE_DATA="YES" # "YES" to save increment (add others?) JEDI output
 
 THISDATE=2019121518 
-JDAY=350 # CSD sort out.
 
 ############################################################################################
 # SHOULD NOT HAVE TO CHANGE ANYTHING BELOW HERE (except srun call for different resolutions)
@@ -100,10 +96,10 @@ export DP=`echo $PREVDATE | cut -c7-8`
 export HP=`echo $PREVDATE | cut -c9-10`
 
 FILEDATE=${YYYY}${MM}${DD}.${HH}0000
+DOY=$(date -d "${YYYY}-${MM}-${DD}" +%j)
 
 cd $WORKDIR 
 
-if [ 1 == 1 ]; then 
 # establish temporary work directory
 rm -rf $WORKDIR
 mkdir $WORKDIR
@@ -130,7 +126,7 @@ done
 cat >> fims.nml << EOF
  &fIMS_nml
   idim=$RES, jdim=$RES,
-  jdate=${YYYY}${JDAY},
+  jdate=${YYYY}${DOY},
   yyyymmdd=${YYYY}${MM}${DD},
   IMS_OBS_PATH="${OBSDIR}/IMS/data_in/${YYYY}/",
   IMS_IND_PATH="${OBSDIR}/IMS/index_files/"
@@ -140,6 +136,10 @@ EOF
 echo 'snowDA: calling fIMS'
 
 ${FIMS_EXECDIR}/calcfIMS
+if [[ $? != 0 ]]; then
+    echo "fIMS failed"
+    exit 
+fi
 
 cp ${SCRIPTDIR}/jedi/ioda/imsfv3_scf2ioda.py $WORKDIR
 
@@ -149,6 +149,11 @@ echo 'snowDA: calling ioda converter'
 module load intelpython/3.6.8 
 
 python imsfv3_scf2ioda.py -i IMSscf.${YYYY}${MM}${DD}.C${RES}.nc -o ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc 
+if [[ $? != 0 ]]; then
+    echo "IMS IODA converter failed"
+    exit 
+fi
+
 
 ################################################
 # CREATE PSEUDO-ENSEMBLE
@@ -160,6 +165,10 @@ cp -r $RESTART_IN $WORKDIR/mem_neg
 echo 'snowDA: calling create ensemble' 
 
 python ${SCRIPTDIR}/letkf_create_ens.py $FILEDATE $B
+if [[ $? != 0 ]]; then
+    echo "letkf create failed"
+    exit 
+fi
 
 ################################################
 # RUN LETKF
@@ -189,11 +198,11 @@ echo 'snowDA: calling fv3-jedi'
 
 # C48 and C96
 srun -n 6 ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
+echo  $?
 
 ################################################
 # APPLY INCREMENT TO UFS RESTARTS 
 ################################################
-fi 
 
 cat << EOF > apply_incr_nml
 &noahmp_snow
@@ -207,6 +216,7 @@ echo 'snowDA: calling apply increment'
 
 # (n=6) -> this is fixed, at one task per tile (with minor code change, could run on a single proc). 
 srun '--export=ALL' -n 6 ${INCR_EXECDIR}/apply_incr ${LOGDIR}/apply_incr.log
+echo $?
 
 ################################################
 # CLEAN UP
