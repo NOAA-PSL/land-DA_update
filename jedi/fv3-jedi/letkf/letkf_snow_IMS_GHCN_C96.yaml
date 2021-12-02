@@ -1,1 +1,145 @@
-letkf_snow_IMS_GHCN_C96.yaml_IMSwSOAR
+geometry:
+  fms initialization:
+    namelist filename: Data/fv3files/fmsmpp.nml
+    field table filename: Data/fv3files/field_table
+  akbk: Data/fv3files/akbk64.nc4
+  npx: 97
+  npy: 97
+  npz: 64
+  fieldsets:
+    - fieldset: Data/fieldsets/land.yaml
+    - fieldset: Data/fieldsets/ufo.yaml
+    - fieldset: Data/fieldsets/oro_data.yaml
+  orography:
+    filetype: gfs
+    skip coupler file: true
+    state variables: [orog_filt]
+    datapath: Data/glopara_fix/C96/
+    filename_orog: C96_oro_data.nc
+
+window begin: XXYYYP-XXMP-XXDPTXXHP:00:00Z
+window length: PT6H
+
+background:
+ date: &date XXYYYY-XXMM-XXDDTXXHH:00:00Z
+ members:
+   - filetype: gfs
+     state variables: [snwdph,vtype,slmsk]
+     datapath: mem_pos/
+     filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
+     filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
+   - filetype: gfs
+     state variables: [snwdph,vtype,slmsk]
+     datapath: mem_neg/
+     filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
+     filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
+
+observations:
+- obs space:
+    name: Simulate
+    distribution: Halo
+    simulated variables: [totalSnowDepth]
+    obsdatain:
+      obsfile: ioda.IMSscf.XXYYYYXXMMXXDD.C96.nc
+#    obsdataout:
+#      obsfile: output/hofx_letkf_IMS.nc
+  obs operator:
+    name: Identity
+  obs error:
+    covariance model: diagonal
+  obs localization:
+    search method: kd_tree
+    lengthscale: 250e3
+    localization method: Brasnett99
+    soar horizontal decay: 0.000021
+    vertical lengthscale: 700
+    max nobs: 1
+  obs filters:
+  - filter: Bounds Check # negative / missing snow
+    filter variables:
+    - name: totalSnowDepth
+    minvalue: 0.0
+  - filter: Domain Check # land only
+    where:
+    - variable:
+        name: slmsk@GeoVaLs
+      minvalue: 0.5
+      maxvalue: 1.5
+  - filter: RejectList  # no land-ice
+    where:
+    - variable:
+        name: vtype@GeoVaLs
+      minvalue: 14.5
+      maxvalue: 15.5
+# note: for IMS, we do *not* want to QC out high elevation, 
+# or do a gross error check (later will discard obs 
+# of zero snow fraction, when model has full snow cover).
+- obs space:
+    name: Simulate
+    distribution: Halo
+    simulated variables: [totalSnowDepth]
+    obsdatain:
+      obsfile: ghcn_XXYYYYXXMMXXDD.nc
+  obs operator:
+    name: Identity
+  obs error:
+    covariance model: diagonal
+  obs localization:
+    search method: kd_tree
+    lengthscale: 250e3
+    localization method: Brasnett99
+    soar horizontal decay: 0.000021
+    vertical lengthscale: 700
+    max nobs: 50
+  obs filters:
+  - filter: Bounds Check # negative / missing snow
+    filter variables:
+    - name: totalSnowDepth
+    minvalue: 0.0
+  - filter: Domain Check # missing station elevation (-999.9)
+    where:
+    - variable:
+        name: height@MetaData
+      minvalue: -999.0
+  - filter: Domain Check # land only
+    where:
+    - variable:
+        name: slmsk@GeoVaLs
+      minvalue: 0.5
+      maxvalue: 1.5
+  - filter: RejectList  # no land-ice
+    where:
+    - variable:
+        name: vtype@GeoVaLs
+      minvalue: 14.5
+      maxvalue: 15.5
+  - filter: Background Check # gross error check
+    filter variables:
+    - name: totalSnowDepth
+    threshold: 6.25
+    action:
+      name: reject
+
+driver:
+  save posterior mean: false
+  save posterior mean increment: true
+  save posterior ensemble: false
+
+local ensemble DA:
+  solver: LETKF
+  inflation:
+    rtps: 0.0
+    rtpp: 0.0
+    mult: 1.0
+
+prints:
+  frequency: PT3H
+
+output increment:
+  filetype: gfs
+  filename_sfcd: xainc.sfc_data.nc
+
+#test:
+#  reference filename: testoutput/letkf_snow.ref
+#  float relative tolerance: 1.0e-2
+#  test output filename: testoutput/letkf_snow.test.out

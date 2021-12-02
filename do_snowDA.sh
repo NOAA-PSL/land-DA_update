@@ -28,8 +28,6 @@
 # Clara Draper, Oct 2021.
 
 # to-do: 
-# * switch IMS back to Brasnett once fv3-bundle is updated for altitude/height
-# * process GHCN obs to have height, and change QC in letkf.yaml
 # check that slmsk is always taken from the forecast file (oro files has a different definition)
 # make sure documentation is updated.
 
@@ -106,21 +104,28 @@ mkdir $WORKDIR
 cd $WORKDIR 
 ln -s $OUTDIR ${WORKDIR}/output
 
+# save restarts (as will be over-written with analysis)
+
+for tile in 1 2 3 4 5 6 
+do
+cp $RESTART_IN/${FILEDATE}.sfc_data.tile${tile}.nc  ${OUTDIR}/restarts/${FILEDATE}.sfc_data_back.tile${tile}.nc
+done
+
+
 ################################################
 # PREPARE OBS FILES
 ################################################
-
 
 # SET IODA PYTHON PATHS
 export PYTHONPATH="${IODA_BUILD_DIR}/lib/pyiodaconv":"${IODA_BUILD_DIR}/lib/python3.6/pyioda"
 
 # stage GHCN
-ln -s $OBSDIR/GHCN/data_proc/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc_altitude ghcn_${YYYY}${MM}${DD}.nc
+ln -s $OBSDIR/GHCN/data_proc/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc  ghcn_${YYYY}${MM}${DD}.nc
 
 # prepare IMS
 for tile in 1 2 3 4 5 6 
 do
-ln -s $RESTART_IN/${FILEDATE}.sfc_data.tile${tile}.nc ${WORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc
+cp $RESTART_IN/${FILEDATE}.sfc_data.tile${tile}.nc ${WORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc
 done
 
 cat >> fims.nml << EOF
@@ -221,6 +226,11 @@ echo $?
 ################################################
 # CLEAN UP
 ################################################
+
+for tile in 1 2 3 4 5 6 
+do
+cp ${WORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${OUTDIR}/restarts/${FILEDATE}.sfc_data_anal.tile${tile}.nc
+done
 
 # keep IMS IODA file
 if [ $SAVE_IMS == "YES" ]; then
