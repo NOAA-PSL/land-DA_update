@@ -203,7 +203,6 @@ echo 'snowDA: calling fv3-jedi'
 
 # C48 and C96
 srun -n 6 ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
-echo  $?
 
 ################################################
 # APPLY INCREMENT TO UFS RESTARTS 
