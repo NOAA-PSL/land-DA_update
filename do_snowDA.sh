@@ -33,7 +33,7 @@
 
 # user directories
 
-WORKDIR=/scratch2/BMC/gsienkf/Clara.Draper/workdir/   
+WORKDIR=${WORKDIR:-"/scratch2/BMC/gsienkf/Clara.Draper/workdir/"}
 SCRIPTDIR=/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/landDA_workflow/
 OBSDIR=/scratch2/BMC/gsienkf/Clara.Draper/data_RnR/
 OUTDIR=${SCRIPTDIR}/output/
@@ -95,8 +95,6 @@ export HP=`echo $PREVDATE | cut -c9-10`
 
 FILEDATE=${YYYY}${MM}${DD}.${HH}0000
 DOY=$(date -d "${YYYY}-${MM}-${DD}" +%j)
-
-cd $WORKDIR 
 
 # establish temporary work directory
 rm -rf $WORKDIR
