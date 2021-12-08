@@ -1,4 +1,5 @@
 #!/bin/bash
+
 #BATCH --job-name=landDA
 #SBATCH -t 00:05:00
 #SBATCH -A gsienkf
@@ -34,13 +35,20 @@
 # user directories
 
 WORKDIR=${WORKDIR:-"/scratch2/BMC/gsienkf/Clara.Draper/workdir/"}
-SCRIPTDIR=/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/landDA_workflow/
+SCRIPTDIR=/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/noahMP_driver/cycleOI/landDA_workflow/
 OBSDIR=/scratch2/BMC/gsienkf/Clara.Draper/data_RnR/
-OUTDIR=${SCRIPTDIR}/output/
+OUTDIR=${SCRIPTDIR}/../output/DA/
 LOGDIR=${OUTDIR}/logs/
-#RESTART_IN=/scratch2/BMC/gsienkf/Clara.Draper/DA_test_cases/20191215_C48/ #C48
-#RESTART_IN=/scratch2/BMC/gsienkf/Clara.Draper/jedi/create_ens/mem_base/  #C768 
-RESTART_IN=/scratch2/BMC/gsienkf/Clara.Draper/data_RnR/example_restarts/
+#RSTRDIR=/scratch2/BMC/gsienkf/Clara.Draper/DA_test_cases/20191215_C48/ #C48
+#RSTRDIR=/scratch2/BMC/gsienkf/Clara.Draper/jedi/create_ens/mem_base/  #C768 
+#RSTRDIR=/scratch2/BMC/gsienkf/Clara.Draper/data_RnR/example_restarts/ # C96 Noah-MP
+RSTRDIR=$WORKDIR/restarts/tile # is running offline cycling will be here
+
+# DA options (select "YES" to assimilate)
+ASSIM_IMS=NO
+ASSIM_GHCN=NO
+ASSIM_SYNTH=YES
+JEDI_YAML=letkf_snow_offline_synthetic_snowdepth_C96.yaml
 
 # executable directories
 
@@ -64,14 +72,17 @@ B=30  # back ground error std.
 # STORAGE SETTINGS 
 
 SAVE_IMS="YES" # "YES" to save processed IMS IODA file
-SAVE_DATA="YES" # "YES" to save increment (add others?) JEDI output
+SAVE_INCR="YES" # "YES" to save increment (add others?) JEDI output
+SAVE_TILE="NO" # "YES" to save background in tile space
 
-THISDATE=2019121518 
+THISDATE=${THISDATE:-"2013100223"}
 
 ############################################################################################
 # SHOULD NOT HAVE TO CHANGE ANYTHING BELOW HERE (except srun call for different resolutions)
 
-source workflow_mods_bash
+cd $WORKDIR 
+
+source ${SCRIPTDIR}/workflow_mods_bash
 module list 
 
 ################################################
@@ -97,17 +108,21 @@ FILEDATE=${YYYY}${MM}${DD}.${HH}0000
 DOY=$(date -d "${YYYY}-${MM}-${DD}" +%j)
 
 # establish temporary work directory
-rm -rf $WORKDIR
-mkdir $WORKDIR
-cd $WORKDIR 
-ln -s $OUTDIR ${WORKDIR}/output
+ln -s ${OUTDIR} ${WORKDIR}/output
 
-# save restarts (as will be over-written with analysis)
-
+if  [[ $SAVE_TILE == "YES" ]]; then
 for tile in 1 2 3 4 5 6 
 do
-cp $RESTART_IN/${FILEDATE}.sfc_data.tile${tile}.nc  ${OUTDIR}/restarts/${FILEDATE}.sfc_data_back.tile${tile}.nc
+cp ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${OUTDIR}/restarts/${FILEDATE}.sfc_data_back.tile${tile}.nc
 done
+fi 
+
+#stage restarts for applying JEDI update (files will get directly updated)
+for tile in 1 2 3 4 5 6 
+do
+  ln -s ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc ${WORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc
+done
+ln -s ${RSTRDIR}/${FILEDATE}.coupler.res ${WORKDIR}/${FILEDATE}.coupler.res 
 
 
 ################################################
@@ -117,14 +132,23 @@ done
 # SET IODA PYTHON PATHS
 export PYTHONPATH="${IODA_BUILD_DIR}/lib/pyiodaconv":"${IODA_BUILD_DIR}/lib/python3.6/pyioda"
 
+# use a different version of python for ioda converter (keep for create_ensemble, as latter needs netCDF4)
+module load intelpython/3.6.8 
+
 # stage GHCN
+if [[ $ASSIM_GHCN == "YES" ]]; then
 ln -s $OBSDIR/GHCN/data_proc/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc  ghcn_${YYYY}${MM}${DD}.nc
+fi 
+
+# stage synthetic obs.
+if [[ $ASSIM_SYNTH == "YES" ]]; then
+ln -s $OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}18.nc  synth_${YYYY}${MM}${DD}.nc
+fi 
 
 # prepare IMS
-for tile in 1 2 3 4 5 6 
-do
-cp $RESTART_IN/${FILEDATE}.sfc_data.tile${tile}.nc ${WORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc
-done
+
+if [[ $ASSIM_IMS == "YES" ]]; then
+
 
 cat >> fims.nml << EOF
  &fIMS_nml
@@ -136,34 +160,32 @@ cat >> fims.nml << EOF
   /
 EOF
 
-echo 'snowDA: calling fIMS'
+    echo 'snowDA: calling fIMS'
 
-${FIMS_EXECDIR}/calcfIMS
-if [[ $? != 0 ]]; then
-    echo "fIMS failed"
-    exit 
+    ${FIMS_EXECDIR}/calcfIMS
+    if [[ $? != 0 ]]; then
+        echo "fIMS failed"
+        exit 
+    fi
+
+    cp ${SCRIPTDIR}/jedi/ioda/imsfv3_scf2ioda.py $WORKDIR
+
+    echo 'snowDA: calling ioda converter' 
+
+    python imsfv3_scf2ioda.py -i IMSscf.${YYYY}${MM}${DD}.C${RES}.nc -o ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc 
+    if [[ $? != 0 ]]; then
+        echo "IMS IODA converter failed"
+        exit 
+    fi
+
 fi
-
-cp ${SCRIPTDIR}/jedi/ioda/imsfv3_scf2ioda.py $WORKDIR
-
-echo 'snowDA: calling ioda converter' 
-
-# use a different version of python for ioda converter (keep for create_ensemble, as latter needs netCDF4)
-module load intelpython/3.6.8 
-
-python imsfv3_scf2ioda.py -i IMSscf.${YYYY}${MM}${DD}.C${RES}.nc -o ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc 
-if [[ $? != 0 ]]; then
-    echo "IMS IODA converter failed"
-    exit 
-fi
-
 
 ################################################
 # CREATE PSEUDO-ENSEMBLE
 ################################################
 
-cp -r $RESTART_IN $WORKDIR/mem_pos
-cp -r $RESTART_IN $WORKDIR/mem_neg
+cp -r ${RSTRDIR} $WORKDIR/mem_pos
+cp -r ${RSTRDIR} $WORKDIR/mem_neg
 
 echo 'snowDA: calling create ensemble' 
 
@@ -176,11 +198,12 @@ fi
 ################################################
 # RUN LETKF
 ################################################
+
 # switch back to orional python for fv3-jedi
 module load intelpython/2021.3.0
 
 # prepare namelist
-cp ${SCRIPTDIR}/jedi/fv3-jedi/letkf/letkf_snow_IMS_GHCN_C${RES}.yaml ${WORKDIR}/letkf_snow.yaml
+cp ${SCRIPTDIR}/jedi/fv3-jedi/letkf/$JEDI_YAML ${WORKDIR}/letkf_snow.yaml
 
 sed -i -e "s/XXYYYY/${YYYY}/g" letkf_snow.yaml
 sed -i -e "s/XXMM/${MM}/g" letkf_snow.yaml
@@ -224,18 +247,20 @@ echo $?
 # CLEAN UP
 ################################################
 
+if  [[ $SAVE_TILE == "YES" ]]; then
 for tile in 1 2 3 4 5 6 
 do
-cp ${WORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${OUTDIR}/restarts/${FILEDATE}.sfc_data_anal.tile${tile}.nc
+cp ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${OUTDIR}/restarts/${FILEDATE}.sfc_data_anal.tile${tile}.nc
 done
+fi 
 
 # keep IMS IODA file
-if [ $SAVE_IMS == "YES" ]; then
-        cp ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ${OUTDIR}/IMSproc/
+if [ $SAVE_IMS == "YES"  ] && [ $ASSIM_IMS == "YES"  ]; then
+        cp ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ${OUTDIR}/DA/IMSproc/
 fi 
 
 # keep data
-if [ $SAVE_DATA == "YES" ]; then
+if [ $SAVE_INCR == "YES" ]; then
         # increments
-        cp ${WORKDIR}/${FILEDATE}.xainc.sfc_data.tile*.nc  ${OUTDIR}/jedi_incr/
+        cp ${WORKDIR}/${FILEDATE}.xainc.sfc_data.tile*.nc  ${OUTDIR}/DA/jedi_incr/
 fi 
