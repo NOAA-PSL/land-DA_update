@@ -1,23 +1,5 @@
 #!/bin/bash
 
-#BATCH --job-name=landDA
-#SBATCH -t 00:05:00
-#SBATCH -A gsienkf
-##SBATCH --qos=debug
-#SBATCH --qos=batch
-#SBATCH -o landDA.out
-#SBATCH -e landDA.out
-#SBATCH --nodes=1
-#SBATCH --tasks-per-node=6
-
-# C48 or C96 
-##SBATCH --nodes=1
-##SBATCH --tasks-per-node=6
-
-# C768
-##SBATCH --nodes=4
-##SBATCH --tasks-per-node=24
-
 # script to perform snow depth update for UFS. Includes: 
 # 1. staging and preparation of obs. 
 #    note: IMS obs prep currently requires model background, then conversion to IODA format
@@ -37,8 +19,8 @@
 WORKDIR=${WORKDIR:-"/scratch2/BMC/gsienkf/Clara.Draper/workdir/"}
 SCRIPTDIR=/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/noahMP_driver/cycleOI/landDA_workflow/
 OBSDIR=/scratch2/BMC/gsienkf/Clara.Draper/data_RnR/
-OUTDIR=${SCRIPTDIR}/../output/DA/
-LOGDIR=${OUTDIR}/logs/
+OUTDIR=${SCRIPTDIR}/../output/
+LOGDIR=${OUTDIR}/DA/logs/
 #RSTRDIR=/scratch2/BMC/gsienkf/Clara.Draper/DA_test_cases/20191215_C48/ #C48
 #RSTRDIR=/scratch2/BMC/gsienkf/Clara.Draper/jedi/create_ens/mem_base/  #C768 
 #RSTRDIR=/scratch2/BMC/gsienkf/Clara.Draper/data_RnR/example_restarts/ # C96 Noah-MP
@@ -66,7 +48,8 @@ IODA_BUILD_DIR=/scratch2/BMC/gsienkf/Clara.Draper/jedi/src/ioda-bundle/build/
 
 # EXPERIMENT SETTINGS
 
-RES=96
+RES=${RES:-96}
+NPROC_DA=${NPROC_DA:-6} 
 B=30  # back ground error std.
 
 # STORAGE SETTINGS 
@@ -78,7 +61,7 @@ SAVE_TILE="NO" # "YES" to save background in tile space
 THISDATE=${THISDATE:-"2013100223"}
 
 ############################################################################################
-# SHOULD NOT HAVE TO CHANGE ANYTHING BELOW HERE (except srun call for different resolutions)
+# SHOULD NOT HAVE TO CHANGE ANYTHING BELOW HERE
 
 cd $WORKDIR 
 
@@ -107,8 +90,9 @@ export HP=`echo $PREVDATE | cut -c9-10`
 FILEDATE=${YYYY}${MM}${DD}.${HH}0000
 DOY=$(date -d "${YYYY}-${MM}-${DD}" +%j)
 
-# establish temporary work directory
+if [[ ! -e ${WORKDIR}/output ]]; then
 ln -s ${OUTDIR} ${WORKDIR}/output
+fi 
 
 if  [[ $SAVE_TILE == "YES" ]]; then
 for tile in 1 2 3 4 5 6 
@@ -165,7 +149,7 @@ EOF
     ${FIMS_EXECDIR}/calcfIMS
     if [[ $? != 0 ]]; then
         echo "fIMS failed"
-        exit 
+        exit 10
     fi
 
     cp ${SCRIPTDIR}/jedi/ioda/imsfv3_scf2ioda.py $WORKDIR
@@ -175,7 +159,7 @@ EOF
     python imsfv3_scf2ioda.py -i IMSscf.${YYYY}${MM}${DD}.C${RES}.nc -o ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc 
     if [[ $? != 0 ]]; then
         echo "IMS IODA converter failed"
-        exit 
+        exit 10
     fi
 
 fi
@@ -192,7 +176,7 @@ echo 'snowDA: calling create ensemble'
 python ${SCRIPTDIR}/letkf_create_ens.py $FILEDATE $B
 if [[ $? != 0 ]]; then
     echo "letkf create failed"
-    exit 
+    exit 10
 fi
 
 ################################################
@@ -219,11 +203,8 @@ ln -s $JEDI_STATICDIR Data
 
 echo 'snowDA: calling fv3-jedi' 
 
-# C768
-#srun -n 96 ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
-
 # C48 and C96
-srun -n 6 ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
+srun -n $NPROC_DA ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
 
 ################################################
 # APPLY INCREMENT TO UFS RESTARTS 
