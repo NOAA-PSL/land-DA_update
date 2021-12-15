@@ -7,7 +7,7 @@ geometry:
   npy: 97
   npz: 64
   fieldsets:
-    - fieldset: Data/fieldsets/land.yaml
+    - fieldset: Data/my_Data/offline_land.yaml
     - fieldset: Data/fieldsets/ufo.yaml
     - fieldset: Data/fieldsets/oro_data.yaml
 # use Mike's offline files.
@@ -15,7 +15,7 @@ geometry:
     filetype: gfs
     skip coupler file: true
     state variables: [orog_filt]
-    datapath: jedi/fv3-jedi/Data/offline_fix/
+    datapath: Data/offline_fix/
     filename_orog: oro_C96.mx100.nc
 
 window begin: XXYYYP-XXMP-XXDPTXXHP:00:00Z
@@ -25,12 +25,12 @@ background:
  date: &date XXYYYY-XXMM-XXDDTXXHH:00:00Z
  members:
    - filetype: gfs
-     state variables: [snwdph,vtype,slmsk]
+     state variables: [snwdph,smc,slmsk]
      datapath: mem_pos/
      filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
      filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
    - filetype: gfs
-     state variables: [snwdph,vtype,slmsk]
+     state variables: [snwdph,smc,slmsk]
      datapath: mem_neg/
      filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
      filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
@@ -69,7 +69,7 @@ observations:
   - filter: RejectList  # no land-ice
     where:
     - variable:
-        name: vtype@GeoVaLs
+        name: smc@GeoVaLs
       minvalue: 14.5
       maxvalue: 15.5
 # note: for IMS, we do *not* want to QC out high elevation, 
@@ -111,7 +111,7 @@ observations:
   - filter: RejectList  # no land-ice
     where:
     - variable:
-        name: vtype@GeoVaLs
+        name: smc@GeoVaLs
       minvalue: 14.5
       maxvalue: 15.5
   - filter: Background Check # gross error check
