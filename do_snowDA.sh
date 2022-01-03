@@ -25,8 +25,8 @@ LOGDIR=${OUTDIR}/DA/logs/
 #RSTRDIR=/scratch2/BMC/gsienkf/Clara.Draper/jedi/create_ens/mem_base/  #C768 
 #RSTRDIR=/scratch2/BMC/gsienkf/Clara.Draper/data_RnR/example_restarts/ # C96 Noah-MP
 RSTRDIR=$WORKDIR/restarts/tile # is running offline cycling will be here
-#Azadeh added
-analdate=/scratch1/NCEPDEV/da/Azadeh.Gholoubi/jedi/experiment1/cycleDA/analdates.sh
+
+analdate="PATH TO THE analdate.sh"
 
 # DA options (select "YES" to assimilate)
 ASSIM_IMS=NO
@@ -60,9 +60,7 @@ SAVE_IMS="YES" # "YES" to save processed IMS IODA file
 SAVE_INCR="YES" # "YES" to save increment (add others?) JEDI output
 SAVE_TILE="NO" # "YES" to save background in tile space
 
-#Azadeh added:
 source ${analdate}
-
 THISDATE=$STARTDATE
 
 # THISDATE=${THISDATE:-"2013100223"}
