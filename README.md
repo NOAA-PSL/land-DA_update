@@ -34,7 +34,12 @@ Currently, need to install the full ioda-bundle.
 >cd .. 
 >build.sh 
 
-6.  edit and submit script.
+6. Set your dates. 
+>cp analdates.sh_keep analdates.sh 
+
+Then edit start and end dates.
+
+7.  edit and submit script.
 
 Update directories and resolution in do_snowDA.sh (date variable is also currently set in here)
 

@@ -26,7 +26,7 @@ LOGDIR=${OUTDIR}/DA/logs/
 #RSTRDIR=/scratch2/BMC/gsienkf/Clara.Draper/data_RnR/example_restarts/ # C96 Noah-MP
 RSTRDIR=$WORKDIR/restarts/tile # is running offline cycling will be here
 
-analdate="PATH TO THE analdate.sh"
+ANALDATES=$SCRIPTDIR/analdates.sh
 
 # DA options (select "YES" to assimilate)
 ASSIM_IMS=NO
@@ -60,10 +60,8 @@ SAVE_IMS="YES" # "YES" to save processed IMS IODA file
 SAVE_INCR="YES" # "YES" to save increment (add others?) JEDI output
 SAVE_TILE="NO" # "YES" to save background in tile space
 
-source ${analdate}
+source ${ANALDATES} 
 THISDATE=$STARTDATE
-
-# THISDATE=${THISDATE:-"2013100223"}
 
 ############################################################################################
 # SHOULD NOT HAVE TO CHANGE ANYTHING BELOW HERE
