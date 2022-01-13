@@ -17,8 +17,8 @@
 # user directories
 
 WORKDIR=${WORKDIR:-"/scratch2/BMC/gsienkf/Clara.Draper/workdir/"}
-SCRIPTDIR=/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/noahMP_driver/cycleOI/landDA_workflow/
-OBSDIR=/scratch2/BMC/gsienkf/Clara.Draper/data_RnR/
+SCRIPTDIR=/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/AZworkflow/landDA_workflow/
+OBSDIR=/scratch2/BMC/gsienkf/Clara.Draper/data_AZ/
 OUTDIR=${SCRIPTDIR}/../output/
 LOGDIR=${OUTDIR}/DA/logs/
 #RSTRDIR=/scratch2/BMC/gsienkf/Clara.Draper/DA_test_cases/20191215_C48/ #C48
@@ -26,12 +26,10 @@ LOGDIR=${OUTDIR}/DA/logs/
 #RSTRDIR=/scratch2/BMC/gsienkf/Clara.Draper/data_RnR/example_restarts/ # C96 Noah-MP
 RSTRDIR=$WORKDIR/restarts/tile # is running offline cycling will be here
 
-ANALDATES=$SCRIPTDIR/analdates.sh
-
 # DA options (select "YES" to assimilate)
 ASSIM_IMS=NO
-ASSIM_GHCN=NO
-ASSIM_SYNTH=YES
+ASSIM_GHCN=YES
+ASSIM_SYNTH=NO
 JEDI_YAML=letkf_snow_offline_synthetic_snowdepth_C96.yaml
 
 # executable directories
@@ -60,8 +58,9 @@ SAVE_IMS="YES" # "YES" to save processed IMS IODA file
 SAVE_INCR="YES" # "YES" to save increment (add others?) JEDI output
 SAVE_TILE="NO" # "YES" to save background in tile space
 
-source ${ANALDATES} 
-THISDATE=$STARTDATE
+THISDATE=${THISDATE:-"2013100223"}
+
+echo 'THISDATE in land DA, '$THISDATE
 
 ############################################################################################
 # SHOULD NOT HAVE TO CHANGE ANYTHING BELOW HERE
