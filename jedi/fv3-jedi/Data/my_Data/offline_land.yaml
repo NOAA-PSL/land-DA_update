@@ -24,7 +24,6 @@ Fields:
     Levels: 1
     IOFile: surface
 
-# obs filter for QC needs this to be real
   - FieldIONames: [smc]
     FieldName: smc
     LongName: smc

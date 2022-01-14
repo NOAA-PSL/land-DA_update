@@ -30,7 +30,7 @@ RSTRDIR=$WORKDIR/restarts/tile # is running offline cycling will be here
 ASSIM_IMS=NO
 ASSIM_GHCN=YES
 ASSIM_SYNTH=NO
-JEDI_YAML=letkf_snow_offline_synthetic_snowdepth_C96.yaml
+JEDI_YAML=letkf_snow_offline_GHCN_C96.yaml
 
 # executable directories
 
@@ -58,7 +58,7 @@ SAVE_IMS="YES" # "YES" to save processed IMS IODA file
 SAVE_INCR="YES" # "YES" to save increment (add others?) JEDI output
 SAVE_TILE="NO" # "YES" to save background in tile space
 
-THISDATE=${THISDATE:-"2013100223"}
+THISDATE=${THISDATE:-"2016020123"}
 
 echo 'THISDATE in land DA, '$THISDATE
 
