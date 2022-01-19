@@ -47,13 +47,13 @@ observations:
     name: Identity
   obs error:
     covariance model: diagonal
-  obs localization:
-    search method: kd_tree
+  obs localizations:
+  - localization method: Horizontal SOAR
     lengthscale: 250e3
-    localization method: Brasnett99
     soar horizontal decay: 0.000021
-    vertical lengthscale: 700
     max nobs: 50
+  - localization method: Vertical Brasnett
+    vertical lengthscale: 700
   obs filters:
   - filter: Bounds Check # negative / missing snow
     filter variables:
@@ -74,7 +74,7 @@ observations:
     where:
     - variable:
         name: smc@GeoVaLs
-      minvalue: 0.6
+      minvalue: 0.9
   - filter: Background Check # gross error check
     filter variables:
     - name: totalSnowDepth
@@ -93,9 +93,6 @@ local ensemble DA:
     rtps: 0.0
     rtpp: 0.0
     mult: 1.0
-
-prints:
-  frequency: PT3H
 
 output increment:
   filetype: gfs

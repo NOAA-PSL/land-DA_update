@@ -58,9 +58,10 @@ SAVE_IMS="YES" # "YES" to save processed IMS IODA file
 SAVE_INCR="YES" # "YES" to save increment (add others?) JEDI output
 SAVE_TILE="NO" # "YES" to save background in tile space
 
-THISDATE=${THISDATE:-"2016020123"}
+THISDATE=${THISDATE:-"2015090118"}
 
 echo 'THISDATE in land DA, '$THISDATE
+echo 'temporarily setting hour to 18'
 
 ############################################################################################
 # SHOULD NOT HAVE TO CHANGE ANYTHING BELOW HERE
@@ -77,17 +78,20 @@ module list
 INCDATE=${SCRIPTDIR}/incdate.sh
 
 # substringing to get yr, mon, day, hr info
-export YYYY=`echo $THISDATE | cut -c1-4`
-export MM=`echo $THISDATE | cut -c5-6`
-export DD=`echo $THISDATE | cut -c7-8`
-export HH=`echo $THISDATE | cut -c9-10`
+YYYY=`echo $THISDATE | cut -c1-4`
+MM=`echo $THISDATE | cut -c5-6`
+DD=`echo $THISDATE | cut -c7-8`
+#HH=`echo $THISDATE | cut -c9-10`
+HH=18
+
 
 PREVDATE=`${INCDATE} $THISDATE -6`
 
-export YYYP=`echo $PREVDATE | cut -c1-4`
-export MP=`echo $PREVDATE | cut -c5-6`
-export DP=`echo $PREVDATE | cut -c7-8`
-export HP=`echo $PREVDATE | cut -c9-10`
+YYYP=`echo $PREVDATE | cut -c1-4`
+MP=`echo $PREVDATE | cut -c5-6`
+DP=`echo $PREVDATE | cut -c7-8`
+#HP=`echo $PREVDATE | cut -c9-10`
+HP=18
 
 FILEDATE=${YYYY}${MM}${DD}.${HH}0000
 DOY=$(date -d "${YYYY}-${MM}-${DD}" +%j)
@@ -195,11 +199,13 @@ sed -i -e "s/XXYYYY/${YYYY}/g" letkf_snow.yaml
 sed -i -e "s/XXMM/${MM}/g" letkf_snow.yaml
 sed -i -e "s/XXDD/${DD}/g" letkf_snow.yaml
 sed -i -e "s/XXHH/${HH}/g" letkf_snow.yaml
+#sed -i -e "s/XXHH/18/g" letkf_snow.yaml
 
 sed -i -e "s/XXYYYP/${YYYP}/g" letkf_snow.yaml
 sed -i -e "s/XXMP/${MP}/g" letkf_snow.yaml
 sed -i -e "s/XXDP/${DP}/g" letkf_snow.yaml
 sed -i -e "s/XXHP/${HP}/g" letkf_snow.yaml
+#sed -i -e "s/XXHP/18/g" letkf_snow.yaml
 
 ln -s $JEDI_STATICDIR Data 
 
