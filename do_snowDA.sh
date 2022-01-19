@@ -84,16 +84,16 @@ DD=`echo $THISDATE | cut -c7-8`
 #HH=`echo $THISDATE | cut -c9-10`
 HH=18
 
-
 PREVDATE=`${INCDATE} $THISDATE -6`
 
 YYYP=`echo $PREVDATE | cut -c1-4`
 MP=`echo $PREVDATE | cut -c5-6`
 DP=`echo $PREVDATE | cut -c7-8`
 #HP=`echo $PREVDATE | cut -c9-10`
-HP=18
+HP=12
 
 FILEDATE=${YYYY}${MM}${DD}.${HH}0000
+
 DOY=$(date -d "${YYYY}-${MM}-${DD}" +%j)
 
 if [[ ! -e ${WORKDIR}/output ]]; then
