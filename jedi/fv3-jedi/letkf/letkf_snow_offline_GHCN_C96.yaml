@@ -7,7 +7,7 @@ geometry:
   npy: 97
   npz: 64
   fieldsets:
-    - fieldset: Data/my_Data/offline_land.yaml
+    - fieldset: Data/fieldsets/land.yaml
     - fieldset: Data/fieldsets/oro_data.yaml
 # use Mike's offline files.
   orography:
@@ -15,6 +15,7 @@ geometry:
     skip coupler file: true
     state variables: [orog_filt]
     datapath: Data/offline_fix/
+
     filename_orog: oro_C96.mx100.nc
 
 window begin: XXYYYP-XXMP-XXDPTXXHP:00:00Z
@@ -24,12 +25,12 @@ background:
  date: &date XXYYYY-XXMM-XXDDTXXHH:00:00Z
  members:
    - filetype: gfs
-     state variables: [snwdph,smc,slmsk]
+     state variables: [snwdph,vtype,slmsk]
      datapath: mem_pos/
      filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
      filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
    - filetype: gfs
-     state variables: [snwdph,smc,slmsk]
+     state variables: [snwdph,vtype,slmsk]
      datapath: mem_neg/
      filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
      filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
@@ -73,8 +74,9 @@ observations:
   - filter: RejectList  # no land-ice
     where:
     - variable:
-        name: smc@GeoVaLs
-      minvalue: 0.9
+        name: vtype@GeoVaLs
+      minvalue: 14.5
+      maxvalue: 15.5
   - filter: Background Check # gross error check
     filter variables:
     - name: totalSnowDepth

@@ -27,10 +27,11 @@ LOGDIR=${OUTDIR}/DA/logs/
 RSTRDIR=$WORKDIR/restarts/tile # is running offline cycling will be here
 
 # DA options (select "YES" to assimilate)
-ASSIM_IMS=NO
+ASSIM_IMS=YES
 ASSIM_GHCN=YES
 ASSIM_SYNTH=NO
-JEDI_YAML=letkf_snow_offline_GHCN_C96.yaml
+#JEDI_YAML=letkf_snow_offline_GHCN_C96.yaml # GHCN only
+JEDI_YAML=letkf_snow_offline_IMS_GHCN_C96.yaml # IMS and GHCN
 
 # executable directories
 
