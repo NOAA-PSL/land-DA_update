@@ -17,9 +17,9 @@
 # user directories
 
 WORKDIR=${WORKDIR:-"/scratch2/BMC/gsienkf/Clara.Draper/workdir/"}
-SCRIPTDIR=/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/AZworkflow/landDA_workflow/
+SCRIPTDIR=${DADIR:-"/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/AZworkflow/landDA_workflow/"}
 OBSDIR=/scratch2/BMC/gsienkf/Clara.Draper/data_AZ/
-OUTDIR=${SCRIPTDIR}/../output/
+OUTDIR=${OUTDIR:-${SCRIPTDIR}/../output/} 
 LOGDIR=${OUTDIR}/DA/logs/
 #RSTRDIR=/scratch2/BMC/gsienkf/Clara.Draper/DA_test_cases/20191215_C48/ #C48
 #RSTRDIR=/scratch2/BMC/gsienkf/Clara.Draper/jedi/create_ens/mem_base/  #C768 

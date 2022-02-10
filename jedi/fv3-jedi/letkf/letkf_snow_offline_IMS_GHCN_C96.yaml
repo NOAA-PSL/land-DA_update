@@ -42,7 +42,7 @@ observations:
     obsdatain:
       obsfile: ghcn_XXYYYYXXMMXXDD.nc
     obsdataout:
-      obsfile: output/DA/hofx/letkf_hofx_ghcn.nc
+      obsfile: output/DA/hofx/letkf_hofx_ghcn_XXYYYYXXMMXXDD.nc
   obs operator:
     name: Identity
   obs error:
@@ -88,8 +88,8 @@ observations:
     simulated variables: [totalSnowDepth]
     obsdatain:
       obsfile: ioda.IMSscf.XXYYYYXXMMXXDD.C96.nc
-#    obsdataout:
-#      obsfile: output/hofx_letkf_IMS.nc
+    obsdataout:
+      obsfile: output/DA/hofx/letkf_hofx_ims_XXYYYYXXMMXXDD.nc
   obs operator:
     name: Identity
   obs error:
