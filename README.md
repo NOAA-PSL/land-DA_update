@@ -8,7 +8,7 @@ To install:
 
 Follow instructions on website. 
 
-2. Install JEDI IODA-converters: 
+2. If doing IMS assimilation: install JEDI IODA-converters: 
 
 Currently, need to install the full ioda-bundle.
 ** As of 11/24/2021, instructions in the JEDI documentation don't work (python problem, need to use own version of python with packages installed locally). See instructions below.
@@ -34,7 +34,8 @@ Currently, need to install the full ioda-bundle.
 >cd .. 
 >build.sh 
 
-6. Set your dates. 
+To submit stand-along (not as a part of cycleDA):
+6. Set your dates.
 >cp analdates.sh_keep analdates.sh 
 
 Then edit start and end dates.

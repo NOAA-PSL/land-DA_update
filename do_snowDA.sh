@@ -30,6 +30,7 @@ RSTRDIR=$WORKDIR/restarts/tile # is running offline cycling will be here
 ASSIM_IMS=${ASSIM_IMS:-"YES"}
 ASSIM_GHCN=${ASSIM_IMS:-"YES"} 
 ASSIM_SYNTH=${ASSIM_SYNTH:-"NO"} 
+do_DA=${do_DA:-"YES"} # no will calculate hofx only
 JEDI_YAML=${JEDI_YAML:-"letkf_snow_offline_IMS_GHCN_C96.yaml"} # IMS and GHCN
 
 # executable directories
@@ -171,16 +172,20 @@ fi
 # CREATE PSEUDO-ENSEMBLE
 ################################################
 
-cp -r ${RSTRDIR} $WORKDIR/mem_pos
-cp -r ${RSTRDIR} $WORKDIR/mem_neg
+if [[ $do_DA == "YES" ]]; then 
 
-echo 'snowDA: calling create ensemble' 
+    cp -r ${RSTRDIR} $WORKDIR/mem_pos
+    cp -r ${RSTRDIR} $WORKDIR/mem_neg
 
-python ${SCRIPTDIR}/letkf_create_ens.py $FILEDATE $B
-if [[ $? != 0 ]]; then
-    echo "letkf create failed"
-    exit 10
-fi
+    echo 'snowDA: calling create ensemble' 
+
+    python ${SCRIPTDIR}/letkf_create_ens.py $FILEDATE $B
+    if [[ $? != 0 ]]; then
+        echo "letkf create failed"
+        exit 10
+    fi
+
+fi 
 
 ################################################
 # RUN LETKF
@@ -190,7 +195,7 @@ fi
 module load intelpython/2021.3.0
 
 # prepare namelist
-cp ${SCRIPTDIR}/jedi/fv3-jedi/letkf/$JEDI_YAML ${WORKDIR}/letkf_snow.yaml
+cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/$JEDI_YAML ${WORKDIR}/letkf_snow.yaml
 
 sed -i -e "s/XXYYYY/${YYYY}/g" letkf_snow.yaml
 sed -i -e "s/XXMM/${MM}/g" letkf_snow.yaml
@@ -207,11 +212,17 @@ ln -s $JEDI_STATICDIR Data
 echo 'snowDA: calling fv3-jedi' 
 
 # C48 and C96
+if [[ $do_DA == "YES" ]]; then
 srun -n $NPROC_DA ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
+else  # h(x) only
+srun -n $NPROC_DA ${JEDI_EXECDIR}/fv3jedi_hofx_nomodel.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
+fi 
 
 ################################################
 # APPLY INCREMENT TO UFS RESTARTS 
 ################################################
+
+if [[ $do_DA == "YES" ]]; then 
 
 cat << EOF > apply_incr_nml
 &noahmp_snow
@@ -226,6 +237,8 @@ echo 'snowDA: calling apply increment'
 # (n=6) -> this is fixed, at one task per tile (with minor code change, could run on a single proc). 
 srun '--export=ALL' -n 6 ${INCR_EXECDIR}/apply_incr ${LOGDIR}/apply_incr.log
 echo $?
+
+fi 
 
 ################################################
 # CLEAN UP
@@ -243,8 +256,7 @@ if [ $SAVE_IMS == "YES"  ] && [ $ASSIM_IMS == "YES"  ]; then
         cp ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ${OUTDIR}/DA/IMSproc/
 fi 
 
-# keep data
-if [ $SAVE_INCR == "YES" ]; then
-        # increments
+# keep increments
+if [ $SAVE_INCR == "YES" ] && [ $do_DA == "YES" ]; then
         cp ${WORKDIR}/${FILEDATE}.xainc.sfc_data.tile*.nc  ${OUTDIR}/DA/jedi_incr/
 fi 

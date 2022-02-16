@@ -1,0 +1,99 @@
+geometry:
+  fms initialization:
+    namelist filename: Data/fv3files/fmsmpp.nml
+    field table filename: Data/fv3files/field_table
+  akbk: Data/fv3files/akbk64.nc4
+  npx: 97
+  npy: 97
+  npz: 64
+  fieldsets:
+    - fieldset: Data/fieldsets/land.yaml
+    - fieldset: Data/fieldsets/oro_data.yaml
+
+window begin: XXYYYP-XXMP-XXDPTXXHP:00:00Z
+window length: PT6H
+
+state:
+   datetime: XXYYYY-XXMM-XXDDTXXHH:00:00Z
+   filetype: fms restart
+   state variables: [snwdph,vtype,slmsk]
+   datapath: restarts/tile/
+   filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
+   filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
+
+observations:
+- obs space:
+    name: Simulate
+    distribution: Halo
+    simulated variables: [totalSnowDepth]
+    obsdatain:
+      obsfile: ghcn_XXYYYYXXMMXXDD.nc
+    obsdataout:
+      obsfile: output/DA/hofx/letkf_hofx_ghcn_XXYYYYXXMMXXDD.nc
+  obs operator:
+    name: Identity
+  obs error:
+    covariance model: diagonal
+  obs filters:
+  - filter: Bounds Check # negative / missing snow
+    filter variables:
+    - name: totalSnowDepth
+    minvalue: 0.0
+  - filter: Domain Check # missing station elevation (-999.9)
+    where:
+    - variable:
+        name: height@MetaData
+      minvalue: -999.0
+  - filter: Domain Check # land only
+    where:
+    - variable:
+        name: slmsk@GeoVaLs
+      minvalue: 0.5
+      maxvalue: 1.5
+  - filter: RejectList  # no land-ice
+    where:
+    - variable:
+        name: vtype@GeoVaLs
+      minvalue: 14.5
+      maxvalue: 15.5
+  - filter: Background Check # gross error check
+    filter variables:
+    - name: totalSnowDepth
+    threshold: 6.25
+    action:
+      name: reject
+- obs space:
+    name: Simulate
+    distribution: Halo
+    simulated variables: [totalSnowDepth]
+    obsdatain:
+      obsfile: ioda.IMSscf.XXYYYYXXMMXXDD.C96.nc
+    obsdataout:
+      obsfile: output/DA/hofx/letkf_hofx_ims_XXYYYYXXMMXXDD.nc
+  obs operator:
+    name: Identity
+  obs error:
+    covariance model: diagonal
+  obs filters:
+  - filter: Bounds Check # negative / missing snow
+    filter variables:
+    - name: totalSnowDepth
+    minvalue: 0.0
+  - filter: Domain Check # land only
+    where:
+    - variable:
+        name: slmsk@GeoVaLs
+      minvalue: 0.5
+      maxvalue: 1.5
+  - filter: RejectList  # no land-ice
+    where:
+    - variable:
+        name: vtype@GeoVaLs
+      minvalue: 14.5
+      maxvalue: 15.5
+  - filter: Background Check # gross error check
+    filter variables:
+    - name: totalSnowDepth
+    threshold: 6.25
+    action:
+      name: reject
