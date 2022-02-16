@@ -3,49 +3,47 @@ geometry:
     namelist filename: Data/fv3files/fmsmpp.nml
     field table filename: Data/fv3files/field_table
   akbk: Data/fv3files/akbk64.nc4
-  npx: 97
-  npy: 97
+  npx: 49
+  npy: 49
   npz: 64
   fieldsets:
     - fieldset: Data/fieldsets/land.yaml
+    - fieldset: Data/fieldsets/ufo.yaml
     - fieldset: Data/fieldsets/oro_data.yaml
-# use Mike's offline files.
   orography:
-    datetime: XXYYYP-XXMP-XXDPTXXHP:00:00Z
+    datetime: 2019-12-15T18:00:00Z
     filetype: fms restart
     skip coupler file: true
     state variables: [orog_filt]
-    datapath: Data/offline_fix/
-    filename_orog: oro_C96.mx100.nc
+    datapath: Data/inputs/gfs_land_c48/grid/
+    filename_orog: C48_oro_data.nc
 
-window begin: XXYYYP-XXMP-XXDPTXXHP:00:00Z
+window begin: 2019-12-15T15:00:00Z
 window length: PT6H
 
 background:
- date: &date XXYYYY-XXMM-XXDDTXXHH:00:00Z
+ date: &date 2019-12-15T18:00:00Z
  members:
-   - datetime: XXYYYY-XXMM-XXDDTXXHH:00:00Z
+   - datetime: 2019-12-15T18:00:00Z
      filetype: fms restart
      state variables: [snwdph,vtype,slmsk]
-     datapath: mem_pos/
-     filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
-     filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
-   - datetime: XXYYYY-XXMM-XXDDTXXHH:00:00Z
+     datapath: Data/inputs/gfs_land_c48/mem001/
+     filename_sfcd: 20191215.180000.sfc_data.nc
+     filename_cplr: 20191215.180000.coupler.res
+   - datetime: 2019-12-15T18:00:00Z
      filetype: fms restart
      state variables: [snwdph,vtype,slmsk]
-     datapath: mem_neg/
-     filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
-     filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
+     datapath: Data/inputs/gfs_land_c48/mem002/
+     filename_sfcd: 20191215.180000.sfc_data.nc
+     filename_cplr: 20191215.180000.coupler.res
 
 observations:
 - obs space:
     name: Simulate
-    distribution: Halo
+    distribution: InefficientDistribution
     simulated variables: [totalSnowDepth]
     obsdatain:
-      obsfile: ghcn_XXYYYYXXMMXXDD.nc
-    obsdataout:
-      obsfile: output/DA/hofx/letkf_hofx_ghcn_XXYYYYXXMMXXDD.nc
+      obsfile: Data/obs/testinput_tier_1/ghcn_snwd_ioda_20191215.nc
   obs operator:
     name: Identity
   obs error:
@@ -87,7 +85,7 @@ observations:
       name: reject
 
 driver:
-  save posterior mean: false
+  save posterior mean: true
   save posterior mean increment: true
   save posterior ensemble: false
 
@@ -98,11 +96,15 @@ local ensemble DA:
     rtpp: 0.0
     mult: 1.0
 
-output increment:
-  filetype: fms restart
-  filename_sfcd: xainc.sfc_data.nc
+output:
+  filetype: latlon
+  filename: Data/analysis/letkf/gfs_land/mem%{member}%/letkf.
 
-#test:
-#  reference filename: testoutput/letkf_snow.ref
-#  float relative tolerance: 1.0e-2
-#  test output filename: testoutput/letkf_snow.test.out
+output increment:
+  filetype: latlon
+  filename: Data/analysis/letkf/gfs_land/mem%{member}%/xainc.
+
+test:
+  reference filename: testoutput/letkf_snow.ref
+  float relative tolerance: 1.0e-2
+  test output filename: testoutput/letkf_snow.test.out

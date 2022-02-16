@@ -43,9 +43,9 @@ observations:
     distribution: Halo
     simulated variables: [totalSnowDepth]
     obsdatain:
-      obsfile: ghcn_XXYYYYXXMMXXDD.nc
+      obsfile: ioda.IMSscf.XXYYYYXXMMXXDD.C96.nc
     obsdataout:
-      obsfile: output/DA/hofx/letkf_hofx_ghcn_XXYYYYXXMMXXDD.nc
+      obsfile: output/DA/hofx/letkf_hofx_ims_XXYYYYXXMMXXDD.nc
   obs operator:
     name: Identity
   obs error:
@@ -54,19 +54,12 @@ observations:
   - localization method: Horizontal SOAR
     lengthscale: 250e3
     soar horizontal decay: 0.000021
-    max nobs: 50
-  - localization method: Vertical Brasnett
-    vertical lengthscale: 700
+    max nobs: 1
   obs filters:
   - filter: Bounds Check # negative / missing snow
     filter variables:
     - name: totalSnowDepth
     minvalue: 0.0
-  - filter: Domain Check # missing station elevation (-999.9)
-    where:
-    - variable:
-        name: height@MetaData
-      minvalue: -999.0
   - filter: Domain Check # land only
     where:
     - variable:

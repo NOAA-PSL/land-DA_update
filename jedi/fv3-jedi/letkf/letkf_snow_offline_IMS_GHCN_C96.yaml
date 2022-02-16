@@ -11,7 +11,8 @@ geometry:
     - fieldset: Data/fieldsets/oro_data.yaml
 # use Mike's offline files.
   orography:
-    filetype: gfs
+    datetime: XXYYYP-XXMP-XXDPTXXHP:00:00Z
+    filetype: fms restart
     skip coupler file: true
     state variables: [orog_filt]
     datapath: Data/offline_fix/
@@ -23,12 +24,14 @@ window length: PT6H
 background:
  date: &date XXYYYY-XXMM-XXDDTXXHH:00:00Z
  members:
-   - filetype: gfs
+   - datetime: XXYYYY-XXMM-XXDDTXXHH:00:00Z
+     filetype: fms restart
      state variables: [snwdph,vtype,slmsk]
      datapath: mem_pos/
      filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
      filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
-   - filetype: gfs
+   - datetime: XXYYYY-XXMM-XXDDTXXHH:00:00Z
+     filetype: fms restart
      state variables: [snwdph,vtype,slmsk]
      datapath: mem_neg/
      filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
@@ -116,6 +119,12 @@ observations:
         name: vtype@GeoVaLs
       minvalue: 14.5
       maxvalue: 15.5
+  - filter: Background Check # gross error check
+    filter variables:
+    - name: totalSnowDepth
+    threshold: 6.25
+    action:
+      name: reject
 
 driver:
   save posterior mean: false
@@ -130,7 +139,7 @@ local ensemble DA:
     mult: 1.0
 
 output increment:
-  filetype: gfs
+  filetype: fms restart
   filename_sfcd: xainc.sfc_data.nc
 
 #test:
