@@ -121,11 +121,19 @@ ln -s ${RSTRDIR}/${FILEDATE}.coupler.res ${WORKDIR}/${FILEDATE}.coupler.res
 export PYTHONPATH="${IODA_BUILD_DIR}/lib/pyiodaconv":"${IODA_BUILD_DIR}/lib/python3.6/pyioda"
 
 # use a different version of python for ioda converter (keep for create_ensemble, as latter needs netCDF4)
+echo "BEFORE"
+echo $PATH 
+PATH_BACKUP=$PATH
 module load intelpython/3.6.8 
+echo "AFTER" 
+echo $PATH
+export PATH=$PATH:${PATH_BACKUP}
+echo "FIXED" 
+echo $PATH
 
 # stage GHCN
 if [[ $ASSIM_GHCN == "YES" ]]; then
-ln -s $OBSDIR/GHCN/data_proc/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc  ghcn_${YYYY}${MM}${DD}.nc
+ln  -s $OBSDIR/GHCN/data_proc/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc  ghcn_${YYYY}${MM}${DD}.nc
 fi 
 
 # stage synthetic obs.
@@ -136,7 +144,6 @@ fi
 # prepare IMS
 
 if [[ $ASSIM_IMS == "YES" ]]; then
-
 
 cat >> fims.nml << EOF
  &fIMS_nml
