@@ -148,7 +148,6 @@ if [[ $ASSIM_SYNTH == "YES" ]]; then
 ln -s $OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}18.nc  synth_${YYYY}${MM}${DD}.nc
 fi 
 
-#module load intelpython/3.6.8
 # prepare IMS
 
 if [[ $ASSIM_IMS == "YES" ]]; then
@@ -188,12 +187,10 @@ fi
 ################################################
 
 if [[ $do_DA == "YES" ]]; then 
-#module load intelpython/2022.1.2
     cp -r ${RSTRDIR} $WORKDIR/mem_pos
     cp -r ${RSTRDIR} $WORKDIR/mem_neg
 
     echo 'snowDA: calling create ensemble' 
-#module load intelpython/3.6.8
     python ${SCRIPTDIR}/letkf_create_ens.py $FILEDATE $B
     if [[ $? != 0 ]]; then
         echo "letkf create failed"
@@ -208,7 +205,6 @@ fi
 
 # switch back to orional python for fv3-jedi
 module load intelpython/2021.3.0
-#module load intelpython/2022.1.2
 
 # prepare namelist
 cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/$JEDI_YAML ${WORKDIR}/letkf_snow.yaml
