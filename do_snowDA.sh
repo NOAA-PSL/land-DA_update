@@ -228,8 +228,8 @@ ln -s $JEDI_STATICDIR Data
 echo 'snowDA: calling fv3-jedi' 
 
 # C48 and C96
-export OOPS_DEBUG=1
-export OOPS_TRACE=1
+#export OOPS_DEBUG=1
+#export OOPS_TRACE=1
 if [[ $do_DA == "YES" ]]; then
 srun -n $NPROC_DA ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
 else  # h(x) only
