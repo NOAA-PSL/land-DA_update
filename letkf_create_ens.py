@@ -30,6 +30,4 @@ for ens in range(2):
         var_array = ncOut.variables["snwdph"][:]
         var_array = var_array + sign[ens]*offset
         ncOut.variables["snwdph"][0,:,:] = var_array[:]
-        ncOut.renameVariable("sheleg","stype")
-        ncOut.variables["stype"][0,:,:] = 30.0
         ncOut.close()
