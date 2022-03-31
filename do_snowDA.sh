@@ -29,9 +29,11 @@ RSTRDIR=$WORKDIR/restarts/tile # is running offline cycling will be here
 # DA options (select "YES" to assimilate)
 ASSIM_IMS=${ASSIM_IMS:-"YES"}
 ASSIM_GHCN=${ASSIM_GHCN:-"YES"} 
-ASSIM_SYNTH=${ASSIM_SYNTH:-"NO"} 
+ASSIM_GTS=${ASSIM_GTS:-"NO"}
+ASSIM_SYNTH=${ASSIM_SYNTH:-"NO"}
 do_DA=${do_DA:-"YES"} # no will calculate hofx only
 JEDI_YAML=${JEDI_YAML:-"letkf_snow_offline_IMS_GHCN_C96.yaml"} # IMS and GHCN
+echo $JEDI_YAML
 
 # executable directories
 
@@ -78,17 +80,17 @@ module list
 INCDATE=${SCRIPTDIR}/incdate.sh
 
 # substringing to get yr, mon, day, hr info
-YYYY=`echo $THISDATE | cut -c1-4`
-MM=`echo $THISDATE | cut -c5-6`
-DD=`echo $THISDATE | cut -c7-8`
-HH=`echo $THISDATE | cut -c9-10`
+export YYYY=`echo $THISDATE | cut -c1-4`
+export MM=`echo $THISDATE | cut -c5-6`
+export DD=`echo $THISDATE | cut -c7-8`
+export HH=`echo $THISDATE | cut -c9-10`
 
 PREVDATE=`${INCDATE} $THISDATE -6`
 
-YYYP=`echo $PREVDATE | cut -c1-4`
-MP=`echo $PREVDATE | cut -c5-6`
-DP=`echo $PREVDATE | cut -c7-8`
-HP=`echo $PREVDATE | cut -c9-10`
+export YYYP=`echo $PREVDATE | cut -c1-4`
+export MP=`echo $PREVDATE | cut -c5-6`
+export DP=`echo $PREVDATE | cut -c7-8`
+export HP=`echo $PREVDATE | cut -c9-10`
 
 FILEDATE=${YYYY}${MM}${DD}.${HH}0000
 
@@ -130,6 +132,11 @@ echo $PATH
 export PATH=$PATH:${PATH_BACKUP}
 echo "FIXED" 
 echo $PATH
+
+# stage GTS
+if [[ $ASSIM_GTS == "YES" ]]; then
+ln -s $OBSDIR/GTS/data_proc/${YYYY}${MM}/adpsfc_snow_${YYYY}${MM}${DD}${HH}.nc4  gts_${YYYY}${MM}${DD}${HH}.nc
+fi 
 
 # stage GHCN
 if [[ $ASSIM_GHCN == "YES" ]]; then
