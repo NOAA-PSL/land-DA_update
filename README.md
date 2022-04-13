@@ -25,7 +25,7 @@ Currently, need to install the full ioda-bundle.
 
 >git submodule update --init
 
-5. compile submodules 
+5. compile directories
 
 >cd add_jedi_incr
 >build.sh 
