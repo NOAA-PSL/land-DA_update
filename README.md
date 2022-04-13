@@ -30,7 +30,7 @@ Currently, need to install the full ioda-bundle.
 >cd add_jedi_incr
 >build.sh 
 >cd .. 
->cd IMSobsproc/
+>cd IMS_proc/
 >cd .. 
 >build.sh 
 

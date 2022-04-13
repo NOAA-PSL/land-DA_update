@@ -37,7 +37,7 @@ echo $JEDI_YAML
 
 # executable directories
 
-FIMS_EXECDIR=${SCRIPTDIR}/IMSobsproc/exec/   
+FIMS_EXECDIR=${SCRIPTDIR}/IMS_proc/exec/   
 INCR_EXECDIR=${SCRIPTDIR}/add_jedi_incr/exec/   
 
 # JEDI FV3 Bundle directories

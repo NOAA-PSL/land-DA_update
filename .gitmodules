@@ -1,4 +1,3 @@
-[submodule "IMSobsproc"]
-	path = IMSobsproc
-	url = https://github.com/ClaraDraper-NOAA/IMSobsproc.git
-        branch = RnR_workflow
+[submodule "IMS_proc"]
+	path = IMS_proc
+	url = https://github.com/noaa-psd/land-IMS_proc.git
