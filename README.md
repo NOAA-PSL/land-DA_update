@@ -4,7 +4,7 @@ For the noahMP land surface model.
 
 To install: 
 
-1. Install JEDI fv3-bundle. (specific version?) 
+1. Install JEDI fv3-bundle. Note: must be same version as Clara has on hera. 
 
 Follow instructions on website. 
 
