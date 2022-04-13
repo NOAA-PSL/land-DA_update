@@ -2,7 +2,3 @@
 	path = IMSobsproc
 	url = https://github.com/ClaraDraper-NOAA/IMSobsproc.git
         branch = RnR_workflow
-[submodule "AddJediIncr"]
-	path = AddJediIncr
-	url = https://github.com/ClaraDraper-NOAA/AddJediIncr.git
-        branch = RnR_workflow

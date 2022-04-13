@@ -1,5 +1,5 @@
-# landDA_workflow
-Workflow to perfrom the snow DA, to assimilate GHCN station snow depth and IMS snow cover obs, using the JEDI LETKF.
+# DA_update
+Scripts to perfrom the snow DA, to assimilate GHCN station snow depth and IMS snow cover obs, using the JEDI LETKF.
 For the noahMP land surface model.
 
 To install: 
@@ -27,7 +27,7 @@ Currently, need to install the full ioda-bundle.
 
 5. compile submodules 
 
->cd AddJediIncr/
+>cd add_jedi_incr
 >build.sh 
 >cd .. 
 >cd IMSobsproc/

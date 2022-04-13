@@ -17,5 +17,5 @@ setenv SBATCH_ACCOUNT $SLURM_ACCOUNT
 
 ######################################
 
-# needed for AddJediIncr
+# needed for add_jedi_incr
 module load netcdf

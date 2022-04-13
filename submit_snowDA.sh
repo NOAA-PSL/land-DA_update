@@ -23,6 +23,6 @@ NPROC_DA=6
 #NPROC_DA=96 
 source workflow_mods_bash 
 
-/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/AZworkflow/landDA_workflow/do_snowDA.sh 
+/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/AZworkflow/DA_update/do_snowDA.sh 
 
 

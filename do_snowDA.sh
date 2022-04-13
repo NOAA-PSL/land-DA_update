@@ -17,7 +17,7 @@
 # user directories
 
 WORKDIR=${WORKDIR:-"/scratch2/BMC/gsienkf/Clara.Draper/workdir/"}
-SCRIPTDIR=${DADIR:-"/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/AZworkflow/landDA_workflow/"}
+SCRIPTDIR=${DADIR:-"/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/AZworkflow/DA_update/"}
 OBSDIR=/scratch2/BMC/gsienkf/Clara.Draper/data_AZ/
 OUTDIR=${OUTDIR:-${SCRIPTDIR}/../output/} 
 LOGDIR=${OUTDIR}/DA/logs/
@@ -38,7 +38,7 @@ echo $JEDI_YAML
 # executable directories
 
 FIMS_EXECDIR=${SCRIPTDIR}/IMSobsproc/exec/   
-INCR_EXECDIR=${SCRIPTDIR}/AddJediIncr/exec/   
+INCR_EXECDIR=${SCRIPTDIR}/add_jedi_incr/exec/   
 
 # JEDI FV3 Bundle directories
 
