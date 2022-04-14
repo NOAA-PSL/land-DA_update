@@ -60,6 +60,7 @@ B=30  # back ground error std.
 SAVE_IMS="YES" # "YES" to save processed IMS IODA file
 SAVE_INCR="YES" # "YES" to save increment (add others?) JEDI output
 SAVE_TILE="NO" # "YES" to save background in tile space
+REDUCE_HOFX="YES" # "YES" to remove duplicate hofx files (one per processor)
 
 THISDATE=${THISDATE:-"2015090118"}
 
@@ -273,4 +274,12 @@ fi
 # keep increments
 if [ $SAVE_INCR == "YES" ] && [ $do_DA == "YES" ]; then
         cp ${WORKDIR}/${FILEDATE}.xainc.sfc_data.tile*.nc  ${OUTDIR}/DA/jedi_incr/
+fi 
+
+# keep only one copy of each hofx files
+if [ $REDUCE_HOFX == "YES" ] && [ $do_DA == "YES" ]; then
+       for file in $(ls ${OUTDIR}/DA/hofx/*${YYYY}${MM}${DD}*00[123456789].nc) 
+        do 
+        rm $file 
+        done
 fi 

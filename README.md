@@ -31,8 +31,8 @@ Currently, need to install the full ioda-bundle.
 >build.sh 
 >cd .. 
 >cd IMS_proc/
->cd .. 
 >build.sh 
+>cd .. 
 
 To submit stand-along (not as a part of cycleDA):
 6. Set your dates.
