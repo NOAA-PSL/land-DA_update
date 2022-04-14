@@ -11,7 +11,7 @@ geometry:
     - fieldset: Data/fieldsets/oro_data.yaml
 
 window begin: XXYYYP-XXMP-XXDPTXXHP:00:00Z
-window length: PT6H
+window length: PT12H
 
 state:
    datetime: XXYYYY-XXMM-XXDDTXXHH:00:00Z
