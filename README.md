@@ -34,7 +34,8 @@ Currently, need to install the full ioda-bundle.
 >build.sh 
 >cd .. 
 
-To submit stand-along (not as a part of cycleDA):
+To submit stand-alone (not as a part of cycleDA):
+
 6. Set your dates.
 >cp analdates.sh_keep analdates.sh 
 
