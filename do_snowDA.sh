@@ -18,7 +18,7 @@
 
 WORKDIR=${WORKDIR:-"/scratch2/BMC/gsienkf/Clara.Draper/workdir/"}
 SCRIPTDIR=${DADIR:-"/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/AZworkflow/DA_update/"}
-OBSDIR=/scratch2/BMC/gsienkf/Clara.Draper/data_AZ/
+OBSDIR=${OBSDIR:-"/scratch2/BMC/gsienkf/Clara.Draper/data_AZ/"}
 OUTDIR=${OUTDIR:-${SCRIPTDIR}/../output/} 
 LOGDIR=${OUTDIR}/DA/logs/
 #RSTRDIR=/scratch2/BMC/gsienkf/Clara.Draper/DA_test_cases/20191215_C48/ #C48
@@ -42,12 +42,12 @@ INCR_EXECDIR=${SCRIPTDIR}/add_jedi_incr/exec/
 
 # JEDI FV3 Bundle directories
 
-JEDI_EXECDIR=/scratch2/BMC/gsienkf/Clara.Draper/jedi/build/bin/
+JEDI_EXECDIR=${JEDI_EXECDIR:-"/scratch2/BMC/gsienkf/Clara.Draper/jedi/build/bin/"}
 JEDI_STATICDIR=${SCRIPTDIR}/jedi/fv3-jedi/Data/
 
 # JEDI IODA-converter bundle directories
 
-IODA_BUILD_DIR=/scratch2/BMC/gsienkf/Clara.Draper/jedi/src/ioda-bundle/build/
+IODA_BUILD_DIR=${IODA_BUILD_DIR:-"/scratch2/BMC/gsienkf/Clara.Draper/jedi/src/ioda-bundle/build/"}
 
 # EXPERIMENT SETTINGS
 
@@ -86,7 +86,7 @@ export MM=`echo $THISDATE | cut -c5-6`
 export DD=`echo $THISDATE | cut -c7-8`
 export HH=`echo $THISDATE | cut -c9-10`
 
-PREVDATE=`${INCDATE} $THISDATE -6`
+PREVDATE=`${INCDATE} $THISDATE -3`
 
 export YYYP=`echo $PREVDATE | cut -c1-4`
 export MP=`echo $PREVDATE | cut -c5-6`
@@ -136,8 +136,13 @@ echo $PATH
 
 # stage GTS
 if [[ $ASSIM_GTS == "YES" ]]; then
-ln -s $OBSDIR/GTS/data_proc/${YYYY}${MM}/adpsfc_snow_${YYYY}${MM}${DD}${HH}.nc4  gts_${YYYY}${MM}${DD}${HH}.nc
-fi 
+  export skip_DA=YES
+  obsfile=$OBSDIR/GTS/data_proc/${YYYY}${MM}/adpsfc_snow_${YYYY}${MM}${DD}${HH}.nc4
+  if [[ -e $obsfile ]]; then
+    ln -s $obsfile  gts_${YYYY}${MM}${DD}${HH}.nc
+    export skip_DA=NO
+  fi
+fi
 
 # stage GHCN
 if [[ $ASSIM_GHCN == "YES" ]]; then
@@ -187,7 +192,7 @@ fi
 # CREATE PSEUDO-ENSEMBLE
 ################################################
 
-if [[ $do_DA == "YES" ]]; then 
+if [[ $do_DA == "YES" && $skip_DA == "NO" ]]; then
 
     cp -r ${RSTRDIR} $WORKDIR/mem_pos
     cp -r ${RSTRDIR} $WORKDIR/mem_neg
@@ -227,7 +232,7 @@ ln -s $JEDI_STATICDIR Data
 echo 'snowDA: calling fv3-jedi' 
 
 # C48 and C96
-if [[ $do_DA == "YES" ]]; then
+if [[ $do_DA == "YES" && $skip_DA == "NO" ]]; then
 srun -n $NPROC_DA ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
 else  # h(x) only
 srun -n $NPROC_DA ${JEDI_EXECDIR}/fv3jedi_hofx_nomodel.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
@@ -237,7 +242,7 @@ fi
 # APPLY INCREMENT TO UFS RESTARTS 
 ################################################
 
-if [[ $do_DA == "YES" ]]; then 
+if [[ $do_DA == "YES" && $skip_DA == "NO" ]]; then
 
 cat << EOF > apply_incr_nml
 &noahmp_snow
@@ -272,14 +277,7 @@ if [ $SAVE_IMS == "YES"  ] && [ $ASSIM_IMS == "YES"  ]; then
 fi 
 
 # keep increments
-if [ $SAVE_INCR == "YES" ] && [ $do_DA == "YES" ]; then
+if [ $SAVE_INCR == "YES" ] && [ $do_DA == "YES" ] && [ $skip_DA == "NO" ]; then
         cp ${WORKDIR}/${FILEDATE}.xainc.sfc_data.tile*.nc  ${OUTDIR}/DA/jedi_incr/
 fi 
 
-# keep only one copy of each hofx files
-if [ $REDUCE_HOFX == "YES" ]; then
-       for file in $(ls ${OUTDIR}/DA/hofx/*${YYYY}${MM}${DD}*00[123456789].nc) 
-        do 
-        rm $file 
-        done
-fi 
