@@ -31,9 +31,12 @@ ASSIM_IMS=${ASSIM_IMS:-"YES"}
 ASSIM_GHCN=${ASSIM_GHCN:-"YES"} 
 ASSIM_GTS=${ASSIM_GTS:-"NO"}
 ASSIM_SYNTH=${ASSIM_SYNTH:-"NO"}
-do_DA=${do_DA:-"YES"} # no will calculate hofx only
-JEDI_YAML=${JEDI_YAML:-"letkf_snow_offline_IMS_GHCN_C96.yaml"} # IMS and GHCN
-echo $JEDI_YAML
+do_DA=${do_DA:-"YES"}
+do_hofx=${do_hofx:-"YES"}
+YAML_DA=${YAML_DA:-"letkf_snow_offline_IMS_GHCN_C96.yaml"} # IMS and GHCN
+YAML_HOFX=${YAML_HOFX:-"letkfoi_snow_offline_hofx_GHCN_C96.yaml"} 
+echo "DA_update, YAML_DA is ${YAML_DA}"
+echo "DA_update, YAML_HOFX is ${YAML_HOFX}"
 
 # executable directories
 
@@ -95,7 +98,14 @@ export HP=`echo $PREVDATE | cut -c9-10`
 
 FILEDATE=${YYYY}${MM}${DD}.${HH}0000
 
-DOY=$(date -d "${YYYY}-${MM}-${DD}" +%j)
+NEXTDAY=`${INCDATE} ${THISDATE} +24`
+export YYYN=`echo $NEXTDAY | cut -c1-4`
+export MN=`echo $NEXTDAY | cut -c5-6`
+export DN=`echo $NEXTDAY | cut -c7-8`
+
+DOY=$(date -d "${YYYN}-${MN}-${DN}" +%j)
+echo DOY is ${DOY}
+
 
 if [[ ! -e ${WORKDIR}/output ]]; then
 ln -s ${OUTDIR} ${WORKDIR}/output
@@ -124,15 +134,9 @@ ln -s ${RSTRDIR}/${FILEDATE}.coupler.res ${WORKDIR}/${FILEDATE}.coupler.res
 export PYTHONPATH="${IODA_BUILD_DIR}/lib/pyiodaconv":"${IODA_BUILD_DIR}/lib/python3.6/pyioda"
 
 # use a different version of python for ioda converter (keep for create_ensemble, as latter needs netCDF4)
-echo "BEFORE"
-echo $PATH 
 PATH_BACKUP=$PATH
 module load intelpython/3.6.8 
-echo "AFTER" 
-echo $PATH
 export PATH=$PATH:${PATH_BACKUP}
-echo "FIXED" 
-echo $PATH
 
 # stage GTS
 if [[ $ASSIM_GTS == "YES" ]]; then
@@ -209,28 +213,51 @@ fi
 # switch back to orional python for fv3-jedi
 module load intelpython/2021.3.0
 
-# prepare namelist
-cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/$JEDI_YAML ${WORKDIR}/letkf_snow.yaml
+# prepare namelist for DA 
+if [ $do_DA == "YES" ]; then
 
-sed -i -e "s/XXYYYY/${YYYY}/g" letkf_snow.yaml
-sed -i -e "s/XXMM/${MM}/g" letkf_snow.yaml
-sed -i -e "s/XXDD/${DD}/g" letkf_snow.yaml
-sed -i -e "s/XXHH/${HH}/g" letkf_snow.yaml
+    cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/$YAML_DA ${WORKDIR}/letkf_snow.yaml
 
-sed -i -e "s/XXYYYP/${YYYP}/g" letkf_snow.yaml
-sed -i -e "s/XXMP/${MP}/g" letkf_snow.yaml
-sed -i -e "s/XXDP/${DP}/g" letkf_snow.yaml
-sed -i -e "s/XXHP/${HP}/g" letkf_snow.yaml
+    sed -i -e "s/XXYYYY/${YYYY}/g" letkf_snow.yaml
+    sed -i -e "s/XXMM/${MM}/g" letkf_snow.yaml
+    sed -i -e "s/XXDD/${DD}/g" letkf_snow.yaml
+    sed -i -e "s/XXHH/${HH}/g" letkf_snow.yaml
 
-ln -s $JEDI_STATICDIR Data 
+    sed -i -e "s/XXYYYP/${YYYP}/g" letkf_snow.yaml
+    sed -i -e "s/XXMP/${MP}/g" letkf_snow.yaml
+    sed -i -e "s/XXDP/${DP}/g" letkf_snow.yaml
+    sed -i -e "s/XXHP/${HP}/g" letkf_snow.yaml
+
+fi 
+
+if [ $do_hofx == "YES" ]; then 
+
+    cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/$YAML_HOFX ${WORKDIR}/hofx_snow.yaml
+
+    sed -i -e "s/XXYYYY/${YYYY}/g" hofx_snow.yaml
+    sed -i -e "s/XXMM/${MM}/g" hofx_snow.yaml
+    sed -i -e "s/XXDD/${DD}/g" hofx_snow.yaml
+    sed -i -e "s/XXHH/${HH}/g" hofx_snow.yaml
+
+    sed -i -e "s/XXYYYP/${YYYP}/g" hofx_snow.yaml
+    sed -i -e "s/XXMP/${MP}/g" hofx_snow.yaml
+    sed -i -e "s/XXDP/${DP}/g" hofx_snow.yaml
+    sed -i -e "s/XXHP/${HP}/g" hofx_snow.yaml
+
+fi
+
+# add an if statement here
+if [[ ! -e Data ]]; then
+    ln -s $JEDI_STATICDIR Data 
+fi
 
 echo 'snowDA: calling fv3-jedi' 
 
-# C48 and C96
 if [[ $do_DA == "YES" ]]; then
 srun -n $NPROC_DA ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
-else  # h(x) only
-srun -n $NPROC_DA ${JEDI_EXECDIR}/fv3jedi_hofx_nomodel.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
+fi 
+if [[ $do_hofx == "YES" ]]; then  
+srun -n $NPROC_DA ${JEDI_EXECDIR}/fv3jedi_hofx_nomodel.x hofx_snow.yaml ${LOGDIR}/jedi_hofx.log
 fi 
 
 ################################################
@@ -277,7 +304,7 @@ if [ $SAVE_INCR == "YES" ] && [ $do_DA == "YES" ]; then
 fi 
 
 # keep only one copy of each hofx files
-if [ $REDUCE_HOFX == "YES" ]; then
+if [ $REDUCE_HOFX == "YES" ] && [ $do_hofx == "YES" ]; then
        for file in $(ls ${OUTDIR}/DA/hofx/*${YYYY}${MM}${DD}*00[123456789].nc) 
         do 
         rm $file 
