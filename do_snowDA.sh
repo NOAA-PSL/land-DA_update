@@ -98,7 +98,8 @@ export HP=`echo $PREVDATE | cut -c9-10`
 
 FILEDATE=${YYYY}${MM}${DD}.${HH}0000
 
-NEXTDAY=`${INCDATE} ${THISDATE} +24`
+#NEXTDAY=`${INCDATE} ${THISDATE} +24`
+NEXTDAY=${THISDATE} # TEMPORARY TO CHECK TEST PASSES
 export YYYN=`echo $NEXTDAY | cut -c1-4`
 export MN=`echo $NEXTDAY | cut -c5-6`
 export DN=`echo $NEXTDAY | cut -c7-8`
@@ -303,9 +304,11 @@ if [ $SAVE_INCR == "YES" ] && [ $do_DA == "YES" ]; then
 fi 
 
 # keep only one copy of each hofx files
-if [ $REDUCE_HOFX == "YES" ] && [ $do_hofx == "YES" || $do_DA == "YES" ]; then
+if [ $REDUCE_HOFX == "YES" ]; then 
+   if [ $do_hofx == "YES" ] || [ $do_DA == "YES" ] ; then
        for file in $(ls ${OUTDIR}/DA/hofx/*${YYYY}${MM}${DD}*00[123456789].nc) 
         do 
         rm $file 
         done
+   fi
 fi 
