@@ -246,7 +246,6 @@ if [ $do_hofx == "YES" ]; then
 
 fi
 
-# add an if statement here
 if [[ ! -e Data ]]; then
     ln -s $JEDI_STATICDIR Data 
 fi
@@ -304,7 +303,7 @@ if [ $SAVE_INCR == "YES" ] && [ $do_DA == "YES" ]; then
 fi 
 
 # keep only one copy of each hofx files
-if [ $REDUCE_HOFX == "YES" ] && [ $do_hofx == "YES" ]; then
+if [ $REDUCE_HOFX == "YES" ] && [ $do_hofx == "YES" || $do_DA == "YES" ]; then
        for file in $(ls ${OUTDIR}/DA/hofx/*${YYYY}${MM}${DD}*00[123456789].nc) 
         do 
         rm $file 
