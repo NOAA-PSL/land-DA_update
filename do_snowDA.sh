@@ -18,7 +18,7 @@
 
 WORKDIR=${WORKDIR:-"/scratch2/BMC/gsienkf/Clara.Draper/workdir/"}
 SCRIPTDIR=${DADIR:-"/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/AZworkflow/DA_update/"}
-OBSDIR=/scratch2/BMC/gsienkf/Clara.Draper/data_AZ/
+OBSDIR=${OBSDIR:-"/scratch2/NCEPDEV/land/data/DA/"}
 OUTDIR=${OUTDIR:-${SCRIPTDIR}/../output/} 
 LOGDIR=${OUTDIR}/DA/logs/
 #RSTRDIR=/scratch2/BMC/gsienkf/Clara.Draper/DA_test_cases/20191215_C48/ #C48
@@ -141,12 +141,12 @@ export PATH=$PATH:${PATH_BACKUP}
 
 # stage GTS
 if [[ $ASSIM_GTS == "YES" ]]; then
-ln -s $OBSDIR/GTS/data_proc/${YYYY}${MM}/adpsfc_snow_${YYYY}${MM}${DD}${HH}.nc4  gts_${YYYY}${MM}${DD}${HH}.nc
+ln -s $OBSDIR/snow_depth/GTS/data_proc/${YYYY}${MM}/adpsfc_snow_${YYYY}${MM}${DD}${HH}.nc4  gts_${YYYY}${MM}${DD}${HH}.nc
 fi 
 
 # stage GHCN
 if [[ $ASSIM_GHCN == "YES" ]]; then
-ln  -s $OBSDIR/GHCN/data_proc/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc  ghcn_${YYYY}${MM}${DD}.nc
+ln  -s $OBSDIR/snow_depth/GHCN/data_proc/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc  ghcn_${YYYY}${MM}${DD}.nc
 fi 
 
 # stage synthetic obs.
@@ -158,13 +158,21 @@ fi
 
 if [[ $ASSIM_IMS == "YES" ]]; then
 
+if [[ $NEXTDAY -gt 2014120200 ]]; then
+        ims_vsn=1.3 
+else
+        ims_vsn=1.2 
+fi
+
 cat >> fims.nml << EOF
  &fIMS_nml
   idim=$RES, jdim=$RES,
   jdate=${YYYY}${DOY},
   yyyymmdd=${YYYY}${MM}${DD},
-  IMS_OBS_PATH="${OBSDIR}/IMS/data_in/${YYYY}/",
-  IMS_IND_PATH="${OBSDIR}/IMS/index_files/"
+  imsformat=2,
+  imsversion=${ims_vsn},
+  IMS_OBS_PATH="${OBSDIR}/snow_ice_cover/IMS/${YYYY}/",
+  IMS_IND_PATH="${OBSDIR}/snow_ice_cover/IMS/index_files/"
   /
 EOF
 
