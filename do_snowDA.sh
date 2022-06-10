@@ -195,7 +195,7 @@ EOF
         exit 10
     fi
  
-    IMS_IODA=imsfv3_scf2iodai_obs40.py
+    IMS_IODA=imsfv3_scf2ioda_obs40.py
     cp ${SCRIPTDIR}/jedi/ioda/${IMS_IODA} $WORKDIR
 
     echo 'snowDA: calling ioda converter' 
