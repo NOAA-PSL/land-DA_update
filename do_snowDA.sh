@@ -38,6 +38,10 @@ YAML_HOFX=${YAML_HOFX:-"letkfoi_snow_offline_hofx_GHCN_C96.yaml"}
 echo "DA_update, YAML_DA is ${YAML_DA}"
 echo "DA_update, YAML_HOFX is ${YAML_HOFX}"
 
+# IMS data in file is from day before the file's time stamp 
+IMStiming=FILEDATE # FILEDATE - use IMS data for file's time stamp =THISDATE (NRT option) 
+                   # OBSDATE  - use IMS data for observation time stamp = THISDATE (hindcast option)
+
 # executable directories
 
 FIMS_EXECDIR=${SCRIPTDIR}/IMS_proc/exec/   
@@ -98,11 +102,18 @@ export HP=`echo $PREVDATE | cut -c9-10`
 
 FILEDATE=${YYYY}${MM}${DD}.${HH}0000
 
-#NEXTDAY=`${INCDATE} ${THISDATE} +24`
-NEXTDAY=${THISDATE} # TEMPORARY TO CHECK TEST PASSES
-export YYYN=`echo $NEXTDAY | cut -c1-4`
-export MN=`echo $NEXTDAY | cut -c5-6`
-export DN=`echo $NEXTDAY | cut -c7-8`
+if [[ $IMStiming == "FILEDATE" ]]; then 
+        IMSDAY=${THISDATE} 
+elif [[ $IMStiming == "OBSDATE" ]]; then
+        IMSDAY=`${INCDATE} ${THISDATE} +24`
+else
+        echo 'UNKNOWN IMStiming selection, exiting' 
+        exit 10 
+fi
+
+export YYYN=`echo $IMSDAY | cut -c1-4`
+export MN=`echo $IMSDAY | cut -c5-6`
+export DN=`echo $IMSDAY | cut -c7-8`
 
 DOY=$(date -d "${YYYN}-${MN}-${DN}" +%j)
 echo DOY is ${DOY}
@@ -158,7 +169,7 @@ fi
 
 if [[ $ASSIM_IMS == "YES" ]]; then
 
-if [[ $NEXTDAY -gt 2014120200 ]]; then
+if [[ $IMSDAY -gt 2014120200 ]]; then
         ims_vsn=1.3 
 else
         ims_vsn=1.2 
