@@ -39,7 +39,7 @@ echo "DA_update, YAML_DA is ${YAML_DA}"
 echo "DA_update, YAML_HOFX is ${YAML_HOFX}"
 
 # IMS data in file is from day before the file's time stamp 
-IMStiming=FILEDATE # FILEDATE - use IMS data for file's time stamp =THISDATE (NRT option) 
+IMStiming=OBSDATE # FILEDATE - use IMS data for file's time stamp =THISDATE (NRT option) 
                    # OBSDATE  - use IMS data for observation time stamp = THISDATE (hindcast option)
 
 # executable directories
@@ -194,12 +194,13 @@ EOF
         echo "fIMS failed"
         exit 10
     fi
-
-    cp ${SCRIPTDIR}/jedi/ioda/imsfv3_scf2ioda.py $WORKDIR
+ 
+    IMS_IODA=imsfv3_scf2iodai_obs40.py
+    cp ${SCRIPTDIR}/jedi/ioda/${IMS_IODA} $WORKDIR
 
     echo 'snowDA: calling ioda converter' 
 
-    python imsfv3_scf2ioda.py -i IMSscf.${YYYY}${MM}${DD}.C${RES}.nc -o ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc 
+    python ${IMS_IODA} -i IMSscf.${YYYY}${MM}${DD}.C${RES}.nc -o ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc 
     if [[ $? != 0 ]]; then
         echo "IMS IODA converter failed"
         exit 10
