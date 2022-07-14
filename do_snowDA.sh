@@ -157,7 +157,7 @@ fi
 
 # stage GHCN
 if [[ $ASSIM_GHCN == "YES" ]]; then
-ln  -s $OBSDIR/snow_depth/GHCN/data_proc/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc  ghcn_${YYYY}${MM}${DD}.nc
+ln  -s $OBSDIR/snow_depth/GHCN/data_proc/${YYYY}/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc  ghcn_${YYYY}${MM}${DD}.nc
 fi 
 
 # stage synthetic obs.
