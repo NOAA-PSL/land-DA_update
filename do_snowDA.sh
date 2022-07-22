@@ -27,10 +27,10 @@ LOGDIR=${OUTDIR}/DA/logs/
 RSTRDIR=$WORKDIR/restarts/tile # is running offline cycling will be here
 
 # DA options (select "YES" to assimilate)
-ASSIM_IMS=${ASSIM_IMS:-"YES"}
-ASSIM_GHCN=${ASSIM_GHCN:-"YES"} 
-ASSIM_GTS=${ASSIM_GTS:-"NO"}
-ASSIM_SYNTH=${ASSIM_SYNTH:-"NO"}
+DA_IMS=${DA_IMS:-"YES"}
+DA_GHCN=${DA_GHCN:-"YES"} 
+DA_GTS=${DA_GTS:-"NO"}
+DA_SYNTH=${DA_SYNTH:-"NO"}
 do_DA=${do_DA:-"YES"}
 do_hofx=${do_hofx:-"YES"}
 YAML_DA=${YAML_DA:-"letkf_snow_offline_IMS_GHCN_C96.yaml"} # IMS and GHCN
@@ -152,7 +152,7 @@ export PATH=$PATH:${PATH_BACKUP}
 
 # stage GTS
 export SKIP_GTS=YES
-if [[ $ASSIM_GTS == "YES" ]]; then
+if [[ $DA_GTS == "YES" ]]; then
   obsfile=$OBSDIR/GTS/data_proc/${YYYY}${MM}/adpsfc_snow_${YYYY}${MM}${DD}${HH}.nc4
 
   if [[ -e $obsfile ]]; then
@@ -163,7 +163,7 @@ fi
 
 # stage GHCN
 export SKIP_GHCN=YES
-if [[ $ASSIM_GHCN == "YES" ]]; then
+if [[ $DA_GHCN == "YES" ]]; then
   obsfile=$OBSDIR/GHCN/data_proc/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc
   if [[ -e $obsfile ]]; then
     ln -s $obsfile  ghcn_${YYYY}${MM}${DD}.nc
@@ -173,7 +173,7 @@ fi
 
 # stage synthetic obs.
 export SKIP_SYNTH=YES
-if [[ $ASSIM_SYNTH == "YES" ]]; then
+if [[ $DA_SYNTH == "YES" ]]; then
   obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}18.nc
   if [[ -e $obsfile ]]; then
     ln -s $obsfile  synth_${YYYY}${MM}${DD}.nc
@@ -183,7 +183,7 @@ fi
 
 # prepare IMS
 export SKIP_IMS=YES
-if [[ $ASSIM_IMS == "YES" ]]; then
+if [[ $DA_IMS == "YES" ]]; then
 
   if [[ $IMSDAY -gt 2014120200 ]]; then
         ims_vsn=1.3 
