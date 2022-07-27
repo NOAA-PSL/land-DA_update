@@ -72,6 +72,12 @@ observations:
         name: vtype@GeoVaLs
       minvalue: 14.5
       maxvalue: 15.5
+  - filter: Background Check # gross error check
+    filter variables:
+    - name: totalSnowDepth
+    threshold: 6.25
+    action:
+      name: reject
 
 driver:
   save posterior mean: false
