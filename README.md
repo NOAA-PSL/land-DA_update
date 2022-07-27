@@ -4,16 +4,19 @@ For the noahMP land surface model.
 
 To install: 
 
-1. Install JEDI fv3-bundle. Note: must be same version as Clara has on hera. 
+1. OPTIONAL: Install JEDI fv3-bundle and IODA converters (only if will modifying it, otherwise use the default installation). 
+
+Note: For tests to pass, must be same version as Clara has on hera. 
 
 Follow instructions on website. 
 
-2. If doing IMS assimilation: install JEDI IODA-converters: 
+** As of 11/24/2021, instructions in the JEDI documentation  for the IODA converters don't work (python problem, need to use own version of python with packages installed locally). See instructions below.
 
-Currently, need to install the full ioda-bundle.
-** As of 11/24/2021, instructions in the JEDI documentation don't work (python problem, need to use own version of python with packages installed locally). See instructions below.
+2. Link to JEDI files: 
 
-3. Link to JEDI files: 
+default: 
+path-to-jedi-fv3-bundle-build=/scratch2/BMC/gsienkf/Clara.Draper/jedi/build/
+path-to-jedi-ioda-bundle-src=/scratch2/BMC/gsienkf/Clara.Draper/jedi/src/ioda-bundle
 
 >cd jedi/fv3-jedi/Data 
 >make_links.sh path-to-jedi-fv3-bundle-build  
@@ -21,11 +24,11 @@ Currently, need to install the full ioda-bundle.
 >make_links.sh path-to-jedi-ioda-bundle-src
 >cd ../../../
 
-4. Fetch submodules
+3. Fetch submodules
 
 >git submodule update --init
 
-5. compile directories
+4. compile directories
 
 >cd add_jedi_incr
 >build.sh 
@@ -34,9 +37,9 @@ Currently, need to install the full ioda-bundle.
 >build.sh 
 >cd .. 
 
-To submit stand-alone (not as a part of cycleDA):
+To submit stand-alone (not as a part of cycleDA - probably doesn't work at the moment): 
 
-6. Set your dates.
+5. Set your dates.
 >cp analdates.sh_keep analdates.sh 
 
 Then edit start and end dates.
