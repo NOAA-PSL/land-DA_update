@@ -27,10 +27,14 @@ LOGDIR=${OUTDIR}/DA/logs/
 RSTRDIR=$WORKDIR/restarts/tile # is running offline cycling will be here
 
 # DA options (select "YES" to assimilate)
-ASSIM_IMS=${ASSIM_IMS:-"YES"}
-ASSIM_GHCN=${ASSIM_GHCN:-"YES"} 
-ASSIM_GTS=${ASSIM_GTS:-"NO"}
-ASSIM_SYNTH=${ASSIM_SYNTH:-"NO"}
+DA_IMS=${DA_IMS:-"YES"}
+DA_GHCN=${DA_GHCN:-"YES"} 
+DA_GTS=${DA_GTS:-"NO"}
+DA_SYNTH=${DA_SYNTH:-"NO"}
+HOFX_IMS=${HOFX_IMS:-"NO"}
+HOFX_GHCN=${HOFX_GHCN:-"NO"}
+HOFX_GTS=${HOFX_GTS:-"NO"}
+HOFX_SYNTH=${HOFX_SYNTH:-"NO"}
 do_DA=${do_DA:-"YES"}
 do_hofx=${do_hofx:-"YES"}
 YAML_DA=${YAML_DA:-"letkf_snow_offline_IMS_GHCN_C96.yaml"} # IMS and GHCN
@@ -49,12 +53,12 @@ INCR_EXECDIR=${SCRIPTDIR}/add_jedi_incr/exec/
 
 # JEDI FV3 Bundle directories
 
-JEDI_EXECDIR=/scratch2/BMC/gsienkf/Clara.Draper/jedi/build/bin/
+JEDI_EXECDIR=${JEDI_EXECDIR:-"/scratch2/BMC/gsienkf/Clara.Draper/jedi/build/bin/"}
 JEDI_STATICDIR=${SCRIPTDIR}/jedi/fv3-jedi/Data/
 
 # JEDI IODA-converter bundle directories
 
-IODA_BUILD_DIR=/scratch2/BMC/gsienkf/Clara.Draper/jedi/src/ioda-bundle/build/
+IODA_BUILD_DIR=${IODA_BUILD_DIR:-"/scratch2/BMC/gsienkf/Clara.Draper/jedi/src/ioda-bundle/build/"}
 
 # EXPERIMENT SETTINGS
 
@@ -151,29 +155,54 @@ module load intelpython/3.6.8
 export PATH=$PATH:${PATH_BACKUP}
 
 # stage GTS
-if [[ $ASSIM_GTS == "YES" ]]; then
-ln -s $OBSDIR/snow_depth/GTS/data_proc/${YYYY}${MM}/adpsfc_snow_${YYYY}${MM}${DD}${HH}.nc4  gts_${YYYY}${MM}${DD}${HH}.nc
+export GTS_AVAIL=NO
+if [[ $DA_GTS == "YES" || $HOFX_GTS == "YES" ]]; then
+  obsfile=$OBSDIR/snow_depth/GTS/data_proc/${YYYY}${MM}/adpsfc_snow_${YYYY}${MM}${DD}${HH}.nc4
+
+  if [[ -e $obsfile ]]; then
+    ln -s $obsfile  gts_${YYYY}${MM}${DD}${HH}.nc
+    export GTS_AVAIL=YES
+    echo "GTS observations found: $obsfile"
+  else
+    echo "GTS observations not found: $obsfile"
+  fi
 fi 
 
 # stage GHCN
-if [[ $ASSIM_GHCN == "YES" ]]; then
-ln  -s $OBSDIR/snow_depth/GHCN/data_proc/${YYYY}/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc  ghcn_${YYYY}${MM}${DD}.nc
+export GHCN_AVAIL=NO
+if [[ $DA_GHCN == "YES" || $HOFX_GHCD == "YES" ]]; then
+  obsfile=$OBSDIR/snow_depth/GHCN/data_proc/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc
+  if [[ -e $obsfile ]]; then
+    ln -s $obsfile  ghcn_${YYYY}${MM}${DD}.nc
+    export GHCN_AVAIL=YES
+    echo "GHCN observations found: $obsfile"
+  else
+    echo "GHCN observations not found: $obsfile"
+  fi
 fi 
 
 # stage synthetic obs.
-if [[ $ASSIM_SYNTH == "YES" ]]; then
-ln -s $OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}18.nc  synth_${YYYY}${MM}${DD}.nc
+export SYNTH_AVAIL=NO
+if [[ $DA_SYNTH == "YES" || $HOFX_SYNTH == "YES" ]]; then
+  obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}18.nc
+  if [[ -e $obsfile ]]; then
+    ln -s $obsfile  synth_${YYYY}${MM}${DD}.nc
+    export SYNTH_AVAIL=YES
+    echo "SYNTH observations found: $obsfile"
+  else
+    echo "SYNTH observations not found: $obsfile"
+  fi
 fi 
 
 # prepare IMS
+export IMS_AVAIL=NO
+if [[ $DA_IMS == "YES" || $HOFX_IMS == "YES" ]]; then
 
-if [[ $ASSIM_IMS == "YES" ]]; then
-
-if [[ $IMSDAY -gt 2014120200 ]]; then
+  if [[ $IMSDAY -gt 2014120200 ]]; then
         ims_vsn=1.3 
-else
+  else
         ims_vsn=1.2 
-fi
+  fi
 
 cat >> fims.nml << EOF
  &fIMS_nml
@@ -187,6 +216,16 @@ cat >> fims.nml << EOF
   /
 EOF
 
+  obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_4km_v${ims_vsn}.nc
+  if [[ -e $obsfile && $HH == "18" ]]; then
+    cp $obsfile  IMSscf.${YYYY}${MM}${DD}.C${RES}.nc
+    export IMS_AVAIL=YES
+    echo "IMS observations found: $obsfile"
+  else
+    echo "IMS observations not found: $obsfile"
+  fi
+
+  if [[ $IMS_AVAIL == "YES" ]]; then
     echo 'snowDA: calling fIMS'
 
     ${FIMS_EXECDIR}/calcfIMS
@@ -206,13 +245,39 @@ EOF
         exit 10
     fi
 
+  fi
 fi
+############################
+# create the jedi yaml name
+
+   # construct yaml name
+   if [ $do_DA == "YES" ]; then
+        YAML_DA=${DAtype}"_offline_DA"
+   elif [ $do_hofx == "YES" ]; then
+        YAML_DA=${DAtype}"_offline_hofx"
+   fi
+
+   if [ $IMS_AVAIL == "YES" ]; then YAML_DA=${YAML_DA}"_IMS" ; fi
+   if [ $GHCN_AVAIL == "YES" ]; then YAML_DA=${YAML_DA}"_GHCN" ; fi
+   if [ $SYNTH_AVAIL == "YES" ]; then YAML_DA=${YAML_DA}"_SYNTH"; fi
+   if [ $GTS_AVAIL == "YES" ]; then YAML_DA=${YAML_DA}"_GTS" ; fi
+
+   YAML_DA=${YAML_DA}"_C${RES}.yaml"
+
+   echo "JEDI YAML is: "$YAML_DA
+
+   export skip_DA=NO
+   if [[ ! -e ${DADIR}/jedi/fv3-jedi/yaml_files/$YAML_DA ]]; then
+        echo "YAML does not exist, skip DA"
+        export skip_DA=YES
+   fi
+   if [ $skip_DA == "NO" ]; then export YAML_DA ; fi
 
 ################################################
 # CREATE PSEUDO-ENSEMBLE
 ################################################
 
-if [[ $do_DA == "YES" ]]; then 
+if [[ $skip_DA == "NO" ]]; then 
 
     cp -r ${RSTRDIR} $WORKDIR/mem_pos
     cp -r ${RSTRDIR} $WORKDIR/mem_neg
@@ -235,7 +300,7 @@ fi
 module load intelpython/2021.3.0
 
 # prepare namelist for DA 
-if [ $do_DA == "YES" ]; then
+if [[ $do_DA == "YES" && $skip_DA == "NO" ]]; then
 
     cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/$YAML_DA ${WORKDIR}/letkf_snow.yaml
 
@@ -251,7 +316,7 @@ if [ $do_DA == "YES" ]; then
 
 fi 
 
-if [ $do_hofx == "YES" ]; then 
+if [[ $do_hofx == "YES" && $skip_DA == "NO" ]]; then 
 
     cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/$YAML_HOFX ${WORKDIR}/hofx_snow.yaml
 
@@ -273,10 +338,10 @@ fi
 
 echo 'snowDA: calling fv3-jedi' 
 
-if [[ $do_DA == "YES" ]]; then
+if [[ $do_DA == "YES" && $skip_DA == "NO" ]]; then
 srun -n $NPROC_DA ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
 fi 
-if [[ $do_hofx == "YES" ]]; then  
+if [[ $do_hofx == "YES" && $skip_DA == "NO" ]]; then  
 srun -n $NPROC_DA ${JEDI_EXECDIR}/fv3jedi_hofx_nomodel.x hofx_snow.yaml ${LOGDIR}/jedi_hofx.log
 fi 
 
@@ -284,7 +349,7 @@ fi
 # APPLY INCREMENT TO UFS RESTARTS 
 ################################################
 
-if [[ $do_DA == "YES" ]]; then 
+if [[ $skip_DA == "NO" ]]; then 
 
 cat << EOF > apply_incr_nml
 &noahmp_snow
@@ -317,18 +382,18 @@ done
 fi 
 
 # keep IMS IODA file
-if [ $SAVE_IMS == "YES"  ] && [ $ASSIM_IMS == "YES"  ]; then
+if [ $SAVE_IMS == "YES"  ] && [ $IMS_AVAIL == "YES" ]; then
         cp ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ${OUTDIR}/DA/IMSproc/
 fi 
 
 # keep increments
-if [ $SAVE_INCR == "YES" ] && [ $do_DA == "YES" ]; then
+if [ $SAVE_INCR == "YES" ] && [ $skip_DA == "NO" ]; then
         cp ${WORKDIR}/${FILEDATE}.xainc.sfc_data.tile*.nc  ${OUTDIR}/DA/jedi_incr/
 fi 
 
 # keep only one copy of each hofx files
 if [ $REDUCE_HOFX == "YES" ]; then 
-   if [ $do_hofx == "YES" ] || [ $do_DA == "YES" ] ; then
+   if [ $do_hofx == "YES" ] || [ $skip_DA == "NO" ] ; then
        for file in $(ls ${OUTDIR}/DA/hofx/*${YYYY}${MM}${DD}*00[123456789].nc) 
         do 
         rm $file 
