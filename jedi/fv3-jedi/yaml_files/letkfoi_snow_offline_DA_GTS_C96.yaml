@@ -1,3 +1,6 @@
+######################################################
+#this yaml won't work until JEDI has been updated
+######################################################
 geometry:
   fms initialization:
     namelist filename: Data/fv3files/fmsmpp.nml

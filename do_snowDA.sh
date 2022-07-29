@@ -250,58 +250,57 @@ fi
 ############################
 # create the jedi yaml name
 
-   # construct yaml name
-   if [ $do_DA == "YES" ]; then
-        YAML_DA=${DAtype}"_offline_DA"
-   fi
-   if [ $do_hofx == "YES" ]; then
-        YAML_HOFX=${DAtype}"_offline_hofx"
-   fi
+# construct yaml name
+if [ $do_DA == "YES" ]; then
+     YAML_DA=${DAtype}"_offline_DA"
+fi
+if [ $do_hofx == "YES" ]; then
+     YAML_HOFX=${DAtype}"_offline_hofx"
+fi
 
-   if [ $do_DA == "YES" ]; then
-       if [ $IMS_AVAIL == "YES" ]; then YAML_DA=${YAML_DA}"_IMS" ; fi
-       if [ $GHCN_AVAIL == "YES" ]; then YAML_DA=${YAML_DA}"_GHCN" ; fi
-       if [ $SYNTH_AVAIL == "YES" ]; then YAML_DA=${YAML_DA}"_SYNTH"; fi
-       if [ $GTS_AVAIL == "YES" ]; then YAML_DA=${YAML_DA}"_GTS" ; fi
-   fi
+if [ $do_DA == "YES" ]; then
+     if [ $IMS_AVAIL == "YES" ]; then YAML_DA=${YAML_DA}"_IMS" ; fi
+     if [ $GHCN_AVAIL == "YES" ]; then YAML_DA=${YAML_DA}"_GHCN" ; fi
+     if [ $SYNTH_AVAIL == "YES" ]; then YAML_DA=${YAML_DA}"_SYNTH"; fi
+     if [ $GTS_AVAIL == "YES" ]; then YAML_DA=${YAML_DA}"_GTS" ; fi
+fi
 
-   if [ $do_hofx == "YES" ]; then
-       if [ $IMS_AVAIL == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_IMS" ; fi
-       if [ $GHCN_AVAIL == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_GHCN" ; fi
-       if [ $SYNTH_AVAIL == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_SYNTH"; fi
-       if [ $GTS_AVAIL == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_GTS" ; fi
-   fi
+if [ $do_hofx == "YES" ]; then
+     if [ $IMS_AVAIL == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_IMS" ; fi
+     if [ $GHCN_AVAIL == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_GHCN" ; fi
+     if [ $SYNTH_AVAIL == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_SYNTH"; fi
+     if [ $GTS_AVAIL == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_GTS" ; fi
+fi
 
-   YAML_DA=${YAML_DA}"_C${RES}.yaml"
-   YAML_HOFX=${YAML_HOFX}"_C96.yaml"
+YAML_DA=${YAML_DA}"_C${RES}.yaml"
+YAML_HOFX=${YAML_HOFX}"_C96.yaml"
 
-   # if yamls specified in namelist, use those
-   YAML_DA=${YAML_DA_SPEC:-$YAML_DA}
-   YAML_HOFX=${YAML_HOFX_SPEC:-$YAML_HOFX}
-   export skip_DA=NO
-   if [ $do_DA == "YES" ]; then
-        echo "JEDI_YAML for DA "$YAML_DA
-        if [[ ! -e ${DADIR}/jedi/fv3-jedi/yaml_files/$YAML_DA ]]; then
-            echo "DA YAML does not exist, skip DA"
-            export skip_DA=YES
-        fi
-        if [ $skip_DA == "NO" ]; then export YAML_DA ; fi
-   fi
-   export skip_HOFX=NO
-   if [ $do_hofx == "YES" ]; then
-        echo "JEDI_YAML for hofx "$YAML_HOFX
-        if [[ ! -e ${DADIR}/jedi/fv3-jedi/yaml_files/$YAML_HOFX ]]; then
-            echo "HOFX YAML does not exist, skip HOFX"
-            export skip_HOFX=YES
-        fi
-        if [ $skip_HOFX == "NO" ]; then export YAML_HOFX ; fi
-   fi
+# if yamls specified in namelist, use those
+YAML_DA=${YAML_DA_SPEC:-$YAML_DA}
+YAML_HOFX=${YAML_HOFX_SPEC:-$YAML_HOFX}
+export OBS_AVAIL=YES
+if [ $do_DA == "YES" ]; then
+     echo "JEDI_YAML for DA "$YAML_DA
+     if [[ ! -e ${DADIR}/jedi/fv3-jedi/yaml_files/$YAML_DA ]]; then
+         echo "DA YAML does not exist, skip DA"
+         export OBS_AVAIL=NO
+     fi
+     if [ $OBS_AVAIL == "YES" ]; then export YAML_DA ; fi
+fi
+if [ $do_hofx == "YES" ]; then
+     echo "JEDI_YAML for hofx "$YAML_HOFX
+     if [[ ! -e ${DADIR}/jedi/fv3-jedi/yaml_files/$YAML_HOFX ]]; then
+         echo "HOFX YAML does not exist, skip HOFX"
+         export OBS_AVAIL=NO
+     fi
+     if [ $OBS_AVAIL == "YES" ]; then export YAML_HOFX ; fi
+fi
 
 ################################################
 # CREATE PSEUDO-ENSEMBLE
 ################################################
 
-if [[ $skip_DA == "NO" ]]; then 
+if [[ $do_DA == "YES" && $OBS_AVAIL == "YES" ]]; then 
 
     cp -r ${RSTRDIR} $WORKDIR/mem_pos
     cp -r ${RSTRDIR} $WORKDIR/mem_neg
@@ -324,7 +323,7 @@ fi
 module load intelpython/2021.3.0
 
 # prepare namelist for DA 
-if [[ $do_DA == "YES" && $skip_DA == "NO" ]]; then
+if [[ $do_DA == "YES" && $OBS_AVAIL == "YES" ]]; then
 
     cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/$YAML_DA ${WORKDIR}/letkf_snow.yaml
 
@@ -340,7 +339,7 @@ if [[ $do_DA == "YES" && $skip_DA == "NO" ]]; then
 
 fi 
 
-if [[ $do_hofx == "YES" && $skip_HOFX == "NO" ]]; then 
+if [[ $do_hofx == "YES" && $OBS_AVAIL == "YES" ]]; then 
 
     cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/$YAML_HOFX ${WORKDIR}/hofx_snow.yaml
 
@@ -362,10 +361,10 @@ fi
 
 echo 'snowDA: calling fv3-jedi' 
 
-if [[ $do_DA == "YES" && $skip_DA == "NO" ]]; then
+if [[ $do_DA == "YES" && $OBS_AVAIL == "YES" ]]; then
 srun -n $NPROC_DA ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
 fi 
-if [[ $do_hofx == "YES" && $skip_HOFX == "NO" ]]; then  
+if [[ $do_hofx == "YES" && $OBS_AVAIL == "YES" ]]; then  
 srun -n $NPROC_DA ${JEDI_EXECDIR}/fv3jedi_hofx_nomodel.x hofx_snow.yaml ${LOGDIR}/jedi_hofx.log
 fi 
 
@@ -373,7 +372,7 @@ fi
 # APPLY INCREMENT TO UFS RESTARTS 
 ################################################
 
-if [[ $skip_DA == "NO" ]]; then 
+if [[ $do_DA == "YES" && $OBS_AVAIL == "YES" ]]; then 
 
 cat << EOF > apply_incr_nml
 &noahmp_snow
@@ -411,13 +410,13 @@ if [ $SAVE_IMS == "YES"  ] && [ $IMS_AVAIL == "YES" ]; then
 fi 
 
 # keep increments
-if [ $SAVE_INCR == "YES" ] && [ $skip_DA == "NO" ]; then
+if [ $SAVE_INCR == "YES" ] && [ $do_DA == "YES" ] && [ $OBS_AVAIL == "YES" ] ; then
         cp ${WORKDIR}/${FILEDATE}.xainc.sfc_data.tile*.nc  ${OUTDIR}/DA/jedi_incr/
 fi 
 
 # keep only one copy of each hofx files
 if [ $REDUCE_HOFX == "YES" ]; then 
-   if [ $do_hofx == "YES" ] || [ $skip_HOFX == "NO" ] ; then
+   if [ $do_hofx == "YES" ] || [ $OBS_AVAIL == "YES" ] ; then
        for file in $(ls ${OUTDIR}/DA/hofx/*${YYYY}${MM}${DD}*00[123456789].nc) 
         do 
         rm $file 
