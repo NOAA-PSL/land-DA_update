@@ -416,7 +416,7 @@ fi
 
 # keep only one copy of each hofx files
 if [ $REDUCE_HOFX == "YES" ]; then 
-   if [ $do_hofx == "YES" ] || [ $OBS_AVAIL == "YES" ] ; then
+   if [ $do_hofx == "YES" ] || [ $do_DA == "YES" ] ; then
        for file in $(ls ${OUTDIR}/DA/hofx/*${YYYY}${MM}${DD}*00[123456789].nc) 
         do 
         rm $file 
