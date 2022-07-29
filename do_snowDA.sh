@@ -1,6 +1,5 @@
-#!/bin/bash
+#!/bin/bash 
 
-# script to perform snow depth update for UFS. Includes: 
 # 1. staging and preparation of obs. 
 #    note: IMS obs prep currently requires model background, then conversion to IODA format
 # 2. creation of pseudo ensemble 
@@ -54,7 +53,7 @@ INCR_EXECDIR=${SCRIPTDIR}/add_jedi_incr/exec/
 
 # JEDI FV3 Bundle directories
 
-JEDI_EXECDIR=${JEDI_EXECDIR:-"/scratch2/NCEPDEV/land/data/jedi/fv3-bundle-20220727/build/bin/"}
+JEDI_EXECDIR=${JEDI_EXECDIR:-"/scratch2/BMC/gsienkf/Clara.Draper/jedi/build/bin/"}
 JEDI_STATICDIR=${SCRIPTDIR}/jedi/fv3-jedi/Data/
 
 # JEDI IODA-converter bundle directories
@@ -151,9 +150,9 @@ ln -s ${RSTRDIR}/${FILEDATE}.coupler.res ${WORKDIR}/${FILEDATE}.coupler.res
 export PYTHONPATH="${IODA_BUILD_DIR}/lib/pyiodaconv":"${IODA_BUILD_DIR}/lib/python3.6/pyioda"
 
 # use a different version of python for ioda converter (keep for create_ensemble, as latter needs netCDF4)
-#PATH_BACKUP=$PATH
-#module load intelpython/3.6.8 
-#export PATH=$PATH:${PATH_BACKUP}
+PATH_BACKUP=$PATH
+module load intelpython/3.6.8 
+export PATH=$PATH:${PATH_BACKUP}
 
 # stage GTS
 if [[ $DA_GTS == "YES" || $HOFX_GTS == "YES" ]]; then
@@ -237,7 +236,7 @@ fi
 ################################################
 
 # switch back to orional python for fv3-jedi
-#module load intelpython/2021.3.0
+module load intelpython/2021.3.0
 
 # prepare namelist for DA 
 if [ $do_DA == "YES" ]; then
