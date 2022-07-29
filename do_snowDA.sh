@@ -24,13 +24,18 @@ LOGDIR=${OUTDIR}/DA/logs/
 #RSTRDIR=/scratch2/BMC/gsienkf/Clara.Draper/DA_test_cases/20191215_C48/ #C48
 #RSTRDIR=/scratch2/BMC/gsienkf/Clara.Draper/jedi/create_ens/mem_base/  #C768 
 #RSTRDIR=/scratch2/BMC/gsienkf/Clara.Draper/data_RnR/example_restarts/ # C96 Noah-MP
-RSTRDIR=$WORKDIR/restarts/tile # is running offline cycling will be here
+RSTRDIR=${RSTRDIR:-$WORKDIR/restarts/tile/} # if running offline cycling will be here
 
 # DA options (select "YES" to assimilate)
-ASSIM_IMS=${ASSIM_IMS:-"YES"}
-ASSIM_GHCN=${ASSIM_GHCN:-"YES"} 
-ASSIM_GTS=${ASSIM_GTS:-"NO"}
-ASSIM_SYNTH=${ASSIM_SYNTH:-"NO"}
+DA_IMS=${DA_IMS:-"YES"}
+DA_GHCN=${DA_GHCN:-"YES"} 
+DA_GTS=${DA_GTS:-"NO"}
+DA_SYNTH=${DA_SYNTH:-"NO"}
+HOFX_IMS=${HOFX_IMS:-"YES"}
+HOFX_GHCN=${HOFX_GHCN:-"YES"} 
+HOFX_GTS=${HOFX_GTS:-"NO"}
+HOFX_SYNTH=${HOFX_SYNTH:-"NO"}
+
 do_DA=${do_DA:-"YES"}
 do_hofx=${do_hofx:-"YES"}
 YAML_DA=${YAML_DA:-"letkf_snow_offline_IMS_GHCN_C96.yaml"} # IMS and GHCN
@@ -49,7 +54,7 @@ INCR_EXECDIR=${SCRIPTDIR}/add_jedi_incr/exec/
 
 # JEDI FV3 Bundle directories
 
-JEDI_EXECDIR=/scratch2/BMC/gsienkf/Clara.Draper/jedi/build/bin/
+JEDI_EXECDIR=${JEDI_EXECDIR:-"/scratch2/NCEPDEV/land/data/jedi/fv3-bundle-20220727/build/bin/"}
 JEDI_STATICDIR=${SCRIPTDIR}/jedi/fv3-jedi/Data/
 
 # JEDI IODA-converter bundle directories
@@ -146,28 +151,28 @@ ln -s ${RSTRDIR}/${FILEDATE}.coupler.res ${WORKDIR}/${FILEDATE}.coupler.res
 export PYTHONPATH="${IODA_BUILD_DIR}/lib/pyiodaconv":"${IODA_BUILD_DIR}/lib/python3.6/pyioda"
 
 # use a different version of python for ioda converter (keep for create_ensemble, as latter needs netCDF4)
-PATH_BACKUP=$PATH
-module load intelpython/3.6.8 
-export PATH=$PATH:${PATH_BACKUP}
+#PATH_BACKUP=$PATH
+#module load intelpython/3.6.8 
+#export PATH=$PATH:${PATH_BACKUP}
 
 # stage GTS
-if [[ $ASSIM_GTS == "YES" ]]; then
+if [[ $DA_GTS == "YES" || $HOFX_GTS == "YES" ]]; then
 ln -s $OBSDIR/snow_depth/GTS/data_proc/${YYYY}${MM}/adpsfc_snow_${YYYY}${MM}${DD}${HH}.nc4  gts_${YYYY}${MM}${DD}${HH}.nc
 fi 
 
 # stage GHCN
-if [[ $ASSIM_GHCN == "YES" ]]; then
+if [[ $DA_GHCN == "YES" || $HOFX_GHCN == "YES" ]]; then
 ln  -s $OBSDIR/snow_depth/GHCN/data_proc/${YYYY}/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc  ghcn_${YYYY}${MM}${DD}.nc
 fi 
 
 # stage synthetic obs.
-if [[ $ASSIM_SYNTH == "YES" ]]; then
+if [[ $DA_SYNTH == "YES" || $HOFX_SYNTH == "YES" ]]; then
 ln -s $OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}18.nc  synth_${YYYY}${MM}${DD}.nc
 fi 
 
 # prepare IMS
 
-if [[ $ASSIM_IMS == "YES" ]]; then
+if [[ $DA_IMS == "YES" || $HOFX_IMS == "YES" ]]; then
 
 if [[ $IMSDAY -gt 2014120200 ]]; then
         ims_vsn=1.3 
@@ -232,7 +237,7 @@ fi
 ################################################
 
 # switch back to orional python for fv3-jedi
-module load intelpython/2021.3.0
+#module load intelpython/2021.3.0
 
 # prepare namelist for DA 
 if [ $do_DA == "YES" ]; then
@@ -275,9 +280,17 @@ echo 'snowDA: calling fv3-jedi'
 
 if [[ $do_DA == "YES" ]]; then
 srun -n $NPROC_DA ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
+if [[ $? != 0 ]]; then
+    echo "JEDI DA failed"
+    exit 10
+fi
 fi 
 if [[ $do_hofx == "YES" ]]; then  
 srun -n $NPROC_DA ${JEDI_EXECDIR}/fv3jedi_hofx_nomodel.x hofx_snow.yaml ${LOGDIR}/jedi_hofx.log
+if [[ $? != 0 ]]; then
+    echo "JEDI hofx failed"
+    exit 10
+fi
 fi 
 
 ################################################
@@ -317,7 +330,7 @@ done
 fi 
 
 # keep IMS IODA file
-if [ $SAVE_IMS == "YES"  ] && [ $ASSIM_IMS == "YES"  ]; then
+if [ $SAVE_IMS == "YES"  ] && [[ $DA_IMS == "YES" || $HOFX_IMS == "YES" ]]; then
         cp ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ${OUTDIR}/DA/IMSproc/
 fi 
 

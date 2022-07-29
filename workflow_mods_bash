@@ -1,21 +1,20 @@
 
+# jedi
 module purge
-
-######################################
-# JEDI FV3-bundle mods 
-export JEDI_OPT=/scratch1/NCEPDEV/jcsda/jedipara/opt/modules
+export JEDI_OPT=/scratch1/NCEPDEV/jcsda/jedipara/opt/modules/
 module use $JEDI_OPT/modulefiles/core
-
 module load jedi/intel-impi/2020.2
+module load atlas/ecmwf-0.29.0
+module load eckit/ecmwf-1.18.2
+module load fckit/ecmwf-0.9.5
+module use /contrib/miniconda3/modulefiles
+module use /home/Rahul.Mahajan/opt/modulefiles/stack
+module load hpc/1.1.0
+module load hpc-miniconda3/4.5.12
+module load hofx/1.0.0
 
-#  additional, needed for JEDI IODA converter 
-# module load intelpython/3.6.8 
+#make_cmd="make -j8"
+#ecbuild_cmd="ecbuild -DMPIEXEC_EXECUTABLE=`which srun` -DMPIEXEC_NUMPROC_FLAG='-n'"
 
-export SLURM_ACCOUNT=gsienkf
-export SALLOC_ACCOUNT=$SLURM_ACCOUNT
-export SBATCH_ACCOUNT=$SLURM_ACCOUNT
-
-######################################
-
-# needed for add_jedi_incr
+#add_incr
 module load netcdf
