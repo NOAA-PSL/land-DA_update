@@ -200,9 +200,9 @@ if [[ $DA_IMS == "YES" || $HOFX_IMS == "YES" ]]; then
 
 if [[ $IMSDAY -gt 2014120200 ]]; then
         ims_vsn=1.3 
-  else
+else
         ims_vsn=1.2 
-  fi
+fi
 
 cat >> fims.nml << EOF
  &fIMS_nml
@@ -249,12 +249,12 @@ EOF
 fi
 
 ############################
-# summarize the obs availability
+# Derive the OBS_AVAIL
 export OBS_AVAIL=NO
 if [ $IMS_AVAIL == "YES" ] || [ $GHCN_AVAIL == "YES" ] || [ $SYNTH_AVAIL == "YES" ] || [ $GTS_AVAIL == "YES" ] ; then
     export OBS_AVAIL=YES
 else
-    echo "Observation does bot exist, skip DA"
+    echo "Observation does not exist, skip DA"
     exit 0
 fi
 
@@ -328,7 +328,7 @@ fi
 module load intelpython/2021.3.0
 
 # prepare namelist for DA 
-if [[ $do_DA == "YES" ]]; then
+if [ $do_DA == "YES" ]; then
 
     cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/$YAML_DA ${WORKDIR}/letkf_snow.yaml
 
@@ -344,7 +344,7 @@ if [[ $do_DA == "YES" ]]; then
 
 fi 
 
-if [[ $do_hofx == "YES" ]]; then 
+if [ $do_hofx == "YES" ]; then 
 
     cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/$YAML_HOFX ${WORKDIR}/hofx_snow.yaml
 
@@ -418,12 +418,12 @@ done
 fi 
 
 # keep IMS IODA file
-if [ $SAVE_IMS == "YES"  ] && [[ $DA_IMS == "YES" || $HOFX_IMS == "YES" ]] && [ $IMS_AVAIL == "YES" ] ; then
+if [ $SAVE_IMS == "YES"  ] && [[ $DA_IMS == "YES" || $HOFX_IMS == "YES" ]] && [ $IMS_AVAIL == "YES" ]; then
         cp ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ${OUTDIR}/DA/IMSproc/
 fi 
 
 # keep increments
-if [ $SAVE_INCR == "YES" ] && [ $do_DA == "YES" ] ; then
+if [ $SAVE_INCR == "YES" ] && [ $do_DA == "YES" ]; then
         cp ${WORKDIR}/${FILEDATE}.xainc.sfc_data.tile*.nc  ${OUTDIR}/DA/jedi_incr/
 fi 
 
