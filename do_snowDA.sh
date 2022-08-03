@@ -155,54 +155,65 @@ module load intelpython/3.6.8
 export PATH=$PATH:${PATH_BACKUP}
 
 # stage GTS
-export GTS_AVAIL=NO
 if [[ $DA_GTS == "YES" || $HOFX_GTS == "YES" ]]; then
   obsfile=$OBSDIR/snow_depth/GTS/data_proc/${YYYY}${MM}/adpsfc_snow_${YYYY}${MM}${DD}${HH}.nc4
 
   if [[ -e $obsfile ]]; then
     ln -s $obsfile  gts_${YYYY}${MM}${DD}${HH}.nc
-    export GTS_AVAIL=YES
     echo "GTS observations found: $obsfile"
   else
     echo "GTS observations not found: $obsfile"
+    DA_GTS=NO
+    HOFX_GTS=NO
   fi
 fi 
 
 # stage GHCN
-export GHCN_AVAIL=NO
-if [[ $DA_GHCN == "YES" || $HOFX_GHCD == "YES" ]]; then
+if [[ $DA_GHCN == "YES" || $HOFX_GHCN == "YES" ]]; then
   obsfile=$OBSDIR/snow_depth/GHCN/data_proc/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc
   if [[ -e $obsfile ]]; then
     ln -s $obsfile  ghcn_${YYYY}${MM}${DD}.nc
-    export GHCN_AVAIL=YES
     echo "GHCN observations found: $obsfile"
   else
     echo "GHCN observations not found: $obsfile"
+    DA_GHCN=NO
+    HOFX_GHCN=NO
   fi
 fi 
 
 # stage synthetic obs.
-export SYNTH_AVAIL=NO
 if [[ $DA_SYNTH == "YES" || $HOFX_SYNTH == "YES" ]]; then
   obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}18.nc
   if [[ -e $obsfile ]]; then
     ln -s $obsfile  synth_${YYYY}${MM}${DD}.nc
-    export SYNTH_AVAIL=YES
     echo "SYNTH observations found: $obsfile"
   else
     echo "SYNTH observations not found: $obsfile"
+    DA_SYNTH=NO
+    HOFX_SYNTH=NO
   fi
 fi 
 
 # prepare IMS
-export IMS_AVAIL=NO
-if [[ $DA_IMS == "YES" || $HOFX_IMS == "YES" ]]; then
-
 if [[ $IMSDAY -gt 2014120200 ]]; then
         ims_vsn=1.3 
 else
         ims_vsn=1.2 
 fi
+
+if [[ $DA_IMS == "YES" || $HOFX_IMS == "YES" ]]; then
+  obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_4km_v${ims_vsn}.nc
+  if [[ -e $obsfile && $HH == "18" ]]; then
+    #ln -s $obsfile  IMSscf.${YYYY}${MM}${DD}.C${RES}.nc
+    echo "IMS observations found: $obsfile"
+  else
+    echo "IMS observations not found: $obsfile"
+    DA_IMS=NO
+    HOFX_IMS=NO
+  fi
+fi
+
+if [[ $DA_IMS == "YES" || $HOFX_IMS == "YES" ]]; then
 
 cat >> fims.nml << EOF
  &fIMS_nml
@@ -216,16 +227,6 @@ cat >> fims.nml << EOF
   /
 EOF
 
-  obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_4km_v${ims_vsn}.nc
-  if [[ -e $obsfile && $HH == "18" ]]; then
-    cp $obsfile  IMSscf.${YYYY}${MM}${DD}.C${RES}.nc
-    export IMS_AVAIL=YES
-    echo "IMS observations found: $obsfile"
-  else
-    echo "IMS observations not found: $obsfile"
-  fi
-
-  if [[ $IMS_AVAIL == "YES" ]]; then
     echo 'snowDA: calling fIMS'
 
     ${FIMS_EXECDIR}/calcfIMS
@@ -245,37 +246,47 @@ EOF
         exit 10
     fi
 
-  fi
 fi
 
 ############################
-# Derive the OBS_AVAIL
-export OBS_AVAIL=NO
-if [ $IMS_AVAIL == "YES" ] || [ $GHCN_AVAIL == "YES" ] || [ $SYNTH_AVAIL == "YES" ] || [ $GTS_AVAIL == "YES" ] ; then
-    export OBS_AVAIL=YES
-else
-    echo "Observation does not exist, skip DA"
-    exit 0
+# Derive the DA_OBS or HOFX_OBS
+if [ $do_DA == "YES" ]; then
+  DA_OBS=NO
+  if [ $DA_IMS == "YES" ] || [ $DA_GHCN == "YES" ] || [ $DA_SYNTH == "YES" ] || [ $DA_GTS == "YES" ] ; then
+      DA_OBS=YES
+  else
+      echo "Observation does not exist, skip DA"
+      exit 0
+  fi
 fi
 
+if [ $do_hofx == "YES" ]; then
+  HOFX_OBS=NO
+  if [ $HOFX_IMS == "YES" ] || [ $HOFX_GHCN == "YES" ] || [ $HOFX_SYNTH == "YES" ] || [ $HOFX_GTS == "YES" ] ; then
+      HOFX_OBS=YES
+  else
+      echo "Observation does not exist, skip HOFX"
+      exit 0
+  fi
+fi
 ############################
 # create the jedi yaml name
 
 # construct yaml name
 if [ $do_DA == "YES" ]; then
      YAML_DA=${DAtype}"_offline_DA"
-     if [ $IMS_AVAIL == "YES" ]; then YAML_DA=${YAML_DA}"_IMS" ; fi
-     if [ $GHCN_AVAIL == "YES" ]; then YAML_DA=${YAML_DA}"_GHCN" ; fi
-     if [ $SYNTH_AVAIL == "YES" ]; then YAML_DA=${YAML_DA}"_SYNTH"; fi
-     if [ $GTS_AVAIL == "YES" ]; then YAML_DA=${YAML_DA}"_GTS" ; fi
+     if [ $DA_IMS == "YES" ]; then YAML_DA=${YAML_DA}"_IMS" ; fi
+     if [ $DA_GHCN == "YES" ]; then YAML_DA=${YAML_DA}"_GHCN" ; fi
+     if [ $DA_SYNTH == "YES" ]; then YAML_DA=${YAML_DA}"_SYNTH"; fi
+     if [ $DA_GTS == "YES" ]; then YAML_DA=${YAML_DA}"_GTS" ; fi
 fi
 
 if [ $do_hofx == "YES" ]; then
      YAML_HOFX=${DAtype}"_offline_hofx"
-     if [ $IMS_AVAIL == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_IMS" ; fi
-     if [ $GHCN_AVAIL == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_GHCN" ; fi
-     if [ $SYNTH_AVAIL == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_SYNTH"; fi
-     if [ $GTS_AVAIL == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_GTS" ; fi
+     if [ $HOFX_IMS == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_IMS" ; fi
+     if [ $HOFX_GHCN == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_GHCN" ; fi
+     if [ $HOFX_SYNTH == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_SYNTH"; fi
+     if [ $HOFX_GTS == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_GTS" ; fi
 fi
 
 YAML_DA=${YAML_DA}"_C${RES}.yaml"
@@ -284,7 +295,7 @@ YAML_HOFX=${YAML_HOFX}"_C96.yaml"
 # if yamls specified in namelist, use those
 YAML_DA=${YAML_DA_SPEC:-$YAML_DA}
 YAML_HOFX=${YAML_HOFX_SPEC:-$YAML_HOFX}
-if [[ $do_DA == "YES" && $OBS_AVAIL == "YES" ]]; then
+if [[ $do_DA == "YES" && $DA_OBS == "YES" ]]; then
      echo "JEDI_YAML for DA "$YAML_DA
      if [[ ! -e ${DADIR}/jedi/fv3-jedi/yaml_files/$YAML_DA ]]; then
          echo "DA YAML does not exist, exiting"
@@ -292,7 +303,7 @@ if [[ $do_DA == "YES" && $OBS_AVAIL == "YES" ]]; then
      fi
      export YAML_DA
 fi
-if [[ $do_hofx == "YES" && $OBS_AVAIL == "YES" ]]; then
+if [[ $do_hofx == "YES" && $HOFX_OBS == "YES" ]]; then
      echo "JEDI_YAML for hofx "$YAML_HOFX
      if [[ ! -e ${DADIR}/jedi/fv3-jedi/yaml_files/$YAML_HOFX ]]; then
          echo "HOFX YAML does not exist, exiting"
@@ -418,7 +429,7 @@ done
 fi 
 
 # keep IMS IODA file
-if [ $SAVE_IMS == "YES"  ] && [[ $DA_IMS == "YES" || $HOFX_IMS == "YES" ]] && [ $IMS_AVAIL == "YES" ]; then
+if [ $SAVE_IMS == "YES"  ] && [[ $DA_IMS == "YES" || $HOFX_IMS == "YES" ]]; then
         cp ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ${OUTDIR}/DA/IMSproc/
 fi 
 
