@@ -195,16 +195,16 @@ if [[ $DA_SYNTH == "YES" || $HOFX_SYNTH == "YES" ]]; then
 fi 
 
 # prepare IMS
+if [[ $DA_IMS == "YES" || $HOFX_IMS == "YES" ]]; then
+
 if [[ $IMSDAY -gt 2014120200 ]]; then
         ims_vsn=1.3 
 else
         ims_vsn=1.2 
 fi
 
-if [[ $DA_IMS == "YES" || $HOFX_IMS == "YES" ]]; then
   obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_4km_v${ims_vsn}.nc
   if [[ -e $obsfile && $HH == "18" ]]; then
-    #ln -s $obsfile  IMSscf.${YYYY}${MM}${DD}.C${RES}.nc
     echo "IMS observations found: $obsfile"
   else
     echo "IMS observations not found: $obsfile"
