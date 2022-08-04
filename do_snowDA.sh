@@ -249,26 +249,14 @@ EOF
 fi
 
 ############################
-# Derive the DA_OBS or HOFX_OBS
-if [ $do_DA == "YES" ]; then
-  DA_OBS=NO
-  if [ $DA_IMS == "YES" ] || [ $DA_GHCN == "YES" ] || [ $DA_SYNTH == "YES" ] || [ $DA_GTS == "YES" ] ; then
-      DA_OBS=YES
-  else
-      echo "Observation does not exist, skip DA"
+# Update do_DA/do_hofx from the observation availability
+if [[ $do_DA == "YES" || $do_hofx == "YES" ]]; then
+  if [ $DA_IMS == "NO" ] && [ $DA_GHCN == "NO" ] && [ $DA_SYNTH == "NO" ] && [ $DA_GTS == "NO" ] ; then
+      echo "No observation is found: skip DA"
       exit 0
   fi
 fi
 
-if [ $do_hofx == "YES" ]; then
-  HOFX_OBS=NO
-  if [ $HOFX_IMS == "YES" ] || [ $HOFX_GHCN == "YES" ] || [ $HOFX_SYNTH == "YES" ] || [ $HOFX_GTS == "YES" ] ; then
-      HOFX_OBS=YES
-  else
-      echo "Observation does not exist, skip HOFX"
-      exit 0
-  fi
-fi
 ############################
 # create the jedi yaml name
 
@@ -295,7 +283,7 @@ YAML_HOFX=${YAML_HOFX}"_C96.yaml"
 # if yamls specified in namelist, use those
 YAML_DA=${YAML_DA_SPEC:-$YAML_DA}
 YAML_HOFX=${YAML_HOFX_SPEC:-$YAML_HOFX}
-if [[ $do_DA == "YES" && $DA_OBS == "YES" ]]; then
+if [[ $do_DA == "YES" ]]; then
      echo "JEDI_YAML for DA "$YAML_DA
      if [[ ! -e ${DADIR}/jedi/fv3-jedi/yaml_files/$YAML_DA ]]; then
          echo "DA YAML does not exist, exiting"
@@ -303,7 +291,7 @@ if [[ $do_DA == "YES" && $DA_OBS == "YES" ]]; then
      fi
      export YAML_DA
 fi
-if [[ $do_hofx == "YES" && $HOFX_OBS == "YES" ]]; then
+if [[ $do_hofx == "YES" ]]; then
      echo "JEDI_YAML for hofx "$YAML_HOFX
      if [[ ! -e ${DADIR}/jedi/fv3-jedi/yaml_files/$YAML_HOFX ]]; then
          echo "HOFX YAML does not exist, exiting"
