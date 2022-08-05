@@ -58,7 +58,7 @@ JEDI_STATICDIR=${SCRIPTDIR}/jedi/fv3-jedi/Data/
 
 # JEDI IODA-converter bundle directories
 
-IODA_BUILD_DIR=/scratch2/BMC/gsienkf/Clara.Draper/jedi/src/ioda-bundle/build/
+IODA_BUILD_DIR=${IODA_BUILD_DIR:-"/scratch2/BMC/gsienkf/Clara.Draper/jedi/src/ioda-bundle/build/"}
 
 # EXPERIMENT SETTINGS
 
@@ -156,21 +156,45 @@ export PATH=$PATH:${PATH_BACKUP}
 
 # stage GTS
 if [[ $DA_GTS == "YES" || $HOFX_GTS == "YES" ]]; then
-ln -s $OBSDIR/snow_depth/GTS/data_proc/${YYYY}${MM}/adpsfc_snow_${YYYY}${MM}${DD}${HH}.nc4  gts_${YYYY}${MM}${DD}${HH}.nc
+  obsfile=$OBSDIR/snow_depth/GTS/data_proc/${YYYY}${MM}/adpsfc_snow_${YYYY}${MM}${DD}${HH}.nc4
+
+  if [[ -e $obsfile ]]; then
+    ln -s $obsfile  gts_${YYYY}${MM}${DD}${HH}.nc
+    echo "GTS observations found: $obsfile"
+  else
+    echo "GTS observations not found: $obsfile"
+    DA_GTS=NO
+    HOFX_GTS=NO
+  fi
 fi 
 
 # stage GHCN
 if [[ $DA_GHCN == "YES" || $HOFX_GHCN == "YES" ]]; then
-ln  -s $OBSDIR/snow_depth/GHCN/data_proc/${YYYY}/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc  ghcn_${YYYY}${MM}${DD}.nc
+  obsfile=$OBSDIR/snow_depth/GHCN/data_proc/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc
+  if [[ -e $obsfile ]]; then
+    ln -s $obsfile  ghcn_${YYYY}${MM}${DD}.nc
+    echo "GHCN observations found: $obsfile"
+  else
+    echo "GHCN observations not found: $obsfile"
+    DA_GHCN=NO
+    HOFX_GHCN=NO
+  fi
 fi 
 
 # stage synthetic obs.
 if [[ $DA_SYNTH == "YES" || $HOFX_SYNTH == "YES" ]]; then
-ln -s $OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}18.nc  synth_${YYYY}${MM}${DD}.nc
+  obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}18.nc
+  if [[ -e $obsfile ]]; then
+    ln -s $obsfile  synth_${YYYY}${MM}${DD}.nc
+    echo "SYNTH observations found: $obsfile"
+  else
+    echo "SYNTH observations not found: $obsfile"
+    DA_SYNTH=NO
+    HOFX_SYNTH=NO
+  fi
 fi 
 
 # prepare IMS
-
 if [[ $DA_IMS == "YES" || $HOFX_IMS == "YES" ]]; then
 
 if [[ $IMSDAY -gt 2014120200 ]]; then
@@ -178,6 +202,18 @@ if [[ $IMSDAY -gt 2014120200 ]]; then
 else
         ims_vsn=1.2 
 fi
+
+  obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_4km_v${ims_vsn}.nc
+  if [[ -e $obsfile && $HH == "18" ]]; then
+    echo "IMS observations found: $obsfile"
+  else
+    echo "IMS observations not found: $obsfile"
+    DA_IMS=NO
+    HOFX_IMS=NO
+  fi
+fi
+
+if [[ $DA_IMS == "YES" || $HOFX_IMS == "YES" ]]; then
 
 cat >> fims.nml << EOF
  &fIMS_nml
@@ -210,6 +246,56 @@ EOF
         exit 10
     fi
 
+fi
+
+############################
+# Check the observation availability
+if [ $DA_IMS == "NO" ] && [ $DA_GHCN == "NO" ] && [ $DA_SYNTH == "NO" ] && [ $DA_GTS == "NO" ] ; then
+    echo "No observation is found: not calling JEDI for hofx or DA"
+    exit 0
+fi
+
+############################
+# create the jedi yaml name
+
+# construct yaml name
+if [ $do_DA == "YES" ]; then
+     YAML_DA=${DAtype}"_offline_DA"
+     if [ $DA_IMS == "YES" ]; then YAML_DA=${YAML_DA}"_IMS" ; fi
+     if [ $DA_GHCN == "YES" ]; then YAML_DA=${YAML_DA}"_GHCN" ; fi
+     if [ $DA_SYNTH == "YES" ]; then YAML_DA=${YAML_DA}"_SYNTH"; fi
+     if [ $DA_GTS == "YES" ]; then YAML_DA=${YAML_DA}"_GTS" ; fi
+fi
+
+if [ $do_hofx == "YES" ]; then
+     YAML_HOFX=${DAtype}"_offline_hofx"
+     if [ $HOFX_IMS == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_IMS" ; fi
+     if [ $HOFX_GHCN == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_GHCN" ; fi
+     if [ $HOFX_SYNTH == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_SYNTH"; fi
+     if [ $HOFX_GTS == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_GTS" ; fi
+fi
+
+YAML_DA=${YAML_DA}"_C${RES}.yaml"
+YAML_HOFX=${YAML_HOFX}"_C96.yaml"
+
+# if yamls specified in namelist, use those
+YAML_DA=${YAML_DA_SPEC:-$YAML_DA}
+YAML_HOFX=${YAML_HOFX_SPEC:-$YAML_HOFX}
+if [[ $do_DA == "YES" ]]; then
+     echo "JEDI_YAML for DA "$YAML_DA
+     if [[ ! -e ${DADIR}/jedi/fv3-jedi/yaml_files/$YAML_DA ]]; then
+         echo "DA YAML does not exist, exiting"
+         exit 10
+     fi
+     export YAML_DA
+fi
+if [[ $do_hofx == "YES" ]]; then
+     echo "JEDI_YAML for hofx "$YAML_HOFX
+     if [[ ! -e ${DADIR}/jedi/fv3-jedi/yaml_files/$YAML_HOFX ]]; then
+         echo "HOFX YAML does not exist, exiting"
+         exit 10
+     fi
+     export YAML_HOFX
 fi
 
 ################################################
