@@ -249,12 +249,10 @@ EOF
 fi
 
 ############################
-# Update do_DA/do_hofx from the observation availability
-if [[ $do_DA == "YES" || $do_hofx == "YES" ]]; then
-  if [ $DA_IMS == "NO" ] && [ $DA_GHCN == "NO" ] && [ $DA_SYNTH == "NO" ] && [ $DA_GTS == "NO" ] ; then
-      echo "No observation is found: skip DA"
-      exit 0
-  fi
+# Check the observation availability
+if [ $DA_IMS == "NO" ] && [ $DA_GHCN == "NO" ] && [ $DA_SYNTH == "NO" ] && [ $DA_GTS == "NO" ] ; then
+    echo "No observation is found: not calling JEDI for hofx or DA"
+    exit 0
 fi
 
 ############################
