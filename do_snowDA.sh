@@ -82,7 +82,7 @@ echo 'THISDATE in land DA, '$THISDATE
 
 cd $WORKDIR 
 
-source ${SCRIPTDIR}/workflow_mods_bash
+source ${SCRIPTDIR}/land_mods_hera
 
 ################################################
 # FORMAT DATE STRINGS
@@ -225,7 +225,7 @@ EOF
         exit 10
     fi
 
-    source ${SCRIPTDIR}/ioda_mods
+    source ${SCRIPTDIR}/ioda_mods_hera
  
     IMS_IODA=imsfv3_scf2ioda_obs40.py
     cp ${SCRIPTDIR}/jedi/ioda/${IMS_IODA} $WORKDIR
@@ -354,7 +354,7 @@ if [[ ! -e Data ]]; then
 fi
 
 echo 'snowDA: calling fv3-jedi' 
-module load workflow_mods_bash
+source ${JEDI_EXECDIR}/fv3_mods_hera
 
 if [[ $do_DA == "YES" ]]; then
 srun -n $NPROC_DA ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
@@ -386,6 +386,7 @@ cat << EOF > apply_incr_nml
 EOF
 
 echo 'snowDA: calling apply increment'
+source ${SCRIPTDIR}/land_mods_hera
 
 # (n=6) -> this is fixed, at one task per tile (with minor code change, could run on a single proc). 
 srun '--export=ALL' -n 6 ${INCR_EXECDIR}/apply_incr ${LOGDIR}/apply_incr.log
