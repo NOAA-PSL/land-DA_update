@@ -53,7 +53,7 @@ INCR_EXECDIR=${SCRIPTDIR}/add_jedi_incr/exec/
 
 # JEDI FV3 Bundle directories
 
-JEDI_EXECDIR=${JEDI_EXECDIR:-"/scratch2/BMC/gsienkf/Clara.Draper/jedi/build/bin/"}
+JEDI_EXECDIR=${JEDI_EXECDIR:-"/scratch2/NCEPDEV/land/data/jedi/fv3-bundle/build/bin/"}
 JEDI_STATICDIR=${SCRIPTDIR}/jedi/fv3-jedi/Data/
 
 # JEDI IODA-converter bundle directories
@@ -313,9 +313,6 @@ fi
 # RUN LETKF
 ################################################
 
-# switch back to orional python for fv3-jedi
-module load intelpython/2021.3.0
-
 # prepare namelist for DA 
 if [ $do_DA == "YES" ]; then
 
@@ -354,7 +351,7 @@ if [[ ! -e Data ]]; then
 fi
 
 echo 'snowDA: calling fv3-jedi' 
-source ${JEDI_EXECDIR}/fv3_mods_hera
+source ${JEDI_EXECDIR}/../../../fv3_mods_hera
 
 if [[ $do_DA == "YES" ]]; then
 srun -n $NPROC_DA ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
