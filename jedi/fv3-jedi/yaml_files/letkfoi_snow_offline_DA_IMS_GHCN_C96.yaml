@@ -39,7 +39,7 @@ background:
 observations:
   observers:
   - obs space:
-      name: SnowCoverIMS
+      name: SnowDepthIMS
       distribution:
          name: Halo
          halo size: 250e3

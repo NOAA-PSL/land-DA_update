@@ -82,7 +82,6 @@ echo 'THISDATE in land DA, '$THISDATE
 
 cd $WORKDIR 
 
-source ${SCRIPTDIR}/land_mods_hera
 
 ################################################
 # FORMAT DATE STRINGS
@@ -145,6 +144,7 @@ ln -s ${RSTRDIR}/${FILEDATE}.coupler.res ${WORKDIR}/${FILEDATE}.coupler.res
 # PREPARE OBS FILES
 ################################################
 
+
 # stage GTS
 if [[ $DA_GTS == "YES" || $HOFX_GTS == "YES" ]]; then
   obsfile=$OBSDIR/snow_depth/GTS/data_proc/${YYYY}${MM}/adpsfc_snow_${YYYY}${MM}${DD}${HH}.nc4
@@ -161,7 +161,7 @@ fi
 
 # stage GHCN
 if [[ $DA_GHCN == "YES" || $HOFX_GHCN == "YES" ]]; then
-  obsfile=$OBSDIR/snow_depth/GHCN/data_proc/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc
+  obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYY}/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc
   if [[ -e $obsfile ]]; then
     ln -s $obsfile  ghcn_${YYYY}${MM}${DD}.nc
     echo "GHCN observations found: $obsfile"
@@ -218,6 +218,7 @@ cat >> fims.nml << EOF
 EOF
 
     echo 'snowDA: calling fIMS'
+    source ${SCRIPTDIR}/land_mods_hera
 
     ${FIMS_EXECDIR}/calcfIMS
     if [[ $? != 0 ]]; then
@@ -225,12 +226,11 @@ EOF
         exit 10
     fi
 
-    source ${SCRIPTDIR}/ioda_mods_hera
- 
     IMS_IODA=imsfv3_scf2ioda_obs40.py
     cp ${SCRIPTDIR}/jedi/ioda/${IMS_IODA} $WORKDIR
 
     echo 'snowDA: calling ioda converter' 
+    source ${SCRIPTDIR}/ioda_mods_hera
 
     python ${IMS_IODA} -i IMSscf.${YYYY}${MM}${DD}.C${RES}.nc -o ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc 
     if [[ $? != 0 ]]; then
@@ -300,6 +300,9 @@ if [[ $do_DA == "YES" ]]; then
     cp -r ${RSTRDIR} $WORKDIR/mem_neg
 
     echo 'snowDA: calling create ensemble' 
+
+    # using ioda mods to get a python version with netCDF4
+    source ${SCRIPTDIR}/ioda_mods_hera
 
     python ${SCRIPTDIR}/letkf_create_ens.py $FILEDATE $B
     if [[ $? != 0 ]]; then
