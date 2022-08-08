@@ -1,5 +1,7 @@
 
 module purge
+unset LD_LIBRARY_PATH
+unset PYTHONPATH
 
 ######################################
 # JEDI FV3-bundle mods 

@@ -58,7 +58,7 @@ JEDI_STATICDIR=${SCRIPTDIR}/jedi/fv3-jedi/Data/
 
 # JEDI IODA-converter bundle directories
 
-IODA_BUILD_DIR=${IODA_BUILD_DIR:-"/scratch2/BMC/gsienkf/Clara.Draper/jedi/src/ioda-bundle/build/"}
+IODA_BUILD_DIR=${IODA_BUILD_DIR:-"/scratch2/BMC/gsienkf/UFS-RNR/UFS-RNR-stack/external/ioda-bundle/build/"}
 
 # EXPERIMENT SETTINGS
 
@@ -83,7 +83,6 @@ echo 'THISDATE in land DA, '$THISDATE
 cd $WORKDIR 
 
 source ${SCRIPTDIR}/workflow_mods_bash
-module list 
 
 ################################################
 # FORMAT DATE STRINGS
@@ -146,14 +145,6 @@ ln -s ${RSTRDIR}/${FILEDATE}.coupler.res ${WORKDIR}/${FILEDATE}.coupler.res
 # PREPARE OBS FILES
 ################################################
 
-# SET IODA PYTHON PATHS
-export PYTHONPATH="${IODA_BUILD_DIR}/lib/pyiodaconv":"${IODA_BUILD_DIR}/lib/python3.6/pyioda"
-
-# use a different version of python for ioda converter (keep for create_ensemble, as latter needs netCDF4)
-PATH_BACKUP=$PATH
-module load intelpython/3.6.8 
-export PATH=$PATH:${PATH_BACKUP}
-
 # stage GTS
 if [[ $DA_GTS == "YES" || $HOFX_GTS == "YES" ]]; then
   obsfile=$OBSDIR/snow_depth/GTS/data_proc/${YYYY}${MM}/adpsfc_snow_${YYYY}${MM}${DD}${HH}.nc4
@@ -197,11 +188,11 @@ fi
 # prepare IMS
 if [[ $DA_IMS == "YES" || $HOFX_IMS == "YES" ]]; then
 
-if [[ $IMSDAY -gt 2014120200 ]]; then
+  if [[ $IMSDAY -gt 2014120200 ]]; then
         ims_vsn=1.3 
-else
+  else
         ims_vsn=1.2 
-fi
+  fi
 
   obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_4km_v${ims_vsn}.nc
   if [[ -e $obsfile && $HH == "18" ]]; then
@@ -211,9 +202,8 @@ fi
     DA_IMS=NO
     HOFX_IMS=NO
   fi
-fi
-
-if [[ $DA_IMS == "YES" || $HOFX_IMS == "YES" ]]; then
+ 
+# pre-process and call IODA converter for IMS obs.
 
 cat >> fims.nml << EOF
  &fIMS_nml
@@ -234,6 +224,8 @@ EOF
         echo "fIMS failed"
         exit 10
     fi
+
+    source ${SCRIPTDIR}/ioda_mods
  
     IMS_IODA=imsfv3_scf2ioda_obs40.py
     cp ${SCRIPTDIR}/jedi/ioda/${IMS_IODA} $WORKDIR
@@ -362,6 +354,7 @@ if [[ ! -e Data ]]; then
 fi
 
 echo 'snowDA: calling fv3-jedi' 
+module load workflow_mods_bash
 
 if [[ $do_DA == "YES" ]]; then
 srun -n $NPROC_DA ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
