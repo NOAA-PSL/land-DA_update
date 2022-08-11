@@ -1,6 +1,3 @@
-######################################################
-#this yaml won't work until JEDI has been updated
-######################################################
 geometry:
   fms initialization:
     namelist filename: Data/fv3files/fmsmpp.nml
@@ -9,11 +6,9 @@ geometry:
   npx: 97
   npy: 97
   npz: 64
-  fieldsets:
-    - fieldset: Data/fieldsets/land.yaml
-    - fieldset: Data/fieldsets/oro_data.yaml
-    - fieldset: Data/fieldsets/ufo.yaml
-# use Mike's offline files.
+  field metadata override: Data/fieldmetadata/gfs-land.yaml
+
+# using Mike's files
   orography:
     datetime: XXYYYP-XXMP-XXDPTXXHP:00:00Z
     filetype: fms restart
@@ -45,20 +40,15 @@ observations:
   observers:
   - obs space:
       name: Simulate
-      distribution:
-        name: InefficientDistribution
+      distribution: 
+        name: Halo
       simulated variables: [totalSnowDepth]
       obsdatain:
-        obsfile: gts_XXYYYYXXMMXXDDXXHH.nc
+        obsfile: ghcn_XXYYYYXXMMXXDD.nc
       obsdataout:
-        obsfile: output/DA/hofx/letkf_hofx_gts_XXYYYYXXMMXXDDXXHH.nc
+        obsfile: output/DA/hofx/letkf_hofx_ghcn_XXYYYYXXMMXXDD.nc
     obs operator:
-      name: Composite
-      components:
-      # operator used to evaluate H(x)
-      - name: Identity
-      # operator used to evaluate background errors
-      - name: BackgroundErrorIdentity
+      name: Identity
     obs error:
       covariance model: diagonal
     obs localizations:
@@ -73,7 +63,6 @@ observations:
       filter variables:
       - name: totalSnowDepth
       minvalue: 0.0
-      maxvalue: 2000.0
     - filter: Domain Check # missing station elevation (-999.9)
       where:
       - variable:
@@ -91,54 +80,18 @@ observations:
           name: vtype@GeoVaLs
         minvalue: 14.5
         maxvalue: 15.5
-    - filter: BlackList
-      where:
-      - variable:
-          name: station_id@MetaData
-        is_in: [71120,71397,71621,71727,71816]
-        size where true: 5
     - filter: Background Check # gross error check
       filter variables:
       - name: totalSnowDepth
       threshold: 6.25
       action:
         name: reject
-    - filter: Met Office Buddy Check
-      filter variables:
-      - name: totalSnowDepth
-      rejection_threshold: 0.5
-      traced_boxes: # trace all observations
-        - min_latitude: -90
-          max_latitude:  90
-          min_longitude: -180
-          max_longitude:  180
-      search_radius: 150 # km
-      station_id_variable:
-        name: station_id@MetaData
-      num_zonal_bands: 24
-      sort_by_pressure: false
-      max_total_num_buddies: 15
-      max_num_buddies_from_single_band: 10
-      max_num_buddies_with_same_station_id: 5
-      use_legacy_buddy_collector: false
-      horizontal_correlation_scale: { "-90": 150, "90": 150 }
-      temporal_correlation_scale: PT6H
-      damping_factor_1: 1.0
-      damping_factor_2: 1.0
-      background_error_group: BkgError
-    - filter: Variable Assignment
-      assignments:
-      - name: totalSnowDepth@GrossErrorProbability
-        type: float
-        value: 0.02
-      - name: totalSnowDepth_background_error@BkgError
-        type: float
-        value: 30.0
 
 driver:
   save posterior mean: false
   save posterior mean increment: true
   save posterior ensemble: false
+  run as observer only: XXHOFX
 
 local ensemble DA:
   solver: LETKF

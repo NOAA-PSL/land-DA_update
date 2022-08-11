@@ -252,7 +252,7 @@ fi
 
 # construct yaml name
 if [ $do_DA == "YES" ]; then
-     YAML_DA=${DAtype}"_offline_DA"
+     YAML_DA=${DAtype}"_offline"
      if [ $DA_IMS == "YES" ]; then YAML_DA=${YAML_DA}"_IMS" ; fi
      if [ $DA_GHCN == "YES" ]; then YAML_DA=${YAML_DA}"_GHCN" ; fi
      if [ $DA_SYNTH == "YES" ]; then YAML_DA=${YAML_DA}"_SYNTH"; fi
@@ -260,7 +260,7 @@ if [ $do_DA == "YES" ]; then
 fi
 
 if [ $do_hofx == "YES" ]; then
-     YAML_HOFX=${DAtype}"_offline_hofx"
+     YAML_HOFX=${DAtype}"_offline"
      if [ $HOFX_IMS == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_IMS" ; fi
      if [ $HOFX_GHCN == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_GHCN" ; fi
      if [ $HOFX_SYNTH == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_SYNTH"; fi
@@ -331,6 +331,8 @@ if [ $do_DA == "YES" ]; then
     sed -i -e "s/XXDP/${DP}/g" letkf_snow.yaml
     sed -i -e "s/XXHP/${HP}/g" letkf_snow.yaml
 
+    sed -i -e "s/XXHOFX/false/g" letkf_snow.yaml  # do DA
+
 fi 
 
 if [ $do_hofx == "YES" ]; then 
@@ -346,6 +348,8 @@ if [ $do_hofx == "YES" ]; then
     sed -i -e "s/XXMP/${MP}/g" hofx_snow.yaml
     sed -i -e "s/XXDP/${DP}/g" hofx_snow.yaml
     sed -i -e "s/XXHP/${HP}/g" hofx_snow.yaml
+
+    sed -i -e "s/XXHOFX/true/g" letkf_snow.yaml  # do hofx only
 
 fi
 
@@ -364,7 +368,7 @@ if [[ $? != 0 ]]; then
 fi
 fi 
 if [[ $do_hofx == "YES" ]]; then  
-srun -n $NPROC_DA ${JEDI_EXECDIR}/fv3jedi_hofx_nomodel.x hofx_snow.yaml ${LOGDIR}/jedi_hofx.log
+srun -n $NPROC_DA ${JEDI_EXECDIR}/fv3jedi_letkf.x hofx_snow.yaml ${LOGDIR}/jedi_hofx.log
 if [[ $? != 0 ]]; then
     echo "JEDI hofx failed"
     exit 10
