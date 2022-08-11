@@ -37,10 +37,6 @@ HOFX_SYNTH=${HOFX_SYNTH:-"NO"}
 
 do_DA=${do_DA:-"YES"}
 do_hofx=${do_hofx:-"YES"}
-YAML_DA=${YAML_DA:-"letkf_snow_offline_IMS_GHCN_C96.yaml"} # IMS and GHCN
-YAML_HOFX=${YAML_HOFX:-"letkfoi_snow_offline_hofx_GHCN_C96.yaml"} 
-echo "DA_update, YAML_DA is ${YAML_DA}"
-echo "DA_update, YAML_HOFX is ${YAML_HOFX}"
 
 # IMS data in file is from day before the file's time stamp 
 IMStiming=OBSDATE # FILEDATE - use IMS data for file's time stamp =THISDATE (NRT option) 
@@ -63,6 +59,9 @@ IODA_BUILD_DIR=${IODA_BUILD_DIR:-"/scratch2/BMC/gsienkf/UFS-RNR/UFS-RNR-stack/ex
 # EXPERIMENT SETTINGS
 
 RES=${RES:-96}
+RESP1=$((RES+1))
+
+echo 'CSDp1' $RESP1
 NPROC_DA=${NPROC_DA:-6} 
 B=30  # back ground error std.
 
@@ -267,8 +266,8 @@ if [ $do_hofx == "YES" ]; then
      if [ $HOFX_GTS == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_GTS" ; fi
 fi
 
-YAML_DA=${YAML_DA}"_C${RES}.yaml"
-YAML_HOFX=${YAML_HOFX}"_C96.yaml"
+YAML_DA=${YAML_DA}".yaml"
+YAML_HOFX=${YAML_HOFX}".yaml"
 
 # if yamls specified in namelist, use those
 YAML_DA=${YAML_DA_SPEC:-$YAML_DA}
@@ -331,6 +330,9 @@ if [ $do_DA == "YES" ]; then
     sed -i -e "s/XXDP/${DP}/g" letkf_snow.yaml
     sed -i -e "s/XXHP/${HP}/g" letkf_snow.yaml
 
+    sed -i -e "s/XXRES/${RES}/g" letkf_snow.yaml
+    sed -i -e "s/XXREP/${RESP1}/g" letkf_snow.yaml
+
     sed -i -e "s/XXHOFX/false/g" letkf_snow.yaml  # do DA
 
 fi 
@@ -349,7 +351,10 @@ if [ $do_hofx == "YES" ]; then
     sed -i -e "s/XXDP/${DP}/g" hofx_snow.yaml
     sed -i -e "s/XXHP/${HP}/g" hofx_snow.yaml
 
-    sed -i -e "s/XXHOFX/true/g" letkf_snow.yaml  # do hofx only
+    sed -i -e "s/XXRES/${RES}/g" hofx_snow.yaml
+    sed -i -e "s/XXREP/${RESP1}/g" hofx_snow.yaml
+
+    sed -i -e "s/XXHOFX/true/g" hofx_snow.yaml  # do hofx only
 
 fi
 
