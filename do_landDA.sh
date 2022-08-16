@@ -1,11 +1,11 @@
 #!/bin/bash 
-
+# script to run the land DA. Currently only option is the snow LETKFOI.
+#
 # 1. staging and preparation of obs. 
 #    note: IMS obs prep currently requires model background, then conversion to IODA format
 # 2. creation of pseudo ensemble 
 # 3. run LETKF to generate increment file 
-# 4. add increment file to restarts (=disaggregation of bulk snow depth update into updates 
-#    to SWE snd SD in each snow layer).
+# 4. add increment file to restarts (and adjust any necessary dependent variables).
 
 # Clara Draper, Oct 2021.
 
@@ -15,17 +15,15 @@
 
 # user directories
 
-WORKDIR=${WORKDIR:-"/scratch2/BMC/gsienkf/Clara.Draper/workdir/"}
-SCRIPTDIR=${DADIR:-"/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/AZworkflow/DA_update/"}
+SCRIPTDIR=${DADIR}
 OBSDIR=${OBSDIR:-"/scratch2/NCEPDEV/land/data/DA/"}
 OUTDIR=${OUTDIR:-${SCRIPTDIR}/../output/} 
 LOGDIR=${OUTDIR}/DA/logs/
-#RSTRDIR=/scratch2/BMC/gsienkf/Clara.Draper/DA_test_cases/20191215_C48/ #C48
-#RSTRDIR=/scratch2/BMC/gsienkf/Clara.Draper/jedi/create_ens/mem_base/  #C768 
-#RSTRDIR=/scratch2/BMC/gsienkf/Clara.Draper/data_RnR/example_restarts/ # C96 Noah-MP
 RSTRDIR=${RSTRDIR:-$WORKDIR/restarts/tile/} # if running offline cycling will be here
 
 # DA options (select "YES" to assimilate)
+DAtype=${DAtype:-"letkfoi_snow"} # OPTIONS: letkfoi_snow
+
 DA_IMS=${DA_IMS:-"YES"}
 DA_GHCN=${DA_GHCN:-"YES"} 
 DA_GTS=${DA_GTS:-"NO"}
@@ -61,9 +59,8 @@ IODA_BUILD_DIR=${IODA_BUILD_DIR:-"/scratch2/BMC/gsienkf/UFS-RNR/UFS-RNR-stack/ex
 RES=${RES:-96}
 RESP1=$((RES+1))
 
-echo 'CSDp1' $RESP1
 NPROC_DA=${NPROC_DA:-6} 
-B=30  # back ground error std.
+B=30  # back ground error std for LETKFOI
 
 # STORAGE SETTINGS 
 
@@ -72,15 +69,12 @@ SAVE_INCR="YES" # "YES" to save increment (add others?) JEDI output
 SAVE_TILE="NO" # "YES" to save background in tile space
 REDUCE_HOFX="YES" # "YES" to remove duplicate hofx files (one per processor)
 
-THISDATE=${THISDATE:-"2015090118"}
-
 echo 'THISDATE in land DA, '$THISDATE
 
 ############################################################################################
 # SHOULD NOT HAVE TO CHANGE ANYTHING BELOW HERE
 
 cd $WORKDIR 
-
 
 ################################################
 # FORMAT DATE STRINGS
@@ -143,6 +137,7 @@ ln -s ${RSTRDIR}/${FILEDATE}.coupler.res ${WORKDIR}/${FILEDATE}.coupler.res
 # PREPARE OBS FILES
 ################################################
 
+OBS_AVAIL=NO
 
 # stage GTS
 if [[ $DA_GTS == "YES" || $HOFX_GTS == "YES" ]]; then
@@ -151,6 +146,7 @@ if [[ $DA_GTS == "YES" || $HOFX_GTS == "YES" ]]; then
   if [[ -e $obsfile ]]; then
     ln -s $obsfile  gts_${YYYY}${MM}${DD}${HH}.nc
     echo "GTS observations found: $obsfile"
+    OBS_AVAIL=YES
   else
     echo "GTS observations not found: $obsfile"
     DA_GTS=NO
@@ -164,6 +160,7 @@ if [[ $DA_GHCN == "YES" || $HOFX_GHCN == "YES" ]]; then
   if [[ -e $obsfile ]]; then
     ln -s $obsfile  ghcn_${YYYY}${MM}${DD}.nc
     echo "GHCN observations found: $obsfile"
+    OBS_AVAIL=YES
   else
     echo "GHCN observations not found: $obsfile"
     DA_GHCN=NO
@@ -177,6 +174,7 @@ if [[ $DA_SYNTH == "YES" || $HOFX_SYNTH == "YES" ]]; then
   if [[ -e $obsfile ]]; then
     ln -s $obsfile  synth_${YYYY}${MM}${DD}.nc
     echo "SYNTH observations found: $obsfile"
+    OBS_AVAIL=YES
   else
     echo "SYNTH observations not found: $obsfile"
     DA_SYNTH=NO
@@ -196,6 +194,7 @@ if [[ $DA_IMS == "YES" || $HOFX_IMS == "YES" ]]; then
   obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_4km_v${ims_vsn}.nc
   if [[ -e $obsfile && $HH == "18" ]]; then
     echo "IMS observations found: $obsfile"
+    OBS_AVAIL=YES
   else
     echo "IMS observations not found: $obsfile"
     DA_IMS=NO
@@ -216,7 +215,7 @@ cat >> fims.nml << EOF
   /
 EOF
 
-    echo 'snowDA: calling fIMS'
+    echo 'do_landDA: calling fIMS'
     source ${SCRIPTDIR}/land_mods_hera
 
     ${FIMS_EXECDIR}/calcfIMS
@@ -228,7 +227,7 @@ EOF
     IMS_IODA=imsfv3_scf2ioda_obs40.py
     cp ${SCRIPTDIR}/jedi/ioda/${IMS_IODA} $WORKDIR
 
-    echo 'snowDA: calling ioda converter' 
+    echo 'do_landDA: calling ioda converter' 
     source ${SCRIPTDIR}/ioda_mods_hera
 
     python ${IMS_IODA} -i IMSscf.${YYYY}${MM}${DD}.C${RES}.nc -o ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc 
@@ -241,8 +240,8 @@ fi
 
 ############################
 # Check the observation availability
-if [ $DA_IMS == "NO" ] && [ $DA_GHCN == "NO" ] && [ $DA_SYNTH == "NO" ] && [ $DA_GTS == "NO" ] ; then
-    echo "No observation is found: not calling JEDI for hofx or DA"
+if [ $OBS_AVAIL == "NO" ] ; then
+    echo "No observation are found: not calling JEDI for hofx or DA"
     exit 0
 fi
 
@@ -278,7 +277,6 @@ if [[ $do_DA == "YES" ]]; then
          echo "DA YAML does not exist, exiting"
          exit 10
      fi
-     export YAML_DA
 fi
 if [[ $do_hofx == "YES" ]]; then
      echo "JEDI_YAML for hofx "$YAML_HOFX
@@ -286,19 +284,21 @@ if [[ $do_hofx == "YES" ]]; then
          echo "HOFX YAML does not exist, exiting"
          exit 10
      fi
-     export YAML_HOFX
 fi
 
 ################################################
-# CREATE PSEUDO-ENSEMBLE
+# STAGE BACKGROUND ENSEMBLE
 ################################################
 
-if [[ $do_DA == "YES" ]]; then 
+if [[ ${DAtype} == 'letkfoi_snow' ]]; then 
 
+    JEDI_EXEC="fv3jedi_letkf.x"
+
+    # FOR LETKFOI, CREATE THE PSEUDO-ENSEMBLE
     cp -r ${RSTRDIR} $WORKDIR/mem_pos
     cp -r ${RSTRDIR} $WORKDIR/mem_neg
 
-    echo 'snowDA: calling create ensemble' 
+    echo 'do_landDA: calling create ensemble' 
 
     # using ioda mods to get a python version with netCDF4
     source ${SCRIPTDIR}/ioda_mods_hera
@@ -318,43 +318,43 @@ fi
 # prepare namelist for DA 
 if [ $do_DA == "YES" ]; then
 
-    cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/$YAML_DA ${WORKDIR}/letkf_snow.yaml
+    cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/$YAML_DA ${WORKDIR}/letkf_land.yaml
 
-    sed -i -e "s/XXYYYY/${YYYY}/g" letkf_snow.yaml
-    sed -i -e "s/XXMM/${MM}/g" letkf_snow.yaml
-    sed -i -e "s/XXDD/${DD}/g" letkf_snow.yaml
-    sed -i -e "s/XXHH/${HH}/g" letkf_snow.yaml
+    sed -i -e "s/XXYYYY/${YYYY}/g" letkf_land.yaml
+    sed -i -e "s/XXMM/${MM}/g" letkf_land.yaml
+    sed -i -e "s/XXDD/${DD}/g" letkf_land.yaml
+    sed -i -e "s/XXHH/${HH}/g" letkf_land.yaml
 
-    sed -i -e "s/XXYYYP/${YYYP}/g" letkf_snow.yaml
-    sed -i -e "s/XXMP/${MP}/g" letkf_snow.yaml
-    sed -i -e "s/XXDP/${DP}/g" letkf_snow.yaml
-    sed -i -e "s/XXHP/${HP}/g" letkf_snow.yaml
+    sed -i -e "s/XXYYYP/${YYYP}/g" letkf_land.yaml
+    sed -i -e "s/XXMP/${MP}/g" letkf_land.yaml
+    sed -i -e "s/XXDP/${DP}/g" letkf_land.yaml
+    sed -i -e "s/XXHP/${HP}/g" letkf_land.yaml
 
-    sed -i -e "s/XXRES/${RES}/g" letkf_snow.yaml
-    sed -i -e "s/XXREP/${RESP1}/g" letkf_snow.yaml
+    sed -i -e "s/XXRES/${RES}/g" letkf_land.yaml
+    sed -i -e "s/XXREP/${RESP1}/g" letkf_land.yaml
 
-    sed -i -e "s/XXHOFX/false/g" letkf_snow.yaml  # do DA
+    sed -i -e "s/XXHOFX/false/g" letkf_land.yaml  # do DA
 
 fi 
 
 if [ $do_hofx == "YES" ]; then 
 
-    cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/$YAML_HOFX ${WORKDIR}/hofx_snow.yaml
+    cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/$YAML_HOFX ${WORKDIR}/hofx_land.yaml
 
-    sed -i -e "s/XXYYYY/${YYYY}/g" hofx_snow.yaml
-    sed -i -e "s/XXMM/${MM}/g" hofx_snow.yaml
-    sed -i -e "s/XXDD/${DD}/g" hofx_snow.yaml
-    sed -i -e "s/XXHH/${HH}/g" hofx_snow.yaml
+    sed -i -e "s/XXYYYY/${YYYY}/g" hofx_land.yaml
+    sed -i -e "s/XXMM/${MM}/g" hofx_land.yaml
+    sed -i -e "s/XXDD/${DD}/g" hofx_land.yaml
+    sed -i -e "s/XXHH/${HH}/g" hofx_land.yaml
 
-    sed -i -e "s/XXYYYP/${YYYP}/g" hofx_snow.yaml
-    sed -i -e "s/XXMP/${MP}/g" hofx_snow.yaml
-    sed -i -e "s/XXDP/${DP}/g" hofx_snow.yaml
-    sed -i -e "s/XXHP/${HP}/g" hofx_snow.yaml
+    sed -i -e "s/XXYYYP/${YYYP}/g" hofx_land.yaml
+    sed -i -e "s/XXMP/${MP}/g" hofx_land.yaml
+    sed -i -e "s/XXDP/${DP}/g" hofx_land.yaml
+    sed -i -e "s/XXHP/${HP}/g" hofx_land.yaml
 
-    sed -i -e "s/XXRES/${RES}/g" hofx_snow.yaml
-    sed -i -e "s/XXREP/${RESP1}/g" hofx_snow.yaml
+    sed -i -e "s/XXRES/${RES}/g" hofx_land.yaml
+    sed -i -e "s/XXREP/${RESP1}/g" hofx_land.yaml
 
-    sed -i -e "s/XXHOFX/true/g" hofx_snow.yaml  # do hofx only
+    sed -i -e "s/XXHOFX/true/g" hofx_land.yaml  # do hofx only
 
 fi
 
@@ -362,18 +362,18 @@ if [[ ! -e Data ]]; then
     ln -s $JEDI_STATICDIR Data 
 fi
 
-echo 'snowDA: calling fv3-jedi' 
+echo 'do_landDA: calling fv3-jedi' 
 source ${JEDI_EXECDIR}/../../../fv3_mods_hera
 
 if [[ $do_DA == "YES" ]]; then
-srun -n $NPROC_DA ${JEDI_EXECDIR}/fv3jedi_letkf.x letkf_snow.yaml ${LOGDIR}/jedi_letkf.log
+srun -n $NPROC_DA ${JEDI_EXECDIR}/${JEDI_EXEC} letkf_land.yaml ${LOGDIR}/jedi_letkf.log
 if [[ $? != 0 ]]; then
     echo "JEDI DA failed"
     exit 10
 fi
 fi 
 if [[ $do_hofx == "YES" ]]; then  
-srun -n $NPROC_DA ${JEDI_EXECDIR}/fv3jedi_letkf.x hofx_snow.yaml ${LOGDIR}/jedi_hofx.log
+srun -n $NPROC_DA ${JEDI_EXECDIR}/${JEDI_EXEC} hofx_land.yaml ${LOGDIR}/jedi_hofx.log
 if [[ $? != 0 ]]; then
     echo "JEDI hofx failed"
     exit 10
@@ -386,6 +386,8 @@ fi
 
 if [[ $do_DA == "YES" ]]; then 
 
+if [[ $DAtype == "letkfoi_snow" ]]; then 
+
 cat << EOF > apply_incr_nml
 &noahmp_snow
  date_str=${YYYY}${MM}${DD}
@@ -394,14 +396,16 @@ cat << EOF > apply_incr_nml
 /
 EOF
 
-echo 'snowDA: calling apply increment'
+echo 'do_landDA: calling apply snow increment'
 source ${SCRIPTDIR}/land_mods_hera
 
 # (n=6) -> this is fixed, at one task per tile (with minor code change, could run on a single proc). 
 srun '--export=ALL' -n 6 ${INCR_EXECDIR}/apply_incr ${LOGDIR}/apply_incr.log
 if [[ $? != 0 ]]; then
-    echo "apply increment failed"
+    echo "apply snow increment failed"
     exit 10
+fi
+
 fi
 
 fi 
