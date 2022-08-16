@@ -42,7 +42,6 @@ observations:
       name: Simulate
       distribution: 
         name: Halo
-        halo size: 250e3
       simulated variables: [totalSnowDepth]
       obsdatain:
         obsfile: gts_XXYYYYXXMMXXDDXXHH.nc
