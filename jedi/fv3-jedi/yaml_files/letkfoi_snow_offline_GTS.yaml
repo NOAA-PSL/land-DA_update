@@ -1,6 +1,3 @@
-######################################################
-#this yaml won't work until JEDI has been updated
-######################################################
 geometry:
   fms initialization:
     namelist filename: Data/fv3files/fmsmpp.nml
@@ -9,11 +6,9 @@ geometry:
   npx: XXREP
   npy: XXREP
   npz: 64
-  fieldsets:
-    - fieldset: Data/fieldsets/land.yaml
-    - fieldset: Data/fieldsets/oro_data.yaml
-    - fieldset: Data/fieldsets/ufo.yaml
-# use Mike's offline files.
+  field metadata override: Data/fieldmetadata/gfs-land.yaml
+
+# using Mike's files
   orography:
     datetime: XXYYYP-XXMP-XXDPTXXHP:00:00Z
     filetype: fms restart
@@ -45,8 +40,9 @@ observations:
   observers:
   - obs space:
       name: Simulate
-      distribution:
-        name: InefficientDistribution
+      distribution: 
+        name: Halo
+        halo size: 250e3
       simulated variables: [totalSnowDepth]
       obsdatain:
         obsfile: gts_XXYYYYXXMMXXDDXXHH.nc
