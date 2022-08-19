@@ -18,21 +18,35 @@
 # make sure documentation is updated.
 
 #########################################
+# source namelist
+#########################################
+
+if [[ $# -gt 0 ]]; then 
+    config_file=$1
+else
+    echo "do_landDA.sh: no config file specified, exting" 
+    exit 1
+fi
+
+echo "reading DA settings from $config_file"
+
+source $config_file
+
+echo $SCRIPTDIR
+
+#########################################
 # specify user directories
 #########################################
 
-SCRIPTDIR=${DADIR}
 OUTDIR=${OUTDIR:-${SCRIPTDIR}/../output/} 
 LOGDIR=${OUTDIR}/DA/logs/
 RSTRDIR=${RSTRDIR:-$WORKDIR/restarts/tile/} # if running offline cycling will be here
 OBSDIR=${OBSDIR:-"/scratch2/NCEPDEV/land/data/DA/"}
 
 ####### move all of this 
-# DA options (select "YES" to assimilate)
 DAtype=${DAtype:-"letkfoi_snow"} # OPTIONS: letkfoi_snow
-OBS_TYPES=("IMS") 
-JEDI_TYPES=("DA")
 
+# TEMPORARY, UNTIL WE SORT OUT THE LATENCY ON THE IMS OBS
 # IMS data in file is from day before the file's time stamp 
 IMStiming=OBSDATE # FILEDATE - use IMS data for file's time stamp =THISDATE (NRT option) 
                    # OBSDATE  - use IMS data for observation time stamp = THISDATE (hindcast option)
@@ -67,6 +81,8 @@ SAVE_TILE="NO" # "YES" to save background in tile space
 REDUCE_HOFX="YES" # "YES" to remove duplicate hofx files (one per processor)
 
 echo 'THISDATE in land DA, '$THISDATE
+echo $OBS_TYPES 
+echo $JEDI_TYPES
 
 ############################################################################################
 # SHOULD NOT HAVE TO CHANGE ANYTHING BELOW HERE
@@ -84,7 +100,7 @@ export MM=`echo $THISDATE | cut -c5-6`
 export DD=`echo $THISDATE | cut -c7-8`
 export HH=`echo $THISDATE | cut -c9-10`
 
-PREVDATE=`${INCDATE} $THISDATE -6`
+PREVDATE=`${INCDATE} $THISDATE -$WINLEN`
 
 export YYYP=`echo $PREVDATE | cut -c1-4`
 export MP=`echo $PREVDATE | cut -c5-6`
