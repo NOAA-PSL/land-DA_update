@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -le
 # script to run the land DA. Currently only option is the snow LETKFOI.
 #
 # 1. stage the restarts. 
@@ -58,7 +58,6 @@ echo 'THISDATE in land DA, '$THISDATE
 # IMS data in file is from day before the file's time stamp 
 IMStiming=OBSDATE # FILEDATE - use IMS data for file's time stamp =THISDATE (NRT option) 
                    # OBSDATE  - use IMS data for observation time stamp = THISDATE (hindcast option)
-IMShr=${IMShr:-"18"} # for now, assimilate IMS only at 18
 
 ############################################################################################
 
@@ -125,7 +124,7 @@ do
   elif [ ${OBS_TYPES[$ii]} == "GHCN" ]; then 
      obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYY}/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc
   elif [ ${OBS_TYPES[$ii]} == "SYNTH" ]; then 
-     obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}18.nc
+     obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}${HH}.nc
   elif [ ${OBS_TYPES[$ii]} == "IMS" ]; then 
      if [[ $IMStiming == "FILEDATE" ]]; then 
             IMSDAY=${THISDATE} 
@@ -154,11 +153,6 @@ do
     echo "do_landDA: ${OBS_TYPES[$ii]} observations found: $obsfile"
     if [ ${OBS_TYPES[$ii]} != "IMS" ]; then 
        ln -s $obsfile  ${OBS_TYPES[$ii]}_${YYYY}${MM}${DD}${HH}.nc
-    else 
-       if [ ${IMShr} != ${HH} ]; then 
-           OBS_ACTION[$ii]="SKIP"  
-           echo "do_landDA: not assimilating IMS at hr $HH"
-       fi
     fi 
   else
     echo "${OBS_TYPES[$ii]} observations not found: $obsfile"
@@ -267,34 +261,34 @@ if [[ $do_HOFX == "YES" ]]; then
 
    if [[ $YAML_HOFX == "construct" ]];then  # construct the yaml
 
-      cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${WORKDIR}/letkf_land.yaml
+      cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${WORKDIR}/hofx_land.yaml
 
       for ii in "${!OBS_TYPES[@]}";
       do 
-        if [ ${JEDI_JEDI[$ii]} == "HOFX" ]; then
-        cat ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${OBS_TYPES[$ii]}.yaml >> letkf_land.yaml
+        if [ ${JEDI_TYPES[$ii]} == "HOFX" ]; then
+        cat ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${OBS_TYPES[$ii]}.yaml >> hofx_land.yaml
         fi 
       done
 
-      sed -i -e "s/XXYYYY/${YYYY}/g" letkf_land.yaml
-      sed -i -e "s/XXMM/${MM}/g" letkf_land.yaml
-      sed -i -e "s/XXDD/${DD}/g" letkf_land.yaml
-      sed -i -e "s/XXHH/${HH}/g" letkf_land.yaml
+      sed -i -e "s/XXYYYY/${YYYY}/g" hofx_land.yaml
+      sed -i -e "s/XXMM/${MM}/g" hofx_land.yaml
+      sed -i -e "s/XXDD/${DD}/g" hofx_land.yaml
+      sed -i -e "s/XXHH/${HH}/g" hofx_land.yaml
 
-      sed -i -e "s/XXYYYP/${YYYP}/g" letkf_land.yaml
-      sed -i -e "s/XXMP/${MP}/g" letkf_land.yaml
-      sed -i -e "s/XXDP/${DP}/g" letkf_land.yaml
-      sed -i -e "s/XXHP/${HP}/g" letkf_land.yaml
+      sed -i -e "s/XXYYYP/${YYYP}/g" hofx_land.yaml
+      sed -i -e "s/XXMP/${MP}/g" hofx_land.yaml
+      sed -i -e "s/XXDP/${DP}/g" hofx_land.yaml
+      sed -i -e "s/XXHP/${HP}/g" hofx_land.yaml
 
-      sed -i -e "s/XXRES/${RES}/g" letkf_land.yaml
+      sed -i -e "s/XXRES/${RES}/g" hofx_land.yaml
       RESP1=$((RES+1))
-      sed -i -e "s/XXREP/${RESP1}/g" letkf_land.yaml
+      sed -i -e "s/XXREP/${RESP1}/g" hofx_land.yaml
 
-      sed -i -e "s/XXHOFX/true/g" letkf_land.yaml  # do HOFX
+      sed -i -e "s/XXHOFX/true/g" hofx_land.yaml  # do HOFX
 
    else # use specified yaml 
       echo "Using user specified YAML: ${YAML_HOFX}"
-      cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${YAML_HOFX} ${WORKDIR}/letkf_land.yaml
+      cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${YAML_HOFX} ${WORKDIR}/hofx_land.yaml
    fi
 fi
 

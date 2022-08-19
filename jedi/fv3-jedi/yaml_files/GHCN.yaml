@@ -4,7 +4,7 @@
         name: Halo
       simulated variables: [totalSnowDepth]
       obsdatain:
-        obsfile: GHCN_XXYYYYXXMMXXDD.nc
+        obsfile: GHCN_XXYYYYXXMMXXDDXXHH.nc
       obsdataout:
         obsfile: output/DA/hofx/letkf_hofx_ghcn_XXYYYYXXMMXXDD.nc
     obs operator:
