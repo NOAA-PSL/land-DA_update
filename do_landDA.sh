@@ -1,29 +1,35 @@
-
+#!/bin/bash
 # script to run the land DA. Currently only option is the snow LETKFOI.
 #
-# 1. staging and preparation of obs. 
-#    note: IMS obs prep currently requires model background, then conversion to IODA format
-# 2. creation of pseudo ensemble 
-# 3. run LETKF to generate increment file 
-# 4. add increment file to restarts (and adjust any necessary dependent variables).
+# 1. stage the restarts. 
+# 2. stage and process obs. 
+#    note: IMS obs prep currently requires model background, then conversion to IODA format.
+# 3. create the JEDI yamls.
+# 4. create pseudo ensemble (LETKF-OI).
+# 5. run JEDI.
+# 6. add increment file to restarts (and adjust any necessary dependent variables).
+# 7. clean up.
 
 # Clara Draper, Oct 2021.
+# Aug 2020, generalized for all DA types.
 
 # to-do: 
 # check that slmsk is always taken from the forecast file (oro files has a different definition)
 # make sure documentation is updated.
 
-# user directories
+#########################################
+# specify user directories
+#########################################
 
 SCRIPTDIR=${DADIR}
-OBSDIR=${OBSDIR:-"/scratch2/NCEPDEV/land/data/DA/"}
 OUTDIR=${OUTDIR:-${SCRIPTDIR}/../output/} 
 LOGDIR=${OUTDIR}/DA/logs/
 RSTRDIR=${RSTRDIR:-$WORKDIR/restarts/tile/} # if running offline cycling will be here
+OBSDIR=${OBSDIR:-"/scratch2/NCEPDEV/land/data/DA/"}
 
+####### move all of this 
 # DA options (select "YES" to assimilate)
 DAtype=${DAtype:-"letkfoi_snow"} # OPTIONS: letkfoi_snow
-
 OBS_TYPES=("IMS") 
 JEDI_TYPES=("DA")
 
@@ -68,12 +74,11 @@ echo 'THISDATE in land DA, '$THISDATE
 cd $WORKDIR 
 
 ################################################
-# FORMAT DATE STRINGS
+# 1. FORMAT DATE STRINGS AND STAGE RESTARTS
 ################################################
 
 INCDATE=${SCRIPTDIR}/incdate.sh
 
-# substringing to get yr, mon, day, hr info
 export YYYY=`echo $THISDATE | cut -c1-4`
 export MM=`echo $THISDATE | cut -c5-6`
 export DD=`echo $THISDATE | cut -c7-8`
@@ -108,7 +113,7 @@ ln -s ${RSTRDIR}/${FILEDATE}.coupler.res ${WORKDIR}/${FILEDATE}.coupler.res
 
 
 ################################################
-# PREPARE OBS FILES
+# 2. PREPARE OBS FILES
 ################################################
 
 for ii in "${!OBS_TYPES[@]}"; # loop through requested obs
@@ -144,6 +149,7 @@ do
      exit 1 
   fi
 
+  # check obs are available
   if [[ -e $obsfile ]]; then
     if [ ${OBS_TYPES[$ii]} != "IMS" ]; then 
        ln -s $obsfile  ${OBS_TYPES[$ii]}_${YYYY}${MM}${DD}${HH}.nc
@@ -154,10 +160,8 @@ do
     OBS_ACTION[$ii]="SKIP"
   fi
 
-  # prepare IMS
+  # pre-process and call IODA converter for IMS obs.
   if [[ ${OBS_TYPES[$ii]} == "IMS"  && ${OBS_ACTION[$ii]} != "SKIP" ]]; then
-
-# pre-process and call IODA converter for IMS obs.
 
 cat >> fims.nml << EOF
  &fIMS_nml
@@ -170,7 +174,6 @@ cat >> fims.nml << EOF
   IMS_IND_PATH="${OBSDIR}/snow_ice_cover/IMS/index_files/"
   /
 EOF
-
     echo 'do_landDA: calling fIMS'
     source ${SCRIPTDIR}/land_mods_hera
 
@@ -195,8 +198,9 @@ EOF
 
 done # OBS_TYPES
 
-############################
-# Check the observation availability and requested JEDI action
+################################################
+# 3. DETERMINE REQUESTED JEDI TYPE, CONSTRUCT YAMLS
+################################################
 
 do_DA="NO"
 do_HOFX="NO"
@@ -218,11 +222,7 @@ if [[ $do_DA == "NO" && $do_HOFX == "NO" ]]; then
         exit 0 
 fi
 
-############################
-#  PREPARE THE YAML FILE
-
 # if yaml is specified by user, use that. Otherwise, build the yaml
-
 if [[ $do_DA == "YES" ]]; then 
 
    if [[ $YAML_DA == "construct" ]];then  # construct the yaml
@@ -292,7 +292,7 @@ if [[ $do_HOFX == "YES" ]]; then
 fi
 
 ################################################
-# STAGE BACKGROUND ENSEMBLE
+# 4. CREATE BACKGROUND ENSEMBLE (LETKFOI)
 ################################################
 
 if [[ ${DAtype} == 'letkfoi_snow' ]]; then 
@@ -317,7 +317,7 @@ if [[ ${DAtype} == 'letkfoi_snow' ]]; then
 fi 
 
 ################################################
-# RUN LETKF
+# 5. RUN JEDI
 ################################################
 
 if [[ ! -e Data ]]; then
@@ -328,27 +328,27 @@ echo 'do_landDA: calling fv3-jedi'
 source ${JEDI_EXECDIR}/../../../fv3_mods_hera
 
 if [[ $do_DA == "YES" ]]; then
-srun -n $NPROC_DA ${JEDI_EXECDIR}/${JEDI_EXEC} letkf_land.yaml ${LOGDIR}/jedi_letkf.log
-if [[ $? != 0 ]]; then
-    echo "JEDI DA failed"
-    exit 10
-fi
+    srun -n $NPROC_DA ${JEDI_EXECDIR}/${JEDI_EXEC} letkf_land.yaml ${LOGDIR}/jedi_letkf.log
+    if [[ $? != 0 ]]; then
+        echo "JEDI DA failed"
+        exit 10
+    fi
 fi 
 if [[ $do_HOFX == "YES" ]]; then  
-srun -n $NPROC_DA ${JEDI_EXECDIR}/${JEDI_EXEC} hofx_land.yaml ${LOGDIR}/jedi_hofx.log
-if [[ $? != 0 ]]; then
-    echo "JEDI hofx failed"
-    exit 10
-fi
+    srun -n $NPROC_DA ${JEDI_EXECDIR}/${JEDI_EXEC} hofx_land.yaml ${LOGDIR}/jedi_hofx.log
+    if [[ $? != 0 ]]; then
+        echo "JEDI hofx failed"
+        exit 10
+    fi
 fi 
 
 ################################################
-# APPLY INCREMENT TO UFS RESTARTS 
+# 6. APPLY INCREMENT TO UFS RESTARTS 
 ################################################
 
 if [[ $do_DA == "YES" ]]; then 
 
-if [[ $DAtype == "letkfoi_snow" ]]; then 
+  if [[ $DAtype == "letkfoi_snow" ]]; then 
 
 cat << EOF > apply_incr_nml
 &noahmp_snow
@@ -358,49 +358,48 @@ cat << EOF > apply_incr_nml
 /
 EOF
 
-echo 'do_landDA: calling apply snow increment'
-source ${SCRIPTDIR}/land_mods_hera
+    echo 'do_landDA: calling apply snow increment'
+    source ${SCRIPTDIR}/land_mods_hera
 
-# (n=6) -> this is fixed, at one task per tile (with minor code change, could run on a single proc). 
-srun '--export=ALL' -n 6 ${INCR_EXECDIR}/apply_incr ${LOGDIR}/apply_incr.log
-if [[ $? != 0 ]]; then
-    echo "apply snow increment failed"
-    exit 10
-fi
+    # (n=6) -> this is fixed, at one task per tile (with minor code change, could run on a single proc). 
+    srun '--export=ALL' -n 6 ${INCR_EXECDIR}/apply_incr ${LOGDIR}/apply_incr.log
+    if [[ $? != 0 ]]; then
+        echo "apply snow increment failed"
+        exit 10
+    fi
 
-fi
+  fi
 
 fi 
 
 ################################################
-# CLEAN UP
+# 7. CLEAN UP
 ################################################
 
 if  [[ $SAVE_TILE == "YES" ]]; then
-for tile in 1 2 3 4 5 6 
-do
-cp ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${OUTDIR}/restarts/${FILEDATE}.sfc_data_anal.tile${tile}.nc
-done
+   for tile in 1 2 3 4 5 6 
+   do
+     cp ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${OUTDIR}/restarts/${FILEDATE}.sfc_data_anal.tile${tile}.nc
+   done
 fi 
 
 # keep IMS IODA file
 if [ $SAVE_IMS == "YES"  ]; then
-     if [[ -e ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ]]; then
-        cp ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ${OUTDIR}/DA/IMSproc/
-     fi
+   if [[ -e ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ]]; then
+      cp ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ${OUTDIR}/DA/IMSproc/
+   fi
 fi 
 
 # keep increments
 if [ $SAVE_INCR == "YES" ] && [ $do_DA == "YES" ]; then
-        cp ${WORKDIR}/${FILEDATE}.xainc.sfc_data.tile*.nc  ${OUTDIR}/DA/jedi_incr/
+   cp ${WORKDIR}/${FILEDATE}.xainc.sfc_data.tile*.nc  ${OUTDIR}/DA/jedi_incr/
 fi 
 
-# keep only one copy of each hofx files
+# keep only one copy of each hofx files  
+# all obs are on every processor, or is this only for Ineffcient Distribution?
 if [ $REDUCE_HOFX == "YES" ]; then 
-   if [ $do_HOFX == "YES" ] || [ $do_DA == "YES" ] ; then
-       for file in $(ls ${OUTDIR}/DA/hofx/*${YYYY}${MM}${DD}*00[123456789].nc) 
-        do 
-        rm $file 
-        done
-   fi
+   for file in $(ls ${OUTDIR}/DA/hofx/*${YYYY}${MM}${DD}*00[123456789].nc) 
+   do 
+    rm $file 
+   done
 fi 
