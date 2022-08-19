@@ -32,19 +32,13 @@ echo "reading DA settings from $config_file"
 
 source $config_file
 
-echo $SCRIPTDIR
-
 #########################################
 # specify user directories
 #########################################
 
-OUTDIR=${OUTDIR:-${SCRIPTDIR}/../output/} 
 LOGDIR=${OUTDIR}/DA/logs/
 RSTRDIR=${RSTRDIR:-$WORKDIR/restarts/tile/} # if running offline cycling will be here
 OBSDIR=${OBSDIR:-"/scratch2/NCEPDEV/land/data/DA/"}
-
-####### move all of this 
-DAtype=${DAtype:-"letkfoi_snow"} # OPTIONS: letkfoi_snow
 
 # TEMPORARY, UNTIL WE SORT OUT THE LATENCY ON THE IMS OBS
 # IMS data in file is from day before the file's time stamp 
@@ -85,7 +79,15 @@ echo $OBS_TYPES
 echo $JEDI_TYPES
 
 ############################################################################################
-# SHOULD NOT HAVE TO CHANGE ANYTHING BELOW HERE
+
+# create output directories.
+if [[ ! -e ${OUTDIR}/DA ]]; then
+    mkdir -p ${OUTDIR}/DA
+    mkdir ${OUTDIR}/DA/IMSproc
+    mkdir ${OUTDIR}/DA/jedi_incr
+    mkdir ${OUTDIR}/DA/logs
+    mkdir ${OUTDIR}/DA/hofx
+fi 
 
 cd $WORKDIR 
 
@@ -95,17 +97,17 @@ cd $WORKDIR
 
 INCDATE=${SCRIPTDIR}/incdate.sh
 
-export YYYY=`echo $THISDATE | cut -c1-4`
-export MM=`echo $THISDATE | cut -c5-6`
-export DD=`echo $THISDATE | cut -c7-8`
-export HH=`echo $THISDATE | cut -c9-10`
+YYYY=`echo $THISDATE | cut -c1-4`
+MM=`echo $THISDATE | cut -c5-6`
+DD=`echo $THISDATE | cut -c7-8`
+HH=`echo $THISDATE | cut -c9-10`
 
 PREVDATE=`${INCDATE} $THISDATE -$WINLEN`
 
-export YYYP=`echo $PREVDATE | cut -c1-4`
-export MP=`echo $PREVDATE | cut -c5-6`
-export DP=`echo $PREVDATE | cut -c7-8`
-export HP=`echo $PREVDATE | cut -c9-10`
+YYYP=`echo $PREVDATE | cut -c1-4`
+MP=`echo $PREVDATE | cut -c5-6`
+DP=`echo $PREVDATE | cut -c7-8`
+HP=`echo $PREVDATE | cut -c9-10`
 
 FILEDATE=${YYYY}${MM}${DD}.${HH}0000
 
@@ -151,9 +153,9 @@ do
             echo 'UNKNOWN IMStiming selection, exiting' 
             exit 10 
      fi
-     export YYYN=`echo $IMSDAY | cut -c1-4`
-     export MN=`echo $IMSDAY | cut -c5-6`
-     export DN=`echo $IMSDAY | cut -c7-8`
+     YYYN=`echo $IMSDAY | cut -c1-4`
+     MN=`echo $IMSDAY | cut -c5-6`
+     DN=`echo $IMSDAY | cut -c7-8`
      DOY=$(date -d "${YYYN}-${MN}-${DN}" +%j)
      echo DOY is ${DOY}
 
@@ -395,7 +397,7 @@ fi
 if  [[ $SAVE_TILE == "YES" ]]; then
    for tile in 1 2 3 4 5 6 
    do
-     cp ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${OUTDIR}/restarts/${FILEDATE}.sfc_data_anal.tile${tile}.nc
+     cp ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${OUTDIR}/modl/restarts/tile/${FILEDATE}.sfc_data_anal.tile${tile}.nc
    done
 fi 
 
