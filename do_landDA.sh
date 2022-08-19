@@ -1,4 +1,4 @@
-#!/bin/bash 
+
 # script to run the land DA. Currently only option is the snow LETKFOI.
 #
 # 1. staging and preparation of obs. 
@@ -24,18 +24,10 @@ RSTRDIR=${RSTRDIR:-$WORKDIR/restarts/tile/} # if running offline cycling will be
 # DA options (select "YES" to assimilate)
 DAtype=${DAtype:-"letkfoi_snow"} # OPTIONS: letkfoi_snow
 
-DA_IMS=${DA_IMS:-"YES"}
-DA_GHCN=${DA_GHCN:-"YES"} 
-DA_GTS=${DA_GTS:-"NO"}
-DA_SYNTH=${DA_SYNTH:-"NO"}
-HOFX_IMS=${HOFX_IMS:-"YES"}
-HOFX_GHCN=${HOFX_GHCN:-"YES"} 
-HOFX_GTS=${HOFX_GTS:-"NO"}
-HOFX_SYNTH=${HOFX_SYNTH:-"NO"}
+DA_OBS=("IMS") 
+HOFX_OBS=() 
 
-do_DA=${do_DA:-"YES"}
-do_hofx=${do_hofx:-"YES"}
-
+ ${#a[@]}
 # IMS data in file is from day before the file's time stamp 
 IMStiming=OBSDATE # FILEDATE - use IMS data for file's time stamp =THISDATE (NRT option) 
                    # OBSDATE  - use IMS data for observation time stamp = THISDATE (hindcast option)
@@ -192,7 +184,7 @@ if [[ $DA_IMS == "YES" || $HOFX_IMS == "YES" ]]; then
   fi
 
   obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_4km_v${ims_vsn}.nc
-  if [[ -e $obsfile && $HH == "18" ]]; then
+  if [[ -e $obsfile  ]]; then
     echo "IMS observations found: $obsfile"
     OBS_AVAIL=YES
   else
@@ -239,53 +231,94 @@ EOF
 fi
 
 ############################
-# Check the observation availability
+# Check the observation availability and requested JEDI action
+
 if [ $OBS_AVAIL == "NO" ] ; then
-    echo "No observation are found: not calling JEDI for hofx or DA"
+    echo "No observation are found: exiting do_landDA"
     exit 0
 fi
 
+if [[ $DA_IMS == "YES" || $DA_GHCN == "YES" || $DA_SYNTH == "YES" || $DA_GTS == "YES" ]];  then 
+        do_DA="YES"
+else 
+        do_DA="NO"
+fi
+
+if [[ $HOFX_IMS == "YES" || $HOFX_GHCN == "YES" || $HOFX_SYNTH == "YES" || $HOFX_GTS == "YES" ]];  then 
+        do_HOFX="YES"
+else 
+        do_HOFX="NO"
+fi
+
 ############################
-# create the jedi yaml name
+#  PREPARE THE YAML FILE
 
-# construct yaml name
-if [ $do_DA == "YES" ]; then
-     YAML_DA=${DAtype}"_offline"
-     if [ $DA_IMS == "YES" ]; then YAML_DA=${YAML_DA}"_IMS" ; fi
-     if [ $DA_GHCN == "YES" ]; then YAML_DA=${YAML_DA}"_GHCN" ; fi
-     if [ $DA_SYNTH == "YES" ]; then YAML_DA=${YAML_DA}"_SYNTH"; fi
-     if [ $DA_GTS == "YES" ]; then YAML_DA=${YAML_DA}"_GTS" ; fi
+# if yaml is specified by user, use that. Otherwise, build the yaml
+
+
+if [[ $do_DA == "YES" ]]; then 
+
+   if [[ $YAML_DA == "construct" ]];then  # construct the yaml
+
+      cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${WORKDIR}/letkf_land.yaml
+
+      for OBSTYPE in "${DA_OBS[@]}"
+      do
+            cat ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${OBSTYPE}.yaml >> letkf_land.yaml
+      done
+
+      sed -i -e "s/XXYYYY/${YYYY}/g" letkf_land.yaml
+      sed -i -e "s/XXMM/${MM}/g" letkf_land.yaml
+      sed -i -e "s/XXDD/${DD}/g" letkf_land.yaml
+      sed -i -e "s/XXHH/${HH}/g" letkf_land.yaml
+
+      sed -i -e "s/XXYYYP/${YYYP}/g" letkf_land.yaml
+      sed -i -e "s/XXMP/${MP}/g" letkf_land.yaml
+      sed -i -e "s/XXDP/${DP}/g" letkf_land.yaml
+      sed -i -e "s/XXHP/${HP}/g" letkf_land.yaml
+
+      sed -i -e "s/XXRES/${RES}/g" letkf_land.yaml
+      sed -i -e "s/XXREP/${RESP1}/g" letkf_land.yaml
+
+      sed -i -e "s/XXHOFX/false/g" letkf_land.yaml  # do DA
+
+   else # use specified yaml 
+      echo "Using user specified YAML: ${YAML_DA}"
+      cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${YAML_DA} ${WORKDIR}/letkf_land.yaml
+   fi
 fi
 
-if [ $do_hofx == "YES" ]; then
-     YAML_HOFX=${DAtype}"_offline"
-     if [ $HOFX_IMS == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_IMS" ; fi
-     if [ $HOFX_GHCN == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_GHCN" ; fi
-     if [ $HOFX_SYNTH == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_SYNTH"; fi
-     if [ $HOFX_GTS == "YES" ]; then YAML_HOFX=${YAML_HOFX}"_GTS" ; fi
-fi
+if [[ $do_HOFX == "YES" ]]; then 
 
-YAML_DA=${YAML_DA}".yaml"
-YAML_HOFX=${YAML_HOFX}".yaml"
+   if [[ $YAML_HOFX == "construct" ]];then  # construct the yaml
 
-# if yamls specified in namelist, use those
-YAML_DA=${YAML_DA_SPEC:-$YAML_DA}
-YAML_HOFX=${YAML_HOFX_SPEC:-$YAML_HOFX}
-if [[ $do_DA == "YES" ]]; then
-     echo "JEDI_YAML for DA "$YAML_DA
-     if [[ ! -e ${DADIR}/jedi/fv3-jedi/yaml_files/$YAML_DA ]]; then
-         echo "DA YAML does not exist, exiting"
-         exit 10
-     fi
-fi
-if [[ $do_hofx == "YES" ]]; then
-     echo "JEDI_YAML for hofx "$YAML_HOFX
-     if [[ ! -e ${DADIR}/jedi/fv3-jedi/yaml_files/$YAML_HOFX ]]; then
-         echo "HOFX YAML does not exist, exiting"
-         exit 10
-     fi
-fi
+      cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${WORKDIR}/hofx_land.yaml
 
+      for OBSTYPE in "${HOFX_OBS[@]}"
+      do
+            cat ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${OBSTYPE}.yaml >> hofx_land.yaml
+      done
+
+      sed -i -e "s/XXYYYY/${YYYY}/g" hofx_land.yaml
+      sed -i -e "s/XXMM/${MM}/g" hofx_land.yaml
+      sed -i -e "s/XXDD/${DD}/g" hofx_land.yaml
+      sed -i -e "s/XXHH/${HH}/g" hofx_land.yaml
+
+      sed -i -e "s/XXYYYP/${YYYP}/g" hofx_land.yaml
+      sed -i -e "s/XXMP/${MP}/g" hofx_land.yaml
+      sed -i -e "s/XXDP/${DP}/g" hofx_land.yaml
+      sed -i -e "s/XXHP/${HP}/g" hofx_land.yaml
+
+      sed -i -e "s/XXRES/${RES}/g" hofx_land.yaml
+      sed -i -e "s/XXREP/${RESP1}/g" hofx_land.yaml
+
+      sed -i -e "s/XXHOFX/true/g" hofx_land.yaml  # do DA
+
+   else # use specified yaml 
+      echo "Using user specified YAML: ${YAML_HOFX}"
+      cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${YAML_HOFX} ${WORKDIR}/hofx_land.yaml
+   fi
+fi
 ################################################
 # STAGE BACKGROUND ENSEMBLE
 ################################################
@@ -315,49 +348,6 @@ fi
 # RUN LETKF
 ################################################
 
-# prepare namelist for DA 
-if [ $do_DA == "YES" ]; then
-
-    cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/$YAML_DA ${WORKDIR}/letkf_land.yaml
-
-    sed -i -e "s/XXYYYY/${YYYY}/g" letkf_land.yaml
-    sed -i -e "s/XXMM/${MM}/g" letkf_land.yaml
-    sed -i -e "s/XXDD/${DD}/g" letkf_land.yaml
-    sed -i -e "s/XXHH/${HH}/g" letkf_land.yaml
-
-    sed -i -e "s/XXYYYP/${YYYP}/g" letkf_land.yaml
-    sed -i -e "s/XXMP/${MP}/g" letkf_land.yaml
-    sed -i -e "s/XXDP/${DP}/g" letkf_land.yaml
-    sed -i -e "s/XXHP/${HP}/g" letkf_land.yaml
-
-    sed -i -e "s/XXRES/${RES}/g" letkf_land.yaml
-    sed -i -e "s/XXREP/${RESP1}/g" letkf_land.yaml
-
-    sed -i -e "s/XXHOFX/false/g" letkf_land.yaml  # do DA
-
-fi 
-
-if [ $do_hofx == "YES" ]; then 
-
-    cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/$YAML_HOFX ${WORKDIR}/hofx_land.yaml
-
-    sed -i -e "s/XXYYYY/${YYYY}/g" hofx_land.yaml
-    sed -i -e "s/XXMM/${MM}/g" hofx_land.yaml
-    sed -i -e "s/XXDD/${DD}/g" hofx_land.yaml
-    sed -i -e "s/XXHH/${HH}/g" hofx_land.yaml
-
-    sed -i -e "s/XXYYYP/${YYYP}/g" hofx_land.yaml
-    sed -i -e "s/XXMP/${MP}/g" hofx_land.yaml
-    sed -i -e "s/XXDP/${DP}/g" hofx_land.yaml
-    sed -i -e "s/XXHP/${HP}/g" hofx_land.yaml
-
-    sed -i -e "s/XXRES/${RES}/g" hofx_land.yaml
-    sed -i -e "s/XXREP/${RESP1}/g" hofx_land.yaml
-
-    sed -i -e "s/XXHOFX/true/g" hofx_land.yaml  # do hofx only
-
-fi
-
 if [[ ! -e Data ]]; then
     ln -s $JEDI_STATICDIR Data 
 fi
@@ -372,7 +362,7 @@ if [[ $? != 0 ]]; then
     exit 10
 fi
 fi 
-if [[ $do_hofx == "YES" ]]; then  
+if [[ $do_HOFX == "YES" ]]; then  
 srun -n $NPROC_DA ${JEDI_EXECDIR}/${JEDI_EXEC} hofx_land.yaml ${LOGDIR}/jedi_hofx.log
 if [[ $? != 0 ]]; then
     echo "JEDI hofx failed"
@@ -433,7 +423,7 @@ fi
 
 # keep only one copy of each hofx files
 if [ $REDUCE_HOFX == "YES" ]; then 
-   if [ $do_hofx == "YES" ] || [ $do_DA == "YES" ] ; then
+   if [ $do_HOFX == "YES" ] || [ $do_DA == "YES" ] ; then
        for file in $(ls ${OUTDIR}/DA/hofx/*${YYYY}${MM}${DD}*00[123456789].nc) 
         do 
         rm $file 
