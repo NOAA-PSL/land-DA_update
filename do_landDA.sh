@@ -25,9 +25,7 @@ RSTRDIR=${RSTRDIR:-$WORKDIR/restarts/tile/} # if running offline cycling will be
 DAtype=${DAtype:-"letkfoi_snow"} # OPTIONS: letkfoi_snow
 
 OBS_TYPES=("IMS") 
-OBS_JEDI=("DA")
-
-
+JEDI_TYPES=("DA")
 
 # IMS data in file is from day before the file's time stamp 
 IMStiming=OBSDATE # FILEDATE - use IMS data for file's time stamp =THISDATE (NRT option) 
@@ -90,23 +88,6 @@ export HP=`echo $PREVDATE | cut -c9-10`
 
 FILEDATE=${YYYY}${MM}${DD}.${HH}0000
 
-if [[ $IMStiming == "FILEDATE" ]]; then 
-        IMSDAY=${THISDATE} 
-elif [[ $IMStiming == "OBSDATE" ]]; then
-        IMSDAY=`${INCDATE} ${THISDATE} +24`
-else
-        echo 'UNKNOWN IMStiming selection, exiting' 
-        exit 10 
-fi
-
-export YYYN=`echo $IMSDAY | cut -c1-4`
-export MN=`echo $IMSDAY | cut -c5-6`
-export DN=`echo $IMSDAY | cut -c7-8`
-
-DOY=$(date -d "${YYYN}-${MN}-${DN}" +%j)
-echo DOY is ${DOY}
-
-
 if [[ ! -e ${WORKDIR}/output ]]; then
 ln -s ${OUTDIR} ${WORKDIR}/output
 fi 
@@ -130,71 +111,52 @@ ln -s ${RSTRDIR}/${FILEDATE}.coupler.res ${WORKDIR}/${FILEDATE}.coupler.res
 # PREPARE OBS FILES
 ################################################
 
-OBS_AVAIL=NO
+for ii in "${!OBS_TYPES[@]}"; # loop through requested obs
+do 
 
+  # get the obs file name 
+  if [ ${OBS_TYPES[$ii]} == "GTS" ]; then
+     obsfile=$OBSDIR/snow_depth/GTS/data_proc/${YYYY}${MM}/adpsfc_snow_${YYYY}${MM}${DD}${HH}.nc4
+  elif [ ${OBS_TYPES[$ii]} == "GHCN" ]; then 
+     obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYY}/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc
+  elif [ ${OBS_TYPES[$ii]} == "SYNTH" ]; then 
+     obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}18.nc
+  elif [ ${OBS_TYPES[$ii]} == "IMS" ]; then 
+     if [[ $IMStiming == "FILEDATE" ]]; then 
+            IMSDAY=${THISDATE} 
+     elif [[ $IMStiming == "OBSDATE" ]]; then
+            IMSDAY=`${INCDATE} ${THISDATE} +24`
+     else
+            echo 'UNKNOWN IMStiming selection, exiting' 
+            exit 10 
+     fi
+     export YYYN=`echo $IMSDAY | cut -c1-4`
+     export MN=`echo $IMSDAY | cut -c5-6`
+     export DN=`echo $IMSDAY | cut -c7-8`
+     DOY=$(date -d "${YYYN}-${MN}-${DN}" +%j)
+     echo DOY is ${DOY}
 
-# stage GTS
-if [[ $DA_GTS == "YES" || $HOFX_GTS == "YES" ]]; then
-  obsfile=$OBSDIR/snow_depth/GTS/data_proc/${YYYY}${MM}/adpsfc_snow_${YYYY}${MM}${DD}${HH}.nc4
+     if [[ $IMSDAY -gt 2014120200 ]]; then  ims_vsn=1.3 ; else  ims_vsn=1.2 ; fi
+     obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_4km_v${ims_vsn}.nc
+
+  else
+     echo "do_landDA: Unknown obs type requested ${OBS_TYPES[$ii]}, exiting" 
+     exit 1 
+  fi
 
   if [[ -e $obsfile ]]; then
-    ln -s $obsfile  gts_${YYYY}${MM}${DD}${HH}.nc
-    echo "GTS observations found: $obsfile"
-    OBS_AVAIL=YES
+    if [ ${OBS_TYPES[$ii]} != "IMS" ]; then 
+       ln -s $obsfile  ${OBS_TYPES[$ii]}_${YYYY}${MM}${DD}${HH}.nc
+    fi
+    echo "${OBS_TYPES[$ii]} observations found: $obsfile"
   else
-    echo "GTS observations not found: $obsfile"
-    DA_GTS=NO
-    HOFX_GTS=NO
-  fi
-fi 
-
-# stage GHCN
-if [[ $DA_GHCN == "YES" || $HOFX_GHCN == "YES" ]]; then
-  obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYY}/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc
-  if [[ -e $obsfile ]]; then
-    ln -s $obsfile  ghcn_${YYYY}${MM}${DD}.nc
-    echo "GHCN observations found: $obsfile"
-    OBS_AVAIL=YES
-  else
-    echo "GHCN observations not found: $obsfile"
-    DA_GHCN=NO
-    HOFX_GHCN=NO
-  fi
-fi 
-
-# stage synthetic obs.
-if [[ $DA_SYNTH == "YES" || $HOFX_SYNTH == "YES" ]]; then
-  obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}18.nc
-  if [[ -e $obsfile ]]; then
-    ln -s $obsfile  synth_${YYYY}${MM}${DD}.nc
-    echo "SYNTH observations found: $obsfile"
-    OBS_AVAIL=YES
-  else
-    echo "SYNTH observations not found: $obsfile"
-    DA_SYNTH=NO
-    HOFX_SYNTH=NO
-  fi
-fi 
-
-# prepare IMS
-if [[ $DA_IMS == "YES" || $HOFX_IMS == "YES" ]]; then
-
-  if [[ $IMSDAY -gt 2014120200 ]]; then
-        ims_vsn=1.3 
-  else
-        ims_vsn=1.2 
+    echo "${OBS_TYPES[$ii]} observations not found: $obsfile"
+    OBS_ACTION[$ii]="SKIP"
   fi
 
-  obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_4km_v${ims_vsn}.nc
-  if [[ -e $obsfile  ]]; then
-    echo "IMS observations found: $obsfile"
-    OBS_AVAIL=YES
-  else
-    echo "IMS observations not found: $obsfile"
-    DA_IMS=NO
-    HOFX_IMS=NO
-  fi
- 
+  # prepare IMS
+  if [[ ${OBS_TYPES[$ii]} == "IMS"  && ${OBS_ACTION[$ii]} != "SKIP" ]]; then
+
 # pre-process and call IODA converter for IMS obs.
 
 cat >> fims.nml << EOF
@@ -229,27 +191,31 @@ EOF
         echo "IMS IODA converter failed"
         exit 10
     fi
+  fi #IMS
 
-fi
+done # OBS_TYPES
 
 ############################
 # Check the observation availability and requested JEDI action
 
-if [ $OBS_AVAIL == "NO" ] ; then
-    echo "No observation are found: exiting do_landDA"
-    exit 0
-fi
+do_DA="NO"
+do_HOFX="NO"
 
-if [[ $DA_IMS == "YES" || $DA_GHCN == "YES" || $DA_SYNTH == "YES" || $DA_GTS == "YES" ]];  then 
-        do_DA="YES"
-else 
-        do_DA="NO"
-fi
+for ii in "${!OBS_TYPES[@]}"; # loop through requested obs
+do
+   if [ ${JEDI_TYPES[$ii]} == "DA" ]; then 
+         do_DA="YES" 
+   elif [ ${JEDI_TYPES[$ii]} == "HOFX" ]; then
+         do_HOFX="YES" 
+   elif [ ${JEDI_TYPES[$ii]} != "SKIP" ]; then
+         echo "do_landDA:Unknown obs action ${JEDI_TYPES[$ii]}, exiting" 
+         exit 1
+   fi
+done
 
-if [[ $HOFX_IMS == "YES" || $HOFX_GHCN == "YES" || $HOFX_SYNTH == "YES" || $HOFX_GTS == "YES" ]];  then 
-        do_HOFX="YES"
-else 
-        do_HOFX="NO"
+if [[ $do_DA == "NO" && $do_HOFX == "NO" ]]; then 
+        echo "do_landDA:No obs found, not calling JEDI" 
+        exit 0 
 fi
 
 ############################
@@ -265,7 +231,7 @@ if [[ $do_DA == "YES" ]]; then
 
       for ii in "${!OBS_TYPES[@]}";
       do 
-        if [ ${OBS_JEDI[$ii]} == "DA" ]; then
+        if [ ${JEDI_TYPES[$ii]} == "DA" ]; then
         cat ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${OBS_TYPES[$ii]}.yaml >> letkf_land.yaml
         fi 
       done
@@ -295,33 +261,36 @@ if [[ $do_HOFX == "YES" ]]; then
 
    if [[ $YAML_HOFX == "construct" ]];then  # construct the yaml
 
-      cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${WORKDIR}/hofx_land.yaml
+      cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${WORKDIR}/letkf_land.yaml
 
-      for OBSTYPE in "${HOFX_OBS[@]}"
-      do
-            cat ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${OBSTYPE}.yaml >> hofx_land.yaml
+      for ii in "${!OBS_TYPES[@]}";
+      do 
+        if [ ${JEDI_JEDI[$ii]} == "HOFX" ]; then
+        cat ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${OBS_TYPES[$ii]}.yaml >> letkf_land.yaml
+        fi 
       done
 
-      sed -i -e "s/XXYYYY/${YYYY}/g" hofx_land.yaml
-      sed -i -e "s/XXMM/${MM}/g" hofx_land.yaml
-      sed -i -e "s/XXDD/${DD}/g" hofx_land.yaml
-      sed -i -e "s/XXHH/${HH}/g" hofx_land.yaml
+      sed -i -e "s/XXYYYY/${YYYY}/g" letkf_land.yaml
+      sed -i -e "s/XXMM/${MM}/g" letkf_land.yaml
+      sed -i -e "s/XXDD/${DD}/g" letkf_land.yaml
+      sed -i -e "s/XXHH/${HH}/g" letkf_land.yaml
 
-      sed -i -e "s/XXYYYP/${YYYP}/g" hofx_land.yaml
-      sed -i -e "s/XXMP/${MP}/g" hofx_land.yaml
-      sed -i -e "s/XXDP/${DP}/g" hofx_land.yaml
-      sed -i -e "s/XXHP/${HP}/g" hofx_land.yaml
+      sed -i -e "s/XXYYYP/${YYYP}/g" letkf_land.yaml
+      sed -i -e "s/XXMP/${MP}/g" letkf_land.yaml
+      sed -i -e "s/XXDP/${DP}/g" letkf_land.yaml
+      sed -i -e "s/XXHP/${HP}/g" letkf_land.yaml
 
-      sed -i -e "s/XXRES/${RES}/g" hofx_land.yaml
-      sed -i -e "s/XXREP/${RESP1}/g" hofx_land.yaml
+      sed -i -e "s/XXRES/${RES}/g" letkf_land.yaml
+      sed -i -e "s/XXREP/${RESP1}/g" letkf_land.yaml
 
-      sed -i -e "s/XXHOFX/true/g" hofx_land.yaml  # do DA
+      sed -i -e "s/XXHOFX/true/g" letkf_land.yaml  # do HOFX
 
    else # use specified yaml 
       echo "Using user specified YAML: ${YAML_HOFX}"
-      cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${YAML_HOFX} ${WORKDIR}/hofx_land.yaml
+      cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${YAML_HOFX} ${WORKDIR}/letkf_land.yaml
    fi
 fi
+
 ################################################
 # STAGE BACKGROUND ENSEMBLE
 ################################################
@@ -415,8 +384,10 @@ done
 fi 
 
 # keep IMS IODA file
-if [ $SAVE_IMS == "YES"  ] && [[ $DA_IMS == "YES" || $HOFX_IMS == "YES" ]]; then
+if [ $SAVE_IMS == "YES"  ]; then
+     if [[ -e ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ]]; then
         cp ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ${OUTDIR}/DA/IMSproc/
+     fi
 fi 
 
 # keep increments
