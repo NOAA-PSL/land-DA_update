@@ -24,10 +24,11 @@ RSTRDIR=${RSTRDIR:-$WORKDIR/restarts/tile/} # if running offline cycling will be
 # DA options (select "YES" to assimilate)
 DAtype=${DAtype:-"letkfoi_snow"} # OPTIONS: letkfoi_snow
 
-DA_OBS=("IMS") 
-HOFX_OBS=() 
+OBS_TYPES=("IMS") 
+OBS_JEDI=("DA")
 
- ${#a[@]}
+
+
 # IMS data in file is from day before the file's time stamp 
 IMStiming=OBSDATE # FILEDATE - use IMS data for file's time stamp =THISDATE (NRT option) 
                    # OBSDATE  - use IMS data for observation time stamp = THISDATE (hindcast option)
@@ -130,6 +131,7 @@ ln -s ${RSTRDIR}/${FILEDATE}.coupler.res ${WORKDIR}/${FILEDATE}.coupler.res
 ################################################
 
 OBS_AVAIL=NO
+
 
 # stage GTS
 if [[ $DA_GTS == "YES" || $HOFX_GTS == "YES" ]]; then
@@ -255,16 +257,17 @@ fi
 
 # if yaml is specified by user, use that. Otherwise, build the yaml
 
-
 if [[ $do_DA == "YES" ]]; then 
 
    if [[ $YAML_DA == "construct" ]];then  # construct the yaml
 
       cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${WORKDIR}/letkf_land.yaml
 
-      for OBSTYPE in "${DA_OBS[@]}"
-      do
-            cat ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${OBSTYPE}.yaml >> letkf_land.yaml
+      for ii in "${!OBS_TYPES[@]}";
+      do 
+        if [ ${OBS_JEDI[$ii]} == "DA" ]; then
+        cat ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${OBS_TYPES[$ii]}.yaml >> letkf_land.yaml
+        fi 
       done
 
       sed -i -e "s/XXYYYY/${YYYY}/g" letkf_land.yaml
