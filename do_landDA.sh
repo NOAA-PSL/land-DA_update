@@ -18,7 +18,7 @@
 # make sure documentation is updated.
 
 #########################################
-# source namelist
+# source namelist and setup directories
 #########################################
 
 if [[ $# -gt 0 ]]; then 
@@ -32,51 +32,33 @@ echo "reading DA settings from $config_file"
 
 source $config_file
 
-#########################################
-# specify user directories
-#########################################
-
 LOGDIR=${OUTDIR}/DA/logs/
 RSTRDIR=${RSTRDIR:-$WORKDIR/restarts/tile/} # if running offline cycling will be here
 OBSDIR=${OBSDIR:-"/scratch2/NCEPDEV/land/data/DA/"}
 
-# TEMPORARY, UNTIL WE SORT OUT THE LATENCY ON THE IMS OBS
-# IMS data in file is from day before the file's time stamp 
-IMStiming=OBSDATE # FILEDATE - use IMS data for file's time stamp =THISDATE (NRT option) 
-                   # OBSDATE  - use IMS data for observation time stamp = THISDATE (hindcast option)
-
 # executable directories
-
 FIMS_EXECDIR=${SCRIPTDIR}/IMS_proc/exec/   
 INCR_EXECDIR=${SCRIPTDIR}/add_jedi_incr/exec/   
 
-# JEDI FV3 Bundle directories
-
+# JEDI directories
 JEDI_EXECDIR=${JEDI_EXECDIR:-"/scratch2/NCEPDEV/land/data/jedi/fv3-bundle/build/bin/"}
+IODA_BUILD_DIR=${IODA_BUILD_DIR:-"/scratch2/BMC/gsienkf/UFS-RNR/UFS-RNR-stack/external/ioda-bundle/build/"}
 JEDI_STATICDIR=${SCRIPTDIR}/jedi/fv3-jedi/Data/
 
-# JEDI IODA-converter bundle directories
-
-IODA_BUILD_DIR=${IODA_BUILD_DIR:-"/scratch2/BMC/gsienkf/UFS-RNR/UFS-RNR-stack/external/ioda-bundle/build/"}
-
-# EXPERIMENT SETTINGS
-
-RES=${RES:-96}
-RESP1=$((RES+1))
-
-NPROC_DA=${NPROC_DA:-6} 
-B=30  # back ground error std for LETKFOI
-
-# STORAGE SETTINGS 
-
+# storage settings 
 SAVE_IMS="YES" # "YES" to save processed IMS IODA file
 SAVE_INCR="YES" # "YES" to save increment (add others?) JEDI output
 SAVE_TILE="NO" # "YES" to save background in tile space
 REDUCE_HOFX="YES" # "YES" to remove duplicate hofx files (one per processor)
 
 echo 'THISDATE in land DA, '$THISDATE
-echo $OBS_TYPES 
-echo $JEDI_TYPES
+
+############################################################################################
+# TEMPORARY, UNTIL WE SORT OUT THE LATENCY ON THE IMS OBS
+# IMS data in file is from day before the file's time stamp 
+IMStiming=OBSDATE # FILEDATE - use IMS data for file's time stamp =THISDATE (NRT option) 
+                   # OBSDATE  - use IMS data for observation time stamp = THISDATE (hindcast option)
+IMShr=${IMShr:-"18"} # for now, assimilate IMS only at 18
 
 ############################################################################################
 
@@ -169,10 +151,15 @@ do
 
   # check obs are available
   if [[ -e $obsfile ]]; then
+    echo "do_landDA: ${OBS_TYPES[$ii]} observations found: $obsfile"
     if [ ${OBS_TYPES[$ii]} != "IMS" ]; then 
        ln -s $obsfile  ${OBS_TYPES[$ii]}_${YYYY}${MM}${DD}${HH}.nc
-    fi
-    echo "${OBS_TYPES[$ii]} observations found: $obsfile"
+    else 
+       if [ ${IMShr} != ${HH} ]; then 
+           OBS_ACTION[$ii]="SKIP"  
+           echo "do_landDA: not assimilating IMS at hr $HH"
+       fi
+    fi 
   else
     echo "${OBS_TYPES[$ii]} observations not found: $obsfile"
     OBS_ACTION[$ii]="SKIP"
@@ -265,6 +252,7 @@ if [[ $do_DA == "YES" ]]; then
       sed -i -e "s/XXHP/${HP}/g" letkf_land.yaml
 
       sed -i -e "s/XXRES/${RES}/g" letkf_land.yaml
+      RESP1=$((RES+1))
       sed -i -e "s/XXREP/${RESP1}/g" letkf_land.yaml
 
       sed -i -e "s/XXHOFX/false/g" letkf_land.yaml  # do DA
@@ -299,6 +287,7 @@ if [[ $do_HOFX == "YES" ]]; then
       sed -i -e "s/XXHP/${HP}/g" letkf_land.yaml
 
       sed -i -e "s/XXRES/${RES}/g" letkf_land.yaml
+      RESP1=$((RES+1))
       sed -i -e "s/XXREP/${RESP1}/g" letkf_land.yaml
 
       sed -i -e "s/XXHOFX/true/g" letkf_land.yaml  # do HOFX
@@ -314,6 +303,8 @@ fi
 ################################################
 
 if [[ ${DAtype} == 'letkfoi_snow' ]]; then 
+
+    B=30  # back ground error std for LETKFOI
 
     JEDI_EXEC="fv3jedi_letkf.x"
 
@@ -338,6 +329,8 @@ fi
 # 5. RUN JEDI
 ################################################
 
+NPROC_JEDI=6
+
 if [[ ! -e Data ]]; then
     ln -s $JEDI_STATICDIR Data 
 fi
@@ -346,14 +339,14 @@ echo 'do_landDA: calling fv3-jedi'
 source ${JEDI_EXECDIR}/../../../fv3_mods_hera
 
 if [[ $do_DA == "YES" ]]; then
-    srun -n $NPROC_DA ${JEDI_EXECDIR}/${JEDI_EXEC} letkf_land.yaml ${LOGDIR}/jedi_letkf.log
+    srun -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} letkf_land.yaml ${LOGDIR}/jedi_letkf.log
     if [[ $? != 0 ]]; then
         echo "JEDI DA failed"
         exit 10
     fi
 fi 
 if [[ $do_HOFX == "YES" ]]; then  
-    srun -n $NPROC_DA ${JEDI_EXECDIR}/${JEDI_EXEC} hofx_land.yaml ${LOGDIR}/jedi_hofx.log
+    srun -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} hofx_land.yaml ${LOGDIR}/jedi_hofx.log
     if [[ $? != 0 ]]; then
         echo "JEDI hofx failed"
         exit 10
