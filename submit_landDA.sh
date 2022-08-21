@@ -13,16 +13,11 @@
 # C48 or C96 
 ##SBATCH --nodes=1
 ##SBATCH --tasks-per-node=6
-RES=96
-NPROC_DA=6
 
 # C768
 ##SBATCH --nodes=4
 ##SBATCH --tasks-per-node=24
-#RES=768 
-#NPROC_DA=96 
-source workflow_mods_bash 
 
-/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/AZworkflow/DA_update/do_snowDA.sh 
+./do_landDA.sh  settings_DA_IMS
 
 

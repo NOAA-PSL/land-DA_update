@@ -70,6 +70,11 @@ if [[ ! -e ${OUTDIR}/DA ]]; then
     mkdir ${OUTDIR}/DA/hofx
 fi 
 
+if [[ ! -e $WORKDIR ]]; then 
+    mkdir $WORKDIR
+fi
+
+
 cd $WORKDIR 
 
 ################################################
