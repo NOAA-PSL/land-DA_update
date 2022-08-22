@@ -211,13 +211,13 @@ do_HOFX="NO"
 
 for ii in "${!OBS_TYPES[@]}"; # loop through requested obs
 do
-   if [ ${JEDI_TYPES[$ii]} == "DA" ]; then 
+   if [[ ${JEDI_TYPES[$ii]} == "DA" && ${OBS_ACTION[$ii]} != "SKIP" ]]; then 
          do_DA="YES" 
-   elif [ ${JEDI_TYPES[$ii]} == "HOFX" ]; then
+   elif [[ ${JEDI_TYPES[$ii]} == "HOFX" && ${OBS_ACTION[$ii]} != "SKIP" ]]; then
          do_HOFX="YES" 
-   elif [ ${JEDI_TYPES[$ii]} != "SKIP" ]; then
-         echo "do_landDA:Unknown obs action ${JEDI_TYPES[$ii]}, exiting" 
-         exit 1
+#   elif [ ${JEDI_TYPES[$ii]} != "SKIP" ]; then
+#         echo "do_landDA:Unknown obs action ${JEDI_TYPES[$ii]}, exiting" 
+#         exit 1
    fi
 done
 
