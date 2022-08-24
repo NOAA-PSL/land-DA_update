@@ -161,11 +161,11 @@ do
     fi 
   else
     echo "${OBS_TYPES[$ii]} observations not found: $obsfile"
-    OBS_ACTION[$ii]="SKIP"
+    JEDI_TYPES[$ii]="SKIP"
   fi
 
   # pre-process and call IODA converter for IMS obs.
-  if [[ ${OBS_TYPES[$ii]} == "IMS"  && ${OBS_ACTION[$ii]} != "SKIP" ]]; then
+  if [[ ${OBS_TYPES[$ii]} == "IMS"  && ${JEDI_TYPES[$ii]} != "SKIP" ]]; then
 
 cat >> fims.nml << EOF
  &fIMS_nml
