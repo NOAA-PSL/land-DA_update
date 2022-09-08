@@ -53,6 +53,12 @@ REDUCE_HOFX="YES" # "YES" to remove duplicate hofx files (one per processor)
 
 echo 'THISDATE in land DA, '$THISDATE
 
+if [[ ${TTYPE} == "" ]]; then
+OROGTYPE=C${RES}
+else
+OROGTYPE=C${RES}.${TTYPE}
+fi 
+
 ############################################################################################
 # TEMPORARY, UNTIL WE SORT OUT THE LATENCY ON THE IMS OBS
 # IMS data in file is from day before the file's time stamp 
@@ -170,6 +176,7 @@ do
 cat >> fims.nml << EOF
  &fIMS_nml
   idim=$RES, jdim=$RES,
+  otype=${OROGTYPE},
   jdate=${YYYY}${DOY},
   yyyymmdd=${YYYY}${MM}${DD},
   imsformat=2,
@@ -193,7 +200,7 @@ EOF
     echo 'do_landDA: calling ioda converter' 
     source ${LANDDADIR}/ioda_mods_hera
 
-    python ${IMS_IODA} -i IMSscf.${YYYY}${MM}${DD}.C${RES}.nc -o ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc 
+    python ${IMS_IODA} -i IMSscf.${YYYY}${MM}${DD}.${OROGTYPE}.nc -o ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.${OROGTYPE}.nc 
     if [[ $? != 0 ]]; then
         echo "IMS IODA converter failed"
         exit 10
@@ -251,6 +258,7 @@ if [[ $do_DA == "YES" ]]; then
       sed -i -e "s/XXHP/${HP}/g" letkf_land.yaml
 
       sed -i -e "s/XXRES/${RES}/g" letkf_land.yaml
+      sed -i -e "s/XXOROGTYPE/${OROGTYPE}/g" letkf_land.yaml
       RESP1=$((RES+1))
       sed -i -e "s/XXREP/${RESP1}/g" letkf_land.yaml
 
@@ -286,6 +294,7 @@ if [[ $do_HOFX == "YES" ]]; then
       sed -i -e "s/XXHP/${HP}/g" hofx_land.yaml
 
       sed -i -e "s/XXRES/${RES}/g" hofx_land.yaml
+      sed -i -e "s/XXOROGTYPE/${OROGTYPE}/g" hofx_land.yaml
       RESP1=$((RES+1))
       sed -i -e "s/XXREP/${RESP1}/g" hofx_land.yaml
 

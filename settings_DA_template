@@ -8,6 +8,7 @@
 # OUTDIR=/scratch2/BMC/gsienkf/${USER}/cycle_land/${exp_name}/  # temporary directory where experiment is run from
 # RSTRDIR= #  if not specified, is constructed from $WORKDIR 
 # RES= #FV3 resolution
+# TTYPE= #FV3 type. options: "mx100" for coupled atm/ice-ocean, or "" for atm or land only
 
 # directory where do_landDA.sh script is 
 LANDDADIR=${CYCLEDIR}/DA_update/ # if calling from submit_cycle.sh
