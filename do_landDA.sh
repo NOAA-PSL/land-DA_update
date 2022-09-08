@@ -37,18 +37,18 @@ RSTRDIR=${RSTRDIR:-$WORKDIR/restarts/tile/} # if running offline cycling will be
 OBSDIR=${OBSDIR:-"/scratch2/NCEPDEV/land/data/DA/"}
 
 # executable directories
-FIMS_EXECDIR=${SCRIPTDIR}/IMS_proc/exec/   
-INCR_EXECDIR=${SCRIPTDIR}/add_jedi_incr/exec/   
+FIMS_EXECDIR=${LANDDADIR}/IMS_proc/exec/   
+INCR_EXECDIR=${LANDDADIR}/add_jedi_incr/exec/   
 
 # JEDI directories
 JEDI_EXECDIR=${JEDI_EXECDIR:-"/scratch2/NCEPDEV/land/data/jedi/fv3-bundle/build/bin/"}
 IODA_BUILD_DIR=${IODA_BUILD_DIR:-"/scratch2/BMC/gsienkf/UFS-RNR/UFS-RNR-stack/external/ioda-bundle/build/"}
-JEDI_STATICDIR=${SCRIPTDIR}/jedi/fv3-jedi/Data/
+JEDI_STATICDIR=${LANDDADIR}/jedi/fv3-jedi/Data/
 
 # storage settings 
 SAVE_IMS="YES" # "YES" to save processed IMS IODA file
 SAVE_INCR="YES" # "YES" to save increment (add others?) JEDI output
-SAVE_TILE="NO" # "YES" to save background in tile space
+SAVE_TILE=${SAVE_TILE:-"NO"} # "YES" to save background in tile space
 REDUCE_HOFX="YES" # "YES" to remove duplicate hofx files (one per processor)
 
 echo 'THISDATE in land DA, '$THISDATE
@@ -81,7 +81,7 @@ cd $WORKDIR
 # 1. FORMAT DATE STRINGS AND STAGE RESTARTS
 ################################################
 
-INCDATE=${SCRIPTDIR}/incdate.sh
+INCDATE=${LANDDADIR}/incdate.sh
 
 YYYY=`echo $THISDATE | cut -c1-4`
 MM=`echo $THISDATE | cut -c5-6`
@@ -104,16 +104,16 @@ fi
 if  [[ $SAVE_TILE == "YES" ]]; then
 for tile in 1 2 3 4 5 6 
 do
-cp ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${OUTDIR}/restarts/${FILEDATE}.sfc_data_back.tile${tile}.nc
+cp ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${RSTRDIR}/${FILEDATE}.sfc_data_back.tile${tile}.nc
 done
 fi 
 
 #stage restarts for applying JEDI update (files will get directly updated)
 for tile in 1 2 3 4 5 6 
 do
-  ln -s ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc ${WORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc
+  ln -fs ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc ${WORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc
 done
-ln -s ${RSTRDIR}/${FILEDATE}.coupler.res ${WORKDIR}/${FILEDATE}.coupler.res 
+ln -sf ${RSTRDIR}/${FILEDATE}.coupler.res ${WORKDIR}/${FILEDATE}.coupler.res 
 
 
 ################################################
@@ -157,7 +157,7 @@ do
   if [[ -e $obsfile ]]; then
     echo "do_landDA: ${OBS_TYPES[$ii]} observations found: $obsfile"
     if [ ${OBS_TYPES[$ii]} != "IMS" ]; then 
-       ln -s $obsfile  ${OBS_TYPES[$ii]}_${YYYY}${MM}${DD}${HH}.nc
+       ln -fs $obsfile  ${OBS_TYPES[$ii]}_${YYYY}${MM}${DD}${HH}.nc
     fi 
   else
     echo "${OBS_TYPES[$ii]} observations not found: $obsfile"
@@ -179,7 +179,7 @@ cat >> fims.nml << EOF
   /
 EOF
     echo 'do_landDA: calling fIMS'
-    source ${SCRIPTDIR}/land_mods_hera
+    source ${LANDDADIR}/land_mods_hera
 
     ${FIMS_EXECDIR}/calcfIMS
     if [[ $? != 0 ]]; then
@@ -188,10 +188,10 @@ EOF
     fi
 
     IMS_IODA=imsfv3_scf2ioda_obs40.py
-    cp ${SCRIPTDIR}/jedi/ioda/${IMS_IODA} $WORKDIR
+    cp ${LANDDADIR}/jedi/ioda/${IMS_IODA} $WORKDIR
 
     echo 'do_landDA: calling ioda converter' 
-    source ${SCRIPTDIR}/ioda_mods_hera
+    source ${LANDDADIR}/ioda_mods_hera
 
     python ${IMS_IODA} -i IMSscf.${YYYY}${MM}${DD}.C${RES}.nc -o ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc 
     if [[ $? != 0 ]]; then
@@ -231,12 +231,12 @@ if [[ $do_DA == "YES" ]]; then
 
    if [[ $YAML_DA == "construct" ]];then  # construct the yaml
 
-      cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${WORKDIR}/letkf_land.yaml
+      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${WORKDIR}/letkf_land.yaml
 
       for ii in "${!OBS_TYPES[@]}";
       do 
         if [ ${JEDI_TYPES[$ii]} == "DA" ]; then
-        cat ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${OBS_TYPES[$ii]}.yaml >> letkf_land.yaml
+        cat ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${OBS_TYPES[$ii]}.yaml >> letkf_land.yaml
         fi 
       done
 
@@ -258,7 +258,7 @@ if [[ $do_DA == "YES" ]]; then
 
    else # use specified yaml 
       echo "Using user specified YAML: ${YAML_DA}"
-      cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${YAML_DA} ${WORKDIR}/letkf_land.yaml
+      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${YAML_DA} ${WORKDIR}/letkf_land.yaml
    fi
 fi
 
@@ -266,12 +266,12 @@ if [[ $do_HOFX == "YES" ]]; then
 
    if [[ $YAML_HOFX == "construct" ]];then  # construct the yaml
 
-      cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${WORKDIR}/hofx_land.yaml
+      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${WORKDIR}/hofx_land.yaml
 
       for ii in "${!OBS_TYPES[@]}";
       do 
         if [ ${JEDI_TYPES[$ii]} == "HOFX" ]; then
-        cat ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${OBS_TYPES[$ii]}.yaml >> hofx_land.yaml
+        cat ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${OBS_TYPES[$ii]}.yaml >> hofx_land.yaml
         fi 
       done
 
@@ -293,7 +293,7 @@ if [[ $do_HOFX == "YES" ]]; then
 
    else # use specified yaml 
       echo "Using user specified YAML: ${YAML_HOFX}"
-      cp ${SCRIPTDIR}/jedi/fv3-jedi/yaml_files/${YAML_HOFX} ${WORKDIR}/hofx_land.yaml
+      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${YAML_HOFX} ${WORKDIR}/hofx_land.yaml
    fi
 fi
 
@@ -308,15 +308,28 @@ if [[ ${DAtype} == 'letkfoi_snow' ]]; then
     JEDI_EXEC="fv3jedi_letkf.x"
 
     # FOR LETKFOI, CREATE THE PSEUDO-ENSEMBLE
-    cp -r ${RSTRDIR} $WORKDIR/mem_pos
-    cp -r ${RSTRDIR} $WORKDIR/mem_neg
+    #cp -r ${RSTRDIR} $WORKDIR/mem_pos
+    #cp -r ${RSTRDIR} $WORKDIR/mem_neg
+    for ens in pos neg 
+    do
+        if [ -e $WORKDIR/mem_${ens} ]; then 
+                rm -r $WORKDIR/mem_${ens}
+        fi
+        mkdir $WORKDIR/mem_${ens} 
+        for tile in 1 2 3 4 5 6
+        do
+        cp ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${WORKDIR}/mem_${ens}/${FILEDATE}.sfc_data.tile${tile}.nc
+        done
+        cp ${RSTRDIR}/${FILEDATE}.coupler.res ${WORKDIR}/mem_${ens}/${FILEDATE}.coupler.res
+    done
+       
 
     echo 'do_landDA: calling create ensemble' 
 
     # using ioda mods to get a python version with netCDF4
-    source ${SCRIPTDIR}/ioda_mods_hera
+    source ${LANDDADIR}/ioda_mods_hera
 
-    python ${SCRIPTDIR}/letkf_create_ens.py $FILEDATE $B
+    python ${LANDDADIR}/letkf_create_ens.py $FILEDATE $B
     if [[ $? != 0 ]]; then
         echo "letkf create failed"
         exit 10
@@ -369,7 +382,7 @@ cat << EOF > apply_incr_nml
 EOF
 
     echo 'do_landDA: calling apply snow increment'
-    source ${SCRIPTDIR}/land_mods_hera
+    source ${LANDDADIR}/land_mods_hera
 
     # (n=6) -> this is fixed, at one task per tile (with minor code change, could run on a single proc). 
     srun '--export=ALL' -n 6 ${INCR_EXECDIR}/apply_incr ${LOGDIR}/apply_incr.log
