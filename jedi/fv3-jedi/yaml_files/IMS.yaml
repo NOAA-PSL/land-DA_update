@@ -6,7 +6,7 @@
       simulated variables: [totalSnowDepth]
       observed variables: [totalSnowDepth]
       obsdatain:
-        obsfile: ioda.IMSscf.XXYYYYXXMMXXDD.XXOROGTYPE.nc
+        obsfile: ioda.IMSscf.XXYYYYXXMMXXDD.XXTSTUB.nc
       obsdataout:
         obsfile: output/DA/hofx/letkf_hofx_ims_XXYYYYXXMMXXDD.nc
     obs operator:

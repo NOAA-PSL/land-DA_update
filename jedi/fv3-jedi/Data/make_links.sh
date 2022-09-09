@@ -9,7 +9,4 @@ fi
 
 ln -s ${jedi_path}/fv3-jedi/test/Data/fv3files . 
 ln -s ${jedi_path}/fv3-jedi/test/Data/fieldmetadata . 
-# Offline system:
-ln -s /scratch2/BMC/gsienkf/Clara.Draper/data_RnR/orog_files_Mike ./offline_fix
-# Coupled: 
 
