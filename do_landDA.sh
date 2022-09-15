@@ -50,6 +50,7 @@ SAVE_IMS="YES" # "YES" to save processed IMS IODA file
 SAVE_INCR="YES" # "YES" to save increment (add others?) JEDI output
 SAVE_TILE=${SAVE_TILE:-"NO"} # "YES" to save background in tile space
 REDUCE_HOFX="YES" # "YES" to remove duplicate hofx files (one per processor)
+KEEPDADIR=${KEEPDADIR:-"YES"} # delete DA workdir 
 
 echo 'THISDATE in land DA, '$THISDATE
 
@@ -113,7 +114,23 @@ for tile in 1 2 3 4 5 6
 do
   ln -fs ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc ${WORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc
 done
-ln -sf ${RSTRDIR}/${FILEDATE}.coupler.res ${WORKDIR}/${FILEDATE}.coupler.res 
+cres_file=${WORKDIR}/${FILEDATE}.coupler.res
+if [[ -e  ${RSTRDIR}/${FILEDATE}.coupler.res ]]; then 
+    ln -sf ${RSTRDIR}/${FILEDATE}.coupler.res $cres_file
+else #  if not present, need to create coupler.res for JEDI 
+    cp ${LANDDADIR}/template.coupler.res $cres_file
+
+    sed -i -e "s/XXYYYY/${YYYY}/g" $cres_file
+    sed -i -e "s/XXMM/${MM}/g" $cres_file
+    sed -i -e "s/XXDD/${DD}/g" $cres_file
+    sed -i -e "s/XXHH/${HH}/g" $cres_file
+
+    sed -i -e "s/XXYYYP/${YYYP}/g" $cres_file
+    sed -i -e "s/XXMP/${MP}/g" $cres_file
+    sed -i -e "s/XXDP/${DP}/g" $cres_file
+    sed -i -e "s/XXHP/${HP}/g" $cres_file
+
+fi 
 
 
 ################################################
@@ -323,9 +340,9 @@ if [[ ${DAtype} == 'letkfoi_snow' ]]; then
         mkdir $WORKDIR/mem_${ens} 
         for tile in 1 2 3 4 5 6
         do
-        cp ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${WORKDIR}/mem_${ens}/${FILEDATE}.sfc_data.tile${tile}.nc
+        cp ${WORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${WORKDIR}/mem_${ens}/${FILEDATE}.sfc_data.tile${tile}.nc
         done
-        cp ${RSTRDIR}/${FILEDATE}.coupler.res ${WORKDIR}/mem_${ens}/${FILEDATE}.coupler.res
+        cp ${WORKDIR}/${FILEDATE}.coupler.res ${WORKDIR}/mem_${ens}/${FILEDATE}.coupler.res
     done
        
 
@@ -430,4 +447,9 @@ if [ $REDUCE_HOFX == "YES" ]; then
    do 
     rm $file 
    done
+fi 
+
+# clean up 
+if [[ $KEEPDADIR == "NO" ]]; then
+   rm -rf ${WORKDIR} 
 fi 
