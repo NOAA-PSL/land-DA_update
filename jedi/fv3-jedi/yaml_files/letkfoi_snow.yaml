@@ -8,7 +8,7 @@ geometry:
   npz: 64
   field metadata override: Data/fieldmetadata/gfs-land.yaml
 
-  orography:
+  time invariant state fields:
     datetime: XXYYYP-XXMP-XXDPTXXHP:00:00Z
     filetype: fms restart
     skip coupler file: true
