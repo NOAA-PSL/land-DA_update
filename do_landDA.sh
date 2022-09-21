@@ -319,6 +319,8 @@ if [[ $do_HOFX == "YES" ]]; then
    fi
 fi
 
+cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-land-fractional.yaml ${WORKDIR}/gfs-land-fractional.yaml
+
 ################################################
 # 4. CREATE BACKGROUND ENSEMBLE (LETKFOI)
 ################################################
@@ -420,13 +422,6 @@ fi
 ################################################
 # 7. CLEAN UP
 ################################################
-
-if  [[ $SAVE_TILE == "YES" ]]; then
-   for tile in 1 2 3 4 5 6 
-   do
-     cp ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${OUTDIR}/modl/restarts/tile/${FILEDATE}.sfc_data_anal.tile${tile}.nc
-   done
-fi 
 
 # keep IMS IODA file
 if [ $SAVE_IMS == "YES"  ]; then
