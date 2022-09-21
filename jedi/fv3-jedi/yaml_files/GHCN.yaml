@@ -4,9 +4,13 @@
         name: Halo
       simulated variables: [totalSnowDepth]
       obsdatain:
-        obsfile: GHCN_XXYYYYXXMMXXDDXXHH.nc
+        engine:
+          type: H5File
+          obsfile: GHCN_XXYYYYXXMMXXDDXXHH.nc
       obsdataout:
-        obsfile: output/DA/hofx/letkf_hofx_ghcn_XXYYYYXXMMXXDD.nc
+        engine:
+          type: H5File
+          obsfile: output/DA/hofx/letkf_hofx_ghcn_XXYYYYXXMMXXDD.nc
     obs operator:
       name: Identity
     obs error:
@@ -46,25 +50,3 @@
       threshold: 6.25
       action:
         name: reject
-
-driver:
-  save posterior mean: false
-  save posterior mean increment: true
-  save posterior ensemble: false
-  run as observer only: XXHOFX
-
-local ensemble DA:
-  solver: LETKF
-  inflation:
-    rtps: 0.0
-    rtpp: 0.0
-    mult: 1.0
-
-output increment:
-  filetype: fms restart
-  filename_sfcd: xainc.sfc_data.nc
-
-#test:
-#  reference filename: testoutput/letkf_snow.ref
-#  float relative tolerance: 1.0e-2
-#  test output filename: testoutput/letkf_snow.test.out

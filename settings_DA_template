@@ -42,3 +42,6 @@ YAML_HOFX=construct
 #IMShr= # is assimilating IMS at hour other than 18, specify here.
 #OBSDIR= # to override default OBSDIR
 
+# OPTIONAL:delete workdirectory after DA update (do not use for within cycle_workflow)
+#KEEPDADIR=
+

@@ -6,9 +6,13 @@
       simulated variables: [totalSnowDepth]
       observed variables: [totalSnowDepth]
       obsdatain:
-        obsfile: ioda.IMSscf.XXYYYYXXMMXXDD.XXTSTUB.nc
+        engine:
+          type: H5File
+          obsfile: ioda.IMSscf.XXYYYYXXMMXXDD.XXTSTUB.nc
       obsdataout:
-        obsfile: output/DA/hofx/letkf_hofx_ims_XXYYYYXXMMXXDD.nc
+        engine:
+          type: H5File
+          obsfile: output/DA/hofx/letkf_hofx_ims_XXYYYYXXMMXXDD.nc
     obs operator:
       name: Identity
     obs error:
