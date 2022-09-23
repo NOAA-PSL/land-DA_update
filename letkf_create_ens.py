@@ -6,11 +6,12 @@ import sys
 # perturbation, given stdev(ensemble) of B
 # Clara Draper, October, 2021.
 
-if (len(sys.argv) != 3): 
-    print('argument error, usage: letkf_create file_stub back_error' ) 
+if (len(sys.argv) != 4): 
+    print('argument error, usage: letkf_create file_stub variable back_error' ) 
 
 fstub=sys.argv[1]
-b = float(sys.argv[2]) 
+vname=sys.argv[2]
+b = float(sys.argv[3]) 
 
 # 2 ens members 
 offset=b/np.sqrt(2)
@@ -27,7 +28,7 @@ for ens in range(2):
         #print (out_netcdf)
         ncOut = Dataset(out_netcdf, "r+")  
         # add offset to the snow
-        var_array = ncOut.variables["snwdph"][:]
+        var_array = ncOut.variables[vname][:]
         var_array = var_array + sign[ens]*offset
-        ncOut.variables["snwdph"][0,:,:] = var_array[:]
+        ncOut.variables[vname][0,:,:] = var_array[:]
         ncOut.close()

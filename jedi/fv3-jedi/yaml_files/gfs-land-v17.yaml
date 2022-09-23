@@ -10,6 +10,7 @@ field metadata:
 - long name: vtype
   interpolation type: nearest
 
-- long name: ice_fraction_over_sea_area
+- long name: fraction_of_ice
+  io name: fice
   interpolation type: nearest
 

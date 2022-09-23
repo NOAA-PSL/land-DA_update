@@ -1,0 +1,166 @@
+geometry:
+  fms initialization:
+    namelist filename: Data/fv3files/fmsmpp.nml
+    field table filename: Data/fv3files/field_table
+  akbk: Data/fv3files/akbk64.nc4
+  npx: XXREP
+  npy: XXREP
+  npz: 64
+  field metadata override: gfs-land-v17.yaml
+
+  time invariant state fields:
+    datetime: XXYYYP-XXMP-XXDPTXXHP:00:00Z
+    filetype: fms restart
+    skip coupler file: true
+    state variables: [orog_filt]
+    datapath: XXTPATH
+    filename_orog: XXTSTUB.nc
+
+window begin: XXYYYP-XXMP-XXDPTXXHP:00:00Z
+window length: PT6H
+
+background:
+ date: &date XXYYYY-XXMM-XXDDTXXHH:00:00Z
+ members:
+   - datetime: XXYYYY-XXMM-XXDDTXXHH:00:00Z
+     filetype: fms restart
+     state variables: [snwdph,vtype,slmsk,fice]
+     datapath: mem_pos/
+     filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
+     filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
+   - datetime: XXYYYY-XXMM-XXDDTXXHH:00:00Z
+     filetype: fms restart
+     state variables: [snwdph,vtype,slmsk,fice]
+     datapath: mem_neg/
+     filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
+     filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
+
+driver:
+  save posterior mean: false
+  save posterior mean increment: true
+  save posterior ensemble: false
+  run as observer only: XXHOFX
+
+local ensemble DA:
+  solver: LETKF
+  inflation:
+    rtps: 0.0
+    rtpp: 0.0
+    mult: 1.0
+
+output increment:
+  filetype: fms restart
+  filename_sfcd: xainc.sfc_data.nc
+
+observations:
+  observers:
+  - obs space:
+      name: SnowDepthIMS
+      distribution:
+         name: Halo
+         halo size: 250e3
+      simulated variables: [totalSnowDepth]
+      observed variables: [totalSnowDepth]
+      obsdatain:
+        engine:
+          type: H5File
+          obsfile: ioda.IMSscf.XXYYYYXXMMXXDD.XXTSTUB.nc
+      obsdataout:
+        engine:
+          type: H5File
+          obsfile: output/DA/hofx/letkf_hofx_ims_XXYYYYXXMMXXDDXXHH.nc
+    obs operator:
+      name: Identity
+    obs error:
+      covariance model: diagonal
+    obs localizations:
+    - localization method: Horizontal SOAR
+      lengthscale: 250e3
+      soar horizontal decay: 0.000021
+      max nobs: 1
+    obs filters:
+    - filter: Bounds Check # negative / missing snow
+      filter variables:
+      - name: totalSnowDepth
+      minvalue: 0.0
+    - filter: Domain Check # land only, no sea ice
+      where:
+      - variable:
+          name: slmsk@GeoVaLs
+        minvalue: 0.5
+        maxvalue: 1.5
+    - filter: Domain Check # land only, no sea ice
+      where:
+      - variable:
+          name: fraction_of_ice@GeoVaLs
+        maxvalue: 0.0
+    - filter: RejectList  # no land-ice
+      where:
+      - variable:
+          name: vtype@GeoVaLs
+        minvalue: 14.5
+        maxvalue: 15.5
+    - filter: Background Check # gross error check
+      filter variables:
+      - name: totalSnowDepth
+      threshold: 6.25
+      action:
+        name: reject
+  - obs space:
+      name: Simulate
+      distribution: 
+        name: Halo
+        halo size: 250e3
+      simulated variables: [totalSnowDepth]
+      obsdatain:
+        engine:
+          type: H5File
+          obsfile: GHCN_XXYYYYXXMMXXDDXXHH.nc
+      obsdataout:
+        engine:
+          type: H5File
+          obsfile: output/DA/hofx/letkf_hofx_ghcn_XXYYYYXXMMXXDDXXHH.nc
+    obs operator:
+      name: Identity
+    obs error:
+      covariance model: diagonal
+    obs localizations:
+    - localization method: Horizontal SOAR
+      lengthscale: 250e3
+      soar horizontal decay: 0.000021
+      max nobs: 50
+    - localization method: Vertical Brasnett
+      vertical lengthscale: 700
+    obs filters:
+    - filter: Bounds Check # negative / missing snow
+      filter variables:
+      - name: totalSnowDepth
+      minvalue: 0.0
+    - filter: Domain Check # missing station elevation (-999.9)
+      where:
+      - variable:
+          name: height@MetaData
+        minvalue: -999.0
+    - filter: Domain Check # land only, no sea ice
+      where:
+      - variable:
+          name: slmsk@GeoVaLs
+        minvalue: 0.5
+        maxvalue: 1.5
+    - filter: Domain Check # land only, no sea ice
+      where:
+      - variable:
+          name: fraction_of_ice@GeoVaLs
+        maxvalue: 0.0
+    - filter: RejectList  # no land-ice
+      where:
+      - variable:
+          name: vtype@GeoVaLs
+        minvalue: 14.5
+        maxvalue: 15.5
+    - filter: Background Check # gross error check
+      filter variables:
+      - name: totalSnowDepth
+      threshold: 6.25
+      action:
+        name: reject
