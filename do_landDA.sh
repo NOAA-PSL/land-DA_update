@@ -149,6 +149,9 @@ do
      obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYY}/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc
   elif [ ${OBS_TYPES[$ii]} == "SYNTH" ]; then 
      obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}${HH}.nc
+  elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
+     obsfile=$OBSDIR/soil_moisture/SMAP/data_proc/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
+# Zofia - any processing of the SMAP obs goes here.
   elif [ ${OBS_TYPES[$ii]} == "IMS" ]; then 
      if [[ $IMStiming == "FILEDATE" ]]; then 
             IMSDAY=${THISDATE} 
@@ -343,8 +346,6 @@ if [[ ${DAtype} == 'letkfoi_snow' ]]; then
     B=30  # back ground error std for LETKFOI
 
     # FOR LETKFOI, CREATE THE PSEUDO-ENSEMBLE
-    #cp -r ${RSTRDIR} $WORKDIR/mem_pos
-    #cp -r ${RSTRDIR} $WORKDIR/mem_neg
     for ens in pos neg 
     do
         if [ -e $WORKDIR/mem_${ens} ]; then 
@@ -370,7 +371,13 @@ if [[ ${DAtype} == 'letkfoi_snow' ]]; then
         exit 10
     fi
 
-fi 
+elif [[ ${DAtype} == 'letkfoi_smc' ]]; then 
+
+    JEDI_EXEC="fv3jedi_letkf.x"
+
+    cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-soilMoisture.yaml ${WORKDIR}/gfs-soilMoisture.yaml
+
+fi
 
 ################################################
 # 5. RUN JEDI
