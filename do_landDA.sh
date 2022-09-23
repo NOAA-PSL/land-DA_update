@@ -330,15 +330,17 @@ fi
 
 if [[ ${DAtype} == 'letkfoi_snow' ]]; then 
 
+    JEDI_EXEC="fv3jedi_letkf.x"
+
     if [ $GFSv17 == "YES" ]; then
         SNOWDEPTHVAR="snodl" 
+        # field overwrite file with GFSv17 variables.
+        cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-land-v17.yaml ${WORKDIR}/gfs-land-v17.yaml
     else
         SNOWDEPTHVAR="snwdph"
     fi
-    B=30  # back ground error std for LETKFOI
 
-    # field overwrite file with GFSv17 variables.
-    cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-land-v17.yaml ${WORKDIR}/gfs-land-v17.yaml
+    B=30  # back ground error std for LETKFOI
 
     # FOR LETKFOI, CREATE THE PSEUDO-ENSEMBLE
     #cp -r ${RSTRDIR} $WORKDIR/mem_pos
@@ -381,7 +383,6 @@ if [[ ! -e Data ]]; then
 fi
 
 echo 'do_landDA: calling fv3-jedi' 
-echo $JEDI_EXECDIR
 source ${JEDI_EXECDIR}/../../../fv3_mods_hera
 
 if [[ $do_DA == "YES" ]]; then
