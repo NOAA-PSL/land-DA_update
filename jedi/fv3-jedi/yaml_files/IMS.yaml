@@ -12,7 +12,7 @@
       obsdataout:
         engine:
           type: H5File
-          obsfile: output/DA/hofx/letkf_hofx_ims_XXYYYYXXMMXXDD.nc
+          obsfile: output/DA/hofx/letkf_hofx_ims_XXYYYYXXMMXXDDXXHH.nc
     obs operator:
       name: Identity
     obs error:

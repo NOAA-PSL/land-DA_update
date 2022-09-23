@@ -6,7 +6,7 @@ geometry:
   npx: XXREP
   npy: XXREP
   npz: 64
-  field metadata override: Data/fieldmetadata/gfs-land.yaml
+  field metadata override: gfs-land-fractional.yaml
 
   time invariant state fields:
     datetime: XXYYYP-XXMP-XXDPTXXHP:00:00Z
@@ -24,13 +24,13 @@ background:
  members:
    - datetime: XXYYYY-XXMM-XXDDTXXHH:00:00Z
      filetype: fms restart
-     state variables: [snwdph,vtype,slmsk]
+     state variables: [snwdph,vtype,slmsk,fice]
      datapath: mem_pos/
      filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
      filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
    - datetime: XXYYYY-XXMM-XXDDTXXHH:00:00Z
      filetype: fms restart
-     state variables: [snwdph,vtype,slmsk]
+     state variables: [snwdph,vtype,slmsk,fice]
      datapath: mem_neg/
      filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
      filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res

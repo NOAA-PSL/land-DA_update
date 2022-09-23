@@ -2,6 +2,7 @@
       name: Simulate
       distribution: 
         name: Halo
+        halo size: 250e3
       simulated variables: [totalSnowDepth]
       obsdatain:
         engine:
@@ -10,7 +11,7 @@
       obsdataout:
         engine:
           type: H5File
-          obsfile: output/DA/hofx/letkf_hofx_ghcn_XXYYYYXXMMXXDD.nc
+          obsfile: output/DA/hofx/letkf_hofx_ghcn_XXYYYYXXMMXXDDXXHH.nc
     obs operator:
       name: Identity
     obs error:
@@ -38,6 +39,12 @@
           name: slmsk@GeoVaLs
         minvalue: 0.5
         maxvalue: 1.5
+    # GFSv17 only.
+    #- filter: Domain Check # no sea ice
+    #  where:
+    #  - variable:
+    #      name: fraction_of_ice@GeoVaLs
+    #    maxvalue: 0.0
     - filter: RejectList  # no land-ice
       where:
       - variable:

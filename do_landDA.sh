@@ -30,6 +30,8 @@ fi
 
 echo "reading DA settings from $config_file"
 
+GFSv17=${GFSv17:-"NO"}
+
 source $config_file
 
 LOGDIR=${OUTDIR}/DA/logs/
@@ -49,7 +51,7 @@ JEDI_STATICDIR=${LANDDADIR}/jedi/fv3-jedi/Data/
 SAVE_IMS="YES" # "YES" to save processed IMS IODA file
 SAVE_INCR="YES" # "YES" to save increment (add others?) JEDI output
 SAVE_TILE=${SAVE_TILE:-"NO"} # "YES" to save background in tile space
-REDUCE_HOFX="YES" # "YES" to remove duplicate hofx files (one per processor)
+REDUCE_HOFX="NO" # "YES" to remove duplicate hofx files (one per processor)
 KEEPDADIR=${KEEPDADIR:-"YES"} # delete DA workdir 
 
 echo 'THISDATE in land DA, '$THISDATE
@@ -58,7 +60,7 @@ echo 'THISDATE in land DA, '$THISDATE
 # TEMPORARY, UNTIL WE SORT OUT THE LATENCY ON THE IMS OBS
 # IMS data in file is from day before the file's time stamp 
 IMStiming=OBSDATE # FILEDATE - use IMS data for file's time stamp =THISDATE (NRT option) 
-                   # OBSDATE  - use IMS data for observation time stamp = THISDATE (hindcast option)
+                   # OBSDATE  - use IMS data for observation time stamp = THISDATE + 24 (hindcast option)
 
 ############################################################################################
 
@@ -184,12 +186,15 @@ do
   # pre-process and call IODA converter for IMS obs.
   if [[ ${OBS_TYPES[$ii]} == "IMS"  && ${JEDI_TYPES[$ii]} != "SKIP" ]]; then
 
+    if [[ -e fims.nml ]]; then
+        rm -rf fims.nml 
+    fi
 cat >> fims.nml << EOF
  &fIMS_nml
   idim=$RES, jdim=$RES,
   otype=${TSTUB},
   jdate=${YYYY}${DOY},
-  yyyymmdd=${YYYY}${MM}${DD},
+  yyyymmddhh=${YYYY}${MM}${DD}.${HH},
   imsformat=2,
   imsversion=${ims_vsn},
   IMS_OBS_PATH="${OBSDIR}/snow_ice_cover/IMS/${YYYY}/",
@@ -258,28 +263,28 @@ if [[ $do_DA == "YES" ]]; then
         fi 
       done
 
-      sed -i -e "s/XXYYYY/${YYYY}/g" letkf_land.yaml
-      sed -i -e "s/XXMM/${MM}/g" letkf_land.yaml
-      sed -i -e "s/XXDD/${DD}/g" letkf_land.yaml
-      sed -i -e "s/XXHH/${HH}/g" letkf_land.yaml
-
-      sed -i -e "s/XXYYYP/${YYYP}/g" letkf_land.yaml
-      sed -i -e "s/XXMP/${MP}/g" letkf_land.yaml
-      sed -i -e "s/XXDP/${DP}/g" letkf_land.yaml
-      sed -i -e "s/XXHP/${HP}/g" letkf_land.yaml
-
-      sed -i -e "s/XXTSTUB/${TSTUB}/g" letkf_land.yaml
-      sed -i -e "s#XXTPATH#${TPATH}#g" letkf_land.yaml
-      sed -i -e "s/XXRES/${RES}/g" letkf_land.yaml
-      RESP1=$((RES+1))
-      sed -i -e "s/XXREP/${RESP1}/g" letkf_land.yaml
-
-      sed -i -e "s/XXHOFX/false/g" letkf_land.yaml  # do DA
-
    else # use specified yaml 
       echo "Using user specified YAML: ${YAML_DA}"
       cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${YAML_DA} ${WORKDIR}/letkf_land.yaml
    fi
+
+   sed -i -e "s/XXYYYY/${YYYY}/g" letkf_land.yaml
+   sed -i -e "s/XXMM/${MM}/g" letkf_land.yaml
+   sed -i -e "s/XXDD/${DD}/g" letkf_land.yaml
+   sed -i -e "s/XXHH/${HH}/g" letkf_land.yaml
+
+   sed -i -e "s/XXYYYP/${YYYP}/g" letkf_land.yaml
+   sed -i -e "s/XXMP/${MP}/g" letkf_land.yaml
+   sed -i -e "s/XXDP/${DP}/g" letkf_land.yaml
+   sed -i -e "s/XXHP/${HP}/g" letkf_land.yaml
+
+   sed -i -e "s/XXTSTUB/${TSTUB}/g" letkf_land.yaml
+   sed -i -e "s#XXTPATH#${TPATH}#g" letkf_land.yaml
+   sed -i -e "s/XXRES/${RES}/g" letkf_land.yaml
+   RESP1=$((RES+1))
+   sed -i -e "s/XXREP/${RESP1}/g" letkf_land.yaml
+
+   sed -i -e "s/XXHOFX/false/g" letkf_land.yaml  # do DA
 fi
 
 if [[ $do_HOFX == "YES" ]]; then 
@@ -294,29 +299,29 @@ if [[ $do_HOFX == "YES" ]]; then
         cat ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${OBS_TYPES[$ii]}.yaml >> hofx_land.yaml
         fi 
       done
-
-      sed -i -e "s/XXYYYY/${YYYY}/g" hofx_land.yaml
-      sed -i -e "s/XXMM/${MM}/g" hofx_land.yaml
-      sed -i -e "s/XXDD/${DD}/g" hofx_land.yaml
-      sed -i -e "s/XXHH/${HH}/g" hofx_land.yaml
-
-      sed -i -e "s/XXYYYP/${YYYP}/g" hofx_land.yaml
-      sed -i -e "s/XXMP/${MP}/g" hofx_land.yaml
-      sed -i -e "s/XXDP/${DP}/g" hofx_land.yaml
-      sed -i -e "s/XXHP/${HP}/g" hofx_land.yaml
-
-      sed -i -e "s#XXTPATH#${TPATH}#g" hofx_land.yaml
-      sed -i -e "s/XXTSTUB/${TSTUB}/g" hofx_land.yaml
-      sed -i -e "s/XXRES/${RES}/g" hofx_land.yaml
-      RESP1=$((RES+1))
-      sed -i -e "s/XXREP/${RESP1}/g" hofx_land.yaml
-
-      sed -i -e "s/XXHOFX/true/g" hofx_land.yaml  # do HOFX
-
    else # use specified yaml 
       echo "Using user specified YAML: ${YAML_HOFX}"
       cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${YAML_HOFX} ${WORKDIR}/hofx_land.yaml
    fi
+
+   sed -i -e "s/XXYYYY/${YYYY}/g" hofx_land.yaml
+   sed -i -e "s/XXMM/${MM}/g" hofx_land.yaml
+   sed -i -e "s/XXDD/${DD}/g" hofx_land.yaml
+   sed -i -e "s/XXHH/${HH}/g" hofx_land.yaml
+
+   sed -i -e "s/XXYYYP/${YYYP}/g" hofx_land.yaml
+   sed -i -e "s/XXMP/${MP}/g" hofx_land.yaml
+   sed -i -e "s/XXDP/${DP}/g" hofx_land.yaml
+   sed -i -e "s/XXHP/${HP}/g" hofx_land.yaml
+
+   sed -i -e "s#XXTPATH#${TPATH}#g" hofx_land.yaml
+   sed -i -e "s/XXTSTUB/${TSTUB}/g" hofx_land.yaml
+   sed -i -e "s/XXRES/${RES}/g" hofx_land.yaml
+   RESP1=$((RES+1))
+   sed -i -e "s/XXREP/${RESP1}/g" hofx_land.yaml
+
+   sed -i -e "s/XXHOFX/true/g" hofx_land.yaml  # do HOFX
+
 fi
 
 ################################################
@@ -325,9 +330,15 @@ fi
 
 if [[ ${DAtype} == 'letkfoi_snow' ]]; then 
 
+    if [ $GFSv17 == "YES" ]; then
+        SNOWDEPTHVAR="snodl" 
+    else
+        SNOWDEPTHVAR="snwdph"
+    fi
     B=30  # back ground error std for LETKFOI
 
-    JEDI_EXEC="fv3jedi_letkf.x"
+    # field overwrite file with GFSv17 variables.
+    cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-land-v17.yaml ${WORKDIR}/gfs-land-v17.yaml
 
     # FOR LETKFOI, CREATE THE PSEUDO-ENSEMBLE
     #cp -r ${RSTRDIR} $WORKDIR/mem_pos
@@ -351,7 +362,7 @@ if [[ ${DAtype} == 'letkfoi_snow' ]]; then
     # using ioda mods to get a python version with netCDF4
     source ${LANDDADIR}/ioda_mods_hera
 
-    python ${LANDDADIR}/letkf_create_ens.py $FILEDATE $B
+    python ${LANDDADIR}/letkf_create_ens.py $FILEDATE $SNOWDEPTHVAR $B
     if [[ $? != 0 ]]; then
         echo "letkf create failed"
         exit 10
@@ -370,6 +381,7 @@ if [[ ! -e Data ]]; then
 fi
 
 echo 'do_landDA: calling fv3-jedi' 
+echo $JEDI_EXECDIR
 source ${JEDI_EXECDIR}/../../../fv3_mods_hera
 
 if [[ $do_DA == "YES" ]]; then
@@ -420,13 +432,6 @@ fi
 ################################################
 # 7. CLEAN UP
 ################################################
-
-if  [[ $SAVE_TILE == "YES" ]]; then
-   for tile in 1 2 3 4 5 6 
-   do
-     cp ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${OUTDIR}/modl/restarts/tile/${FILEDATE}.sfc_data_anal.tile${tile}.nc
-   done
-fi 
 
 # keep IMS IODA file
 if [ $SAVE_IMS == "YES"  ]; then
