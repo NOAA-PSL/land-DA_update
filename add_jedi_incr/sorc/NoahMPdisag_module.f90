@@ -5,6 +5,11 @@ module NoahMPdisag_module
   public noahmp_type
   public UpdateAllLayers
 
+! Note: in GFS with fractional grid cells, the swe and snow_depth saved in noahmp_type are the 
+!       values over the land fraction only. The restarts have a separate variable with the grid 
+!       cell average. All other varibales here (except temperature_soil) are Noah-MP specific, 
+!       and are defined only over land.
+
   type noahmp_type
     double precision, allocatable :: swe                (:)
     double precision, allocatable :: snow_depth         (:)
@@ -15,6 +20,8 @@ module NoahMPdisag_module
     double precision, allocatable :: snow_ice_layer     (:,:)
     double precision, allocatable :: snow_liq_layer     (:,:)
     double precision, allocatable :: temperature_soil   (:)
+    character(len=10)      :: name_snow_depth
+    character(len=10)      :: name_swe
   end type noahmp_type    
 
 contains   
@@ -164,10 +171,10 @@ contains
             layer_density = swe(iloc) / snow_depth(iloc) * 1000.d0
           end if
           if (temperature_soil(iloc)<=273.155) then  ! do not add is soil too warm (will melt)
-          snow_depth(iloc) = min(snow_depth(iloc) + increment(iloc), 50.) ! limit amount of snow that can 
-                                                                          ! be added so that no more than one layer 
-                                                                          ! is created.
-          swe(iloc) = swe(iloc) + increment(iloc) * layer_density / 1000.d0
+              snow_depth(iloc) = min(snow_depth(iloc) + increment(iloc), 50.) ! limit amount of snow that can 
+                                                                              ! be added so that no more than one layer 
+                                                                              ! is created.
+              swe(iloc) = swe(iloc) + increment(iloc) * layer_density / 1000.d0
           endif
           swe_previous(iloc) = swe(iloc)
 
@@ -225,14 +232,15 @@ contains
     end if
 
     if( (abs(anal_snow_depth - snow_depth(iloc))   > 0.0000001) .and. (anal_snow_depth > 0.0001) ) then
-      print*, "snow increment and updated model snow inconsistent"
+! this condition will fail if too warm to add snow, or snow added was limitted to 50mm to avoid layering issues (both pathway 3)
+      print*, "snow increment and updated model snow inconsistent" 
       print*, pathway
-      print*, anal_snow_depth, snow_depth(iloc)
+      print*, anal_snow_depth, snow_depth(iloc), temperature_soil(iloc)
 !      stop
     end if
 
     if(snow_depth(iloc) < 0.0 .or. snow_soil_interface(iloc,3) > 0.0 ) then
-      print*, "snow increment and updated model snow inconsistent"
+      print*, "snow depth or interface has wrong sign"
       print*, pathway
       print*, snow_depth(iloc), snow_soil_interface(iloc,3)
 !      stop

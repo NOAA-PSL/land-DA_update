@@ -420,6 +420,9 @@ cat << EOF > apply_incr_nml
  date_str=${YYYY}${MM}${DD}
  hour_str=$HH
  res=$RES
+ frac_grid=$GFSv17
+ orog_path=$TPATH
+ otype=$TSTUB
 /
 EOF
 
