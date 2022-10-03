@@ -421,8 +421,8 @@ cat << EOF > apply_incr_nml
  hour_str=$HH
  res=$RES
  frac_grid=$GFSv17
- orog_path=$TPATH
- otype=$TSTUB
+ orog_path="$TPATH"
+ otype="$TSTUB"
 /
 EOF
 
