@@ -1,4 +1,4 @@
-# DA_update
+# land-DA_update
 Scripts to perfrom the snow DA, to assimilate GHCN station snow depth and IMS snow cover obs, using the JEDI LETKF.
 For the noahMP land surface model.
 
