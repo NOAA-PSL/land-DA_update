@@ -40,6 +40,7 @@ contains
   double precision       :: soil_interfaces(7) = (/0.0,0.0,0.0,0.1,0.4,1.0,2.0/)
   double precision       :: partition_ratio, layer_depths(3), anal_snow_depth
   double precision       :: temp_soil_corr
+  integer                :: count0, count1, count2, count3, count4, count5, count6, count7
   
   associate( &
                  swe => noahmp%swe                ,&
@@ -51,17 +52,29 @@ contains
       snow_ice_layer => noahmp%snow_ice_layer     ,&
       snow_liq_layer => noahmp%snow_liq_layer     ,&
     temperature_soil => noahmp%temperature_soil )
+
+  count0=0
+  count1=0
+  count2=0
+  count3=0
+  count4=0
+  count5=0
+  count6=0
+  count7=0
   
   do iloc = 1, vector_length
     temp_soil_corr = min(273.15, temperature_soil(iloc))
     
-    pathway = 0  !  increment creates 0 or -ve snow depth
+    pathway = -1  !  increment is zero.
 
     anal_snow_depth = snow_depth(iloc) + increment(iloc) ! analysed bulk snow depth
 
     if (abs( increment(iloc)) > 0.01 )  then ! skip if no (or small) increment 
         
         if(anal_snow_depth <=  0.0001) then ! correct negative snow depth here
+
+          pathway = 0  !  analysis is zero (or negative) 
+          count1 = count1+1
 
           swe                (iloc)   = 0.0
           snow_depth         (iloc)   = 0.0
@@ -85,6 +98,7 @@ contains
             if(increment(iloc) > 0.0) then  ! add snow in multi-layer mode
 
               pathway = 1 ! adding snow in multi-layer mode
+              count2 = count2+1
         
               vector_loc = 4 + active_layers  ! location in vector of top layer
               
@@ -111,6 +125,7 @@ contains
             elseif(increment(iloc) < 0.0) then  ! remove snow in multi-layer mode
 
               pathway = 2 ! removing snow in multi-layer mode 
+              count3 = count3+1
               
               vector_loc = 4 + active_layers  ! location in vector of top layer
               
@@ -176,6 +191,9 @@ contains
                                                                                   ! be added so that no more than one layer 
                                                                                   ! is created.
                   swe(iloc) = swe(iloc) + increment(iloc) * layer_density / 1000.d0
+                  count4 = count4+1
+              else 
+                  count5 = count5+1
               endif
               swe_previous(iloc) = swe(iloc)
 
@@ -187,6 +205,7 @@ contains
 
               if(snow_depth(iloc) > 25.0) then  ! snow depth is > 25mm so put in a layer
                 pathway = 5 ! addition of snow caused creation of a layer
+                count6 = count6+1
                 active_snow_layers(iloc) = -1.0
                 snow_ice_layer(iloc,3)   = swe(iloc)
                 temperature_snow(iloc,3) = temp_soil_corr
@@ -198,6 +217,7 @@ contains
             elseif(increment(iloc) < 0.0) then  ! remove snow in zero-layer mode
 
               pathway = 6 ! removing snow in zero layer mode
+              count7=count7+1
         
               layer_density = swe(iloc) / snow_depth(iloc) * 1000.d0
               snow_depth(iloc) = snow_depth(iloc) + increment(iloc)
@@ -215,7 +235,8 @@ contains
           end if  ! active_layers
             
         end if  ! anal_snow_depth <= 0.
-    
+    else 
+        count0 = count0+1 
     end if ! non-zero increment 
     ! do some gross checks
 
@@ -233,8 +254,8 @@ contains
 !      stop
     end if
 
-    if( (abs(anal_snow_depth - snow_depth(iloc))   > 0.0000001) .and. (anal_snow_depth > 0.0001) ) then
-! this condition will fail if too warm to add snow, or snow added was limitted to 50mm to avoid layering issues (both pathway 3)
+    if( (abs(anal_snow_depth - snow_depth(iloc))   > 0.01) .and. (anal_snow_depth > 0.0001) .and. temperature_soil(iloc) <= 273.155 ) then
+! this condition will fail if snow added was limitted to 50mm to avoid layering issues 
       print*, "snow increment and updated model snow inconsistent" 
       print*, pathway
       print*, anal_snow_depth, snow_depth(iloc), temperature_soil(iloc)
@@ -249,7 +270,17 @@ contains
     end if
 
   end do
-  
+ 
+  print *, "Noah-MP snow increment summary:" 
+  print *, "No increments added: ", count0
+  print *, "Increment removed all snow", count1 
+  print *, "Increment added snow in multi-layer mode", count2
+  print *, "Increment removed snow in multi-layer mode", count3
+  print *, "Increment added snow in zero-layer mode", count4
+  print *, "Increment not added in zero-layer mode, too warm", count5
+  print *, "Increment added in zero-layer mode, added a layer", count6
+  print *, "Increment removed snow in zero-layer mode", count7
+
   end associate
    
   end subroutine UpdateAllLayers
