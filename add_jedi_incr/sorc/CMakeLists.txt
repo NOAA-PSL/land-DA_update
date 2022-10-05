@@ -24,7 +24,7 @@ endif()
 option(ENABLE_NCDIAG_SERIAL "Enable Serial NetCDF diagnostics" ON)
 
 # Dependencies
-#find_package(MPI REQUIRED)
+find_package(MPI REQUIRED)
 find_package(NetCDF REQUIRED COMPONENTS Fortran)
 
 # Get list of files
@@ -32,5 +32,6 @@ list(APPEND ADD_JEDI_INCR_SRC apply_incr_noahmp_snow.f90  NoahMPdisag_module.f90
 
 add_executable(apply_incr ${ADD_JEDI_INCR_SRC})
 target_link_libraries(apply_incr NetCDF::NetCDF_Fortran)
+target_link_libraries(apply_incr MPI::MPI_Fortran)
 
 
