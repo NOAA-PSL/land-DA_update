@@ -209,6 +209,8 @@
  integer :: ierr,  ncid
  integer :: id_dim, id_var, fres
  integer :: slmsk(res,res) ! saved as double in the file, but i think this is OK
+ integer :: vtype(res,res) ! saved as double in the file, but i think this is OK
+ integer, parameter :: vtype_landice=15
  double precision :: fice(res,res)
  double precision, parameter :: fice_fhold = 0.00001
  integer :: i, j, nn
@@ -230,11 +232,24 @@
     ierr=nf90_open(trim(restart_file),nf90_write,ncid)
     call netcdf_err(ierr, 'opening file: '//trim(restart_file) )
 
-    ! READ MASK and GET MAPPING5
+    ! READ MASK 
     ierr=nf90_inq_varid(ncid, "slmsk", id_var)
     call netcdf_err(ierr, 'reading slmsk id' )
     ierr=nf90_get_var(ncid, id_var, slmsk)
     call netcdf_err(ierr, 'reading slmsk' )
+ 
+    ! REMOVE GLACIER GRID POINTS
+    ierr=nf90_inq_varid(ncid, "vtype", id_var)
+    call netcdf_err(ierr, 'reading vtype id' )
+    ierr=nf90_get_var(ncid, id_var, vtype)
+    call netcdf_err(ierr, 'reading vtype' )
+
+    ! remove land grid cells if glacier land type
+    do i = 1, res 
+        do j = 1, res  
+            if ( vtype(i,j) ==  vtype_landice)  slmsk(i,j)=0 ! vtype is integer, but stored as double
+        enddo 
+    enddo
  
     if (frac_grid=="YES") then 
 
