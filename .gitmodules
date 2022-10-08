@@ -1,3 +1,5 @@
 [submodule "IMS_proc"]
 	path = IMS_proc
-	url = https://github.com/noaa-psd/land-IMS_proc.git
+	url = https://github.com/jkbk2004/land-IMS_proc
+	branch = featre/cmake
+
