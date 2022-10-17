@@ -27,8 +27,12 @@ for ens in range(2):
         out_netcdf = ens_dirs[ens]+'/'+fstub+'.sfc_data.tile'+str(tt+1)+'.nc'
         #print (out_netcdf)
         ncOut = Dataset(out_netcdf, "r+")  
+        # get land mask
+        slmsk_array = ncOut.variables['slmsk'][:]
+        vtype_array = ncOut.variables['vtype'][:]
+        slmsk_array[vtype_array==15]=0 # remove glacier locations
         # add offset to the snow
         var_array = ncOut.variables[vname][:]
-        var_array = var_array + sign[ens]*offset
+        var_array[slmsk_array==1]  = var_array[slmsk_array==1] + sign[ens]*offset
         ncOut.variables[vname][0,:,:] = var_array[:]
         ncOut.close()
