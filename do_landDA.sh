@@ -35,7 +35,6 @@ GFSv17=${GFSv17:-"NO"}
 source $config_file
 
 LOGDIR=${OUTDIR}/DA/logs/
-RSTRDIR=${RSTRDIR:-$WORKDIR/restarts/tile/} # if running offline cycling will be here
 OBSDIR=${OBSDIR:-"/scratch2/NCEPDEV/land/data/DA/"}
 
 # executable directories
@@ -52,7 +51,7 @@ SAVE_IMS="YES" # "YES" to save processed IMS IODA file
 SAVE_INCR="YES" # "YES" to save increment (add others?) JEDI output
 SAVE_TILE=${SAVE_TILE:-"NO"} # "YES" to save background in tile space
 REDUCE_HOFX="NO" # "YES" to remove duplicate hofx files (one per processor)
-KEEPDADIR=${KEEPDADIR:-"YES"} # delete DA workdir 
+KEEPJEDIDIR=${KEEPJEDIDIR:-"NO"} # delete DA workdir 
 
 echo 'THISDATE in land DA, '$THISDATE
 
@@ -73,12 +72,12 @@ if [[ ! -e ${OUTDIR}/DA ]]; then
     mkdir ${OUTDIR}/DA/hofx
 fi 
 
-if [[ ! -e $WORKDIR ]]; then 
-    mkdir $WORKDIR
+if [[ ! -e $JEDIWORKDIR ]]; then 
+    mkdir $JEDIWORKDIR
 fi
 
 
-cd $WORKDIR 
+cd $JEDIWORKDIR 
 
 ################################################
 # 1. FORMAT DATE STRINGS AND STAGE RESTARTS
@@ -100,8 +99,8 @@ HP=`echo $PREVDATE | cut -c9-10`
 
 FILEDATE=${YYYY}${MM}${DD}.${HH}0000
 
-if [[ ! -e ${WORKDIR}/output ]]; then
-ln -s ${OUTDIR} ${WORKDIR}/output
+if [[ ! -e ${JEDIWORKDIR}/output ]]; then
+ln -s ${OUTDIR} ${JEDIWORKDIR}/output
 fi 
 
 if  [[ $SAVE_TILE == "YES" ]]; then
@@ -114,9 +113,9 @@ fi
 #stage restarts for applying JEDI update (files will get directly updated)
 for tile in 1 2 3 4 5 6 
 do
-  ln -fs ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc ${WORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc
+  ln -fs ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc ${JEDIWORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc
 done
-cres_file=${WORKDIR}/${FILEDATE}.coupler.res
+cres_file=${JEDIWORKDIR}/${FILEDATE}.coupler.res
 if [[ -e  ${RSTRDIR}/${FILEDATE}.coupler.res ]]; then 
     ln -sf ${RSTRDIR}/${FILEDATE}.coupler.res $cres_file
 else #  if not present, need to create coupler.res for JEDI 
@@ -214,12 +213,12 @@ EOF
     fi
 
     IMS_IODA=imsfv3_scf2ioda_obs40.py
-    cp ${LANDDADIR}/jedi/ioda/${IMS_IODA} $WORKDIR
+    cp ${LANDDADIR}/jedi/ioda/${IMS_IODA} $JEDIWORKDIR
 
     echo 'do_landDA: calling ioda converter' 
     source ${LANDDADIR}/ioda_mods_hera
 
-    python ${IMS_IODA} -i IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc -o ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc 
+    python ${IMS_IODA} -i IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc -o ${JEDIWORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc 
     if [[ $? != 0 ]]; then
         echo "IMS IODA converter failed"
         exit 10
@@ -257,7 +256,7 @@ if [[ $do_DA == "YES" ]]; then
 
    if [[ $YAML_DA == "construct" ]];then  # construct the yaml
 
-      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${WORKDIR}/letkf_land.yaml
+      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${JEDIWORKDIR}/letkf_land.yaml
 
       for ii in "${!OBS_TYPES[@]}";
       do 
@@ -268,7 +267,7 @@ if [[ $do_DA == "YES" ]]; then
 
    else # use specified yaml 
       echo "Using user specified YAML: ${YAML_DA}"
-      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${YAML_DA} ${WORKDIR}/letkf_land.yaml
+      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${YAML_DA} ${JEDIWORKDIR}/letkf_land.yaml
    fi
 
    sed -i -e "s/XXYYYY/${YYYY}/g" letkf_land.yaml
@@ -294,7 +293,7 @@ if [[ $do_HOFX == "YES" ]]; then
 
    if [[ $YAML_HOFX == "construct" ]];then  # construct the yaml
 
-      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${WORKDIR}/hofx_land.yaml
+      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${JEDIWORKDIR}/hofx_land.yaml
 
       for ii in "${!OBS_TYPES[@]}";
       do 
@@ -304,7 +303,7 @@ if [[ $do_HOFX == "YES" ]]; then
       done
    else # use specified yaml 
       echo "Using user specified YAML: ${YAML_HOFX}"
-      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${YAML_HOFX} ${WORKDIR}/hofx_land.yaml
+      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${YAML_HOFX} ${JEDIWORKDIR}/hofx_land.yaml
    fi
 
    sed -i -e "s/XXYYYY/${YYYY}/g" hofx_land.yaml
@@ -338,7 +337,7 @@ if [[ ${DAtype} == 'letkfoi_snow' ]]; then
     if [ $GFSv17 == "YES" ]; then
         SNOWDEPTHVAR="snodl" 
         # field overwrite file with GFSv17 variables.
-        cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-land-v17.yaml ${WORKDIR}/gfs-land-v17.yaml
+        cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-land-v17.yaml ${JEDIWORKDIR}/gfs-land-v17.yaml
     else
         SNOWDEPTHVAR="snwdph"
     fi
@@ -348,15 +347,15 @@ if [[ ${DAtype} == 'letkfoi_snow' ]]; then
     # FOR LETKFOI, CREATE THE PSEUDO-ENSEMBLE
     for ens in pos neg 
     do
-        if [ -e $WORKDIR/mem_${ens} ]; then 
-                rm -r $WORKDIR/mem_${ens}
+        if [ -e $JEDIWORKDIR/mem_${ens} ]; then 
+                rm -r $JEDIWORKDIR/mem_${ens}
         fi
-        mkdir $WORKDIR/mem_${ens} 
+        mkdir $JEDIWORKDIR/mem_${ens} 
         for tile in 1 2 3 4 5 6
         do
-        cp ${WORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${WORKDIR}/mem_${ens}/${FILEDATE}.sfc_data.tile${tile}.nc
+        cp ${JEDIWORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${JEDIWORKDIR}/mem_${ens}/${FILEDATE}.sfc_data.tile${tile}.nc
         done
-        cp ${WORKDIR}/${FILEDATE}.coupler.res ${WORKDIR}/mem_${ens}/${FILEDATE}.coupler.res
+        cp ${JEDIWORKDIR}/${FILEDATE}.coupler.res ${JEDIWORKDIR}/mem_${ens}/${FILEDATE}.coupler.res
     done
        
 
@@ -375,7 +374,7 @@ elif [[ ${DAtype} == 'letkfoi_smc' ]]; then
 
     JEDI_EXEC="fv3jedi_letkf.x"
 
-    cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-soilMoisture.yaml ${WORKDIR}/gfs-soilMoisture.yaml
+    cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-soilMoisture.yaml ${JEDIWORKDIR}/gfs-soilMoisture.yaml
 
 fi
 
@@ -446,14 +445,14 @@ fi
 
 # keep IMS IODA file
 if [ $SAVE_IMS == "YES"  ]; then
-   if [[ -e ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ]]; then
-      cp ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ${OUTDIR}/DA/IMSproc/
+   if [[ -e ${JEDIWORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ]]; then
+      cp ${JEDIWORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ${OUTDIR}/DA/IMSproc/
    fi
 fi 
 
 # keep increments
 if [ $SAVE_INCR == "YES" ] && [ $do_DA == "YES" ]; then
-   cp ${WORKDIR}/${FILEDATE}.xainc.sfc_data.tile*.nc  ${OUTDIR}/DA/jedi_incr/
+   cp ${JEDIWORKDIR}/${FILEDATE}.xainc.sfc_data.tile*.nc  ${OUTDIR}/DA/jedi_incr/
 fi 
 
 # keep only one copy of each hofx files  
@@ -466,6 +465,6 @@ if [ $REDUCE_HOFX == "YES" ]; then
 fi 
 
 # clean up 
-if [[ $KEEPDADIR == "NO" ]]; then
-   rm -rf ${WORKDIR} 
+if [[ $KEEPJEDIDIR == "NO" ]]; then
+   rm -rf ${JEDIWORKDIR} 
 fi 

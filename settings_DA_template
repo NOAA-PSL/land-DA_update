@@ -43,5 +43,5 @@ YAML_HOFX=construct
 #OBSDIR= # to override default OBSDIR
 
 # OPTIONAL:delete workdirectory after DA update (do not use for within cycle_workflow)
-#KEEPDADIR=
+#KEEPJEDIDIR=
 
