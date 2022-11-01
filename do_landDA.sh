@@ -151,7 +151,12 @@ do
      obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}${HH}.nc
   elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
      obsfile=$OBSDIR/soil_moisture/SMAP/data_proc/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
-# Zofia - any processing of the SMAP obs goes here.
+      if [[ ! -e $obsfile ]]; then
+        echo "do_landDA: pre-processed SMAP observations not found for: $THISDATE. Processing obs now."
+        source ${LANDDADIR}/ioda_mods_hera
+        bash ${LANDDADIR}/SMAP_proc/SMAPproc.sh $THISDATE
+        obsfile=$WORKDIR/smap_${YYYY}${MM}${DD}T${HH}00.nc 
+      fi
   elif [ ${OBS_TYPES[$ii]} == "IMS" ]; then 
      if [[ $IMStiming == "FILEDATE" ]]; then 
             IMSDAY=${THISDATE} 
