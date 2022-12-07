@@ -166,9 +166,26 @@ do
      DOY=$(date -d "${YYYN}-${MN}-${DN}" +%j)
      echo DOY is ${DOY}
 
-     if [[ $IMSDAY -gt 2014120200 ]]; then  ims_vsn=1.3 ; else  ims_vsn=1.2 ; fi
-     obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_4km_v${ims_vsn}.nc
-
+     if [[ $THISDATE -gt 2014120200 ]];  then
+        ims_vsn=1.3
+        imsformat=2 # nc
+        imsres='4km'
+        fsuf='nc'
+        ascii=''
+     elif [[ $THISDATE -gt 2004022400 ]]; then
+        ims_vsn=1.2
+        imsformat=2 # nc
+        imsres='4km'
+        fsuf='nc'
+        ascii=''
+     else
+        ims_vsn=1.1
+        imsformat=1 # asc
+        imsres='24km'
+        fsuf='asc'
+        ascii='ascii'
+     fi
+    obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_${imsres}_v${ims_vsn}.${fsuf}
   else
      echo "do_landDA: Unknown obs type requested ${OBS_TYPES[$ii]}, exiting" 
      exit 1 
