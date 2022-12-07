@@ -214,8 +214,9 @@ cat >> fims.nml << EOF
   otype=${TSTUB},
   jdate=${YYYY}${DOY},
   yyyymmddhh=${YYYY}${MM}${DD}.${HH},
-  imsformat=2,
+  imsformat=${imsformat},
   imsversion=${ims_vsn},
+  imsres=${imsres},
   IMS_OBS_PATH="${OBSDIR}/snow_ice_cover/IMS/${YYYY}/",
   IMS_IND_PATH="${OBSDIR}/snow_ice_cover/IMS/index_files/"
   /
