@@ -167,8 +167,12 @@ do
      DOY=$(date -d "${YYYN}-${MN}-${DN}" +%j)
      echo DOY is ${DOY}
 
-     if [[ $IMSDAY -gt 2014120200 ]]; then  ims_vsn=1.3 ; else  ims_vsn=1.2 ; fi
-     obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_4km_v${ims_vsn}.nc
+     if [[ $IMSDAY -gt  2004060100 ]]; then   # do not assimilate before 2004, as have only 24 km obs
+        if [[ $IMSDAY -gt 2014120200 ]]; then  ims_vsn=1.3 ; else  ims_vsn=1.2 ; fi
+        obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_4km_v${ims_vsn}.nc
+     else
+        JEDI_TYPES[$ii]="SKIP"
+     fi
 
   else
      echo "do_landDA: Unknown obs type requested ${OBS_TYPES[$ii]}, exiting" 
@@ -176,7 +180,7 @@ do
   fi
 
   # check obs are available
-  if [[ -e $obsfile ]]; then
+  if [[ -e $obsfile && ${JEDI_TYPES[$ii]} != "SKIP" ]]; then
     echo "do_landDA: ${OBS_TYPES[$ii]} observations found: $obsfile"
     if [ ${OBS_TYPES[$ii]} != "IMS" ]; then 
        ln -fs $obsfile  ${OBS_TYPES[$ii]}_${YYYY}${MM}${DD}${HH}.nc
