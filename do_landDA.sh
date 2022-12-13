@@ -13,10 +13,6 @@
 # Clara Draper, Oct 2021.
 # Aug 2020, generalized for all DA types.
 
-# to-do: 
-# check that slmsk is always taken from the forecast file (oro files has a different definition)
-# make sure documentation is updated.
-
 #########################################
 # source namelist and setup directories
 #########################################
