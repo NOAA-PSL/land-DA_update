@@ -146,7 +146,9 @@ do
   if [ ${OBS_TYPES[$ii]} == "GTS" ]; then
      obsfile=$OBSDIR/snow_depth/GTS/data_proc/${YYYY}${MM}/adpsfc_snow_${YYYY}${MM}${DD}${HH}.nc4
   elif [ ${OBS_TYPES[$ii]} == "GHCN" ]; then 
-     obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYY}/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc
+     #obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYY}/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc
+     # GHCN obs have been time stamped at 18 on fileday. If assimilating at 00, will need previous day's file.
+     obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYP}/ghcn_snwd_ioda_${YYYP}${MP}${DP}.nc
   elif [ ${OBS_TYPES[$ii]} == "SYNTH" ]; then 
      obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}${HH}.nc
   elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
@@ -284,6 +286,7 @@ if [[ $do_DA == "YES" ]]; then
    sed -i -e "s/XXMP/${MP}/g" letkf_land.yaml
    sed -i -e "s/XXDP/${DP}/g" letkf_land.yaml
    sed -i -e "s/XXHP/${HP}/g" letkf_land.yaml
+   sed -i -e "s/XXWINLEN/${WINLEN}/g" letkf_land.yaml
 
    sed -i -e "s/XXTSTUB/${TSTUB}/g" letkf_land.yaml
    sed -i -e "s#XXTPATH#${TPATH}#g" letkf_land.yaml
@@ -320,6 +323,7 @@ if [[ $do_HOFX == "YES" ]]; then
    sed -i -e "s/XXMP/${MP}/g" hofx_land.yaml
    sed -i -e "s/XXDP/${DP}/g" hofx_land.yaml
    sed -i -e "s/XXHP/${HP}/g" hofx_land.yaml
+   sed -i -e "s/XXWINLEN/${WINLEN}/g" hofx_land.yaml
 
    sed -i -e "s#XXTPATH#${TPATH}#g" hofx_land.yaml
    sed -i -e "s/XXTSTUB/${TSTUB}/g" hofx_land.yaml

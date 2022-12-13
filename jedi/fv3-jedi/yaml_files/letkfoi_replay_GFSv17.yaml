@@ -17,7 +17,7 @@ geometry:
     filename_orog: XXTSTUB.nc
 
 window begin: XXYYYP-XXMP-XXDPTXXHP:00:00Z
-window length: PT6H
+window length: PTXXWINLENH
 
 background:
  date: &date XXYYYY-XXMM-XXDDTXXHH:00:00Z
