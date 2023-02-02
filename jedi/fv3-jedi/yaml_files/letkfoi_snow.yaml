@@ -8,13 +8,13 @@ geometry:
   npz: 64
   field metadata override: Data/fieldmetadata/gfs-land.yaml
 
-  time invariant state fields:
-    datetime: XXYYYP-XXMP-XXDPTXXHP:00:00Z
-    filetype: fms restart
-    skip coupler file: true
-    state variables: [orog_filt]
-    datapath: XXTPATH
-    filename_orog: XXTSTUB.nc
+# time invariant state fields:
+#   datetime: XXYYYP-XXMP-XXDPTXXHP:00:00Z
+#   filetype: fms restart
+#   skip coupler file: true
+#   state variables: [orog_filt]
+#   datapath: XXTPATH
+#   filename_orog: XXTSTUB.nc
 
 window begin: XXYYYP-XXMP-XXDPTXXHP:00:00Z
 window length: PT6H
