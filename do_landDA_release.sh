@@ -46,7 +46,7 @@ apply_incr_EXEC=${BUILDDIR}/bin/apply_incr.exe
 
 # JEDI directories
 
-JEDI_EXECDIR=${JEDI_INSTALL}/fv3-bundle/build/bin
+JEDI_EXECDIR=${JEDI_EXECDIR:-"${JEDI_INSTALL}/fv3-bundle/build/bin"}
 IODA_BUILD_DIR=${JEDI_INSTALL}/ioda-bundle/build
 JEDI_STATICDIR=${LANDDADIR}/jedi/fv3-jedi/Data/
 
@@ -336,6 +336,8 @@ fi
 
 if [[ ${DAtype} == 'letkfoi_snow' ]]; then 
 
+    sed -i -e "/time invariant state fields:/,+6d" letkf_land.yaml
+    sed -i -e "/time invariant state fields:/d" letkf_land.yaml
     JEDI_EXEC="fv3jedi_letkf.x"
 
     if [ $GFSv17 == "YES" ]; then
