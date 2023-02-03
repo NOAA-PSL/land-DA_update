@@ -1,4 +1,4 @@
-#!/bin/bash -le
+#!/bin/bash 
 # script to run the land DA. Currently only option is the snow LETKFOI.
 #
 # 1. stage the restarts. 
@@ -80,7 +80,7 @@ if [[ ! -e $WORKDIR ]]; then
     mkdir $WORKDIR
 fi
 
-
+    
 cd $WORKDIR 
 set -x
 ################################################
@@ -209,7 +209,6 @@ cat >> fims.nml << EOF
 EOF
     echo 'do_landDA: calling fIMS'
 #   source ${LANDDADIR}/land_mods_hera
-
     ${calcfIMS_EXEC}
     if [[ $? != 0 ]]; then
         echo "fIMS failed"
@@ -398,14 +397,14 @@ echo ${LOGDIR}
 echo ${JEDI_EXEC}
 
 if [[ $do_DA == "YES" ]]; then
-    mpiexec -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} letkf_land.yaml ${LOGDIR}/jedi_letkf.log
+    ${MPIEXEC} -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} letkf_land.yaml ${LOGDIR}/jedi_letkf.log
     if [[ $? != 0 ]]; then
         echo "JEDI DA failed"
         exit 10
     fi
 fi 
 if [[ $do_HOFX == "YES" ]]; then  
-    mpiexec -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} hofx_land.yaml ${LOGDIR}/jedi_hofx.log
+    ${MPIEXEC} -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} hofx_land.yaml ${LOGDIR}/jedi_hofx.log
     if [[ $? != 0 ]]; then
         echo "JEDI hofx failed"
         exit 10
@@ -435,7 +434,7 @@ EOF
 #   source ${LANDDADIR}/land_mods_hera
 
     # (n=6) -> this is fixed, at one task per tile (with minor code change, could run on a single proc). 
-    mpiexec -n 6 ${apply_incr_EXEC} ${LOGDIR}/apply_incr.log
+    ${MPIEXEC} -n 6 ${apply_incr_EXEC} ${LOGDIR}/apply_incr.log
     if [[ $? != 0 ]]; then
         echo "apply snow increment failed"
         exit 10
