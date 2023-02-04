@@ -13,10 +13,6 @@
 # Clara Draper, Oct 2021.
 # Aug 2020, generalized for all DA types.
 
-# to-do: 
-# check that slmsk is always taken from the forecast file (oro files has a different definition)
-# make sure documentation is updated.
-
 #########################################
 # source namelist and setup directories
 #########################################
@@ -148,9 +144,6 @@ do
      obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYY}/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc
   elif [ ${OBS_TYPES[$ii]} == "SYNTH" ]; then 
      obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}${HH}.nc
-  elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
-     obsfile=$OBSDIR/soil_moisture/SMAP/data_proc/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
-# Zofia - any processing of the SMAP obs goes here.
   elif [ ${OBS_TYPES[$ii]} == "IMS" ]; then 
      if [[ $IMStiming == "FILEDATE" ]]; then 
             IMSDAY=${THISDATE} 
@@ -168,24 +161,10 @@ do
 
      if [[ $THISDATE -gt 2014120200 ]];  then
         ims_vsn=1.3
-        imsformat=2 # nc
-        imsres='4km'
-        fsuf='nc'
-        ascii=''
-     elif [[ $THISDATE -gt 2004022400 ]]; then
+     else; 
         ims_vsn=1.2
-        imsformat=2 # nc
-        imsres='4km'
-        fsuf='nc'
-        ascii=''
-     else
-        ims_vsn=1.1
-        imsformat=1 # asc
-        imsres='24km'
-        fsuf='asc'
-        ascii='ascii'
      fi
-    obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_${imsres}_v${ims_vsn}.${fsuf}
+    obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_${imsres}_v${ims_vsn}.nc
   else
      echo "do_landDA: Unknown obs type requested ${OBS_TYPES[$ii]}, exiting" 
      exit 1 
@@ -214,9 +193,9 @@ cat >> fims.nml << EOF
   otype=${TSTUB},
   jdate=${YYYY}${DOY},
   yyyymmddhh=${YYYY}${MM}${DD}.${HH},
-  imsformat=${imsformat},
+  imsformat=2,
   imsversion=${ims_vsn},
-  imsres=${imsres},
+  imsres='4km',
   IMS_OBS_PATH="${OBSDIR}/snow_ice_cover/IMS/${YYYY}/",
   IMS_IND_PATH="${OBSDIR}/snow_ice_cover/IMS/index_files/"
   /
@@ -387,12 +366,6 @@ if [[ ${DAtype} == 'letkfoi_snow' ]]; then
         echo "letkf create failed"
         exit 10
     fi
-
-elif [[ ${DAtype} == 'letkfoi_smc' ]]; then 
-
-    JEDI_EXEC="fv3jedi_letkf.x"
-
-    cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-soilMoisture.yaml ${JEDIWORKDIR}/gfs-soilMoisture.yaml
 
 fi
 
