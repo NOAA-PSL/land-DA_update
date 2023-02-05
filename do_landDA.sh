@@ -28,6 +28,8 @@ echo "reading DA settings from $config_file"
 
 GFSv17=${GFSv17:-"NO"}
 
+fv3bundle_vn=20220921
+
 source $config_file
 
 LOGDIR=${OUTDIR}/DA/logs/
@@ -161,10 +163,11 @@ do
 
      if [[ $THISDATE -gt 2014120200 ]];  then
         ims_vsn=1.3
-     else; 
+     else 
         ims_vsn=1.2
      fi
-    obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_${imsres}_v${ims_vsn}.nc
+     imsres='4km'
+     obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_${imsres}_v${ims_vsn}.nc
   else
      echo "do_landDA: Unknown obs type requested ${OBS_TYPES[$ii]}, exiting" 
      exit 1 
@@ -195,7 +198,7 @@ cat >> fims.nml << EOF
   yyyymmddhh=${YYYY}${MM}${DD}.${HH},
   imsformat=2,
   imsversion=${ims_vsn},
-  imsres='4km',
+  imsres=${imsres},
   IMS_OBS_PATH="${OBSDIR}/snow_ice_cover/IMS/${YYYY}/",
   IMS_IND_PATH="${OBSDIR}/snow_ice_cover/IMS/index_files/"
   /
@@ -253,18 +256,18 @@ if [[ $do_DA == "YES" ]]; then
 
    if [[ $YAML_DA == "construct" ]];then  # construct the yaml
 
-      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${JEDIWORKDIR}/letkf_land.yaml
+      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${fv3bundle_vn}/${DAtype}.yaml ${JEDIWORKDIR}/letkf_land.yaml
 
       for ii in "${!OBS_TYPES[@]}";
       do 
         if [ ${JEDI_TYPES[$ii]} == "DA" ]; then
-        cat ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${OBS_TYPES[$ii]}.yaml >> letkf_land.yaml
+        cat ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${fv3bundle_vn}/${OBS_TYPES[$ii]}.yaml >> letkf_land.yaml
         fi 
       done
 
    else # use specified yaml 
       echo "Using user specified YAML: ${YAML_DA}"
-      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${YAML_DA} ${JEDIWORKDIR}/letkf_land.yaml
+      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${fv3bundle_vn}/${YAML_DA} ${JEDIWORKDIR}/letkf_land.yaml
    fi
 
    sed -i -e "s/XXYYYY/${YYYY}/g" letkf_land.yaml
@@ -290,17 +293,17 @@ if [[ $do_HOFX == "YES" ]]; then
 
    if [[ $YAML_HOFX == "construct" ]];then  # construct the yaml
 
-      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${JEDIWORKDIR}/hofx_land.yaml
+      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${fv3bundle_vn}/${DAtype}.yaml ${JEDIWORKDIR}/hofx_land.yaml
 
       for ii in "${!OBS_TYPES[@]}";
       do 
         if [ ${JEDI_TYPES[$ii]} == "HOFX" ]; then
-        cat ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${OBS_TYPES[$ii]}.yaml >> hofx_land.yaml
+        cat ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${fv3bundle_vn}/${OBS_TYPES[$ii]}.yaml >> hofx_land.yaml
         fi 
       done
    else # use specified yaml 
       echo "Using user specified YAML: ${YAML_HOFX}"
-      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${YAML_HOFX} ${JEDIWORKDIR}/hofx_land.yaml
+      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${fv3bundle_vn}/${YAML_HOFX} ${JEDIWORKDIR}/hofx_land.yaml
    fi
 
    sed -i -e "s/XXYYYY/${YYYY}/g" hofx_land.yaml
@@ -334,7 +337,7 @@ if [[ ${DAtype} == 'letkfoi_snow' ]]; then
     if [ $GFSv17 == "YES" ]; then
         SNOWDEPTHVAR="snodl" 
         # field overwrite file with GFSv17 variables.
-        cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-land-v17.yaml ${JEDIWORKDIR}/gfs-land-v17.yaml
+        cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${fv3bundle_vn}/gfs-land-v17.yaml ${JEDIWORKDIR}/gfs-land-v17.yaml
     else
         SNOWDEPTHVAR="snwdph"
     fi
