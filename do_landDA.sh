@@ -143,6 +143,7 @@ do
   # check obs are available
   if [[ -e $obsfile ]]; then
     echo "do_landDA: ${OBS_TYPES[$ii]} observations found: $obsfile"
+    ln -fs $obsfile  ${OBS_TYPES[$ii]}_${YYYY}${MM}${DD}${HH}.nc
   else
     echo "${OBS_TYPES[$ii]} observations not found: $obsfile"
     JEDI_TYPES[$ii]="SKIP"
