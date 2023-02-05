@@ -4,8 +4,8 @@
 # if calling from submit_cycle,vars in this section will already be set. Otherwise, need to be set here.
 
 # THISDATE= # date YYYYMMDDHH
-# WORKDIR=/scratch2/BMC/gsienkf/${USER}/workdir/  # temporary directory where experiment is run from
-# OUTDIR=/scratch2/BMC/gsienkf/${USER}/cycle_land/${exp_name}/  # temporary directory where experiment is run from
+# WORKDIR=  # temporary directory where experiment is run from
+# OUTDIR=   # temporary directory where experiment is run from
 # RSTRDIR= #  if not specified, is constructed from $WORKDIR 
 # RES= #FV3 resolution
 # TPATH= # directory for orography files.
@@ -17,14 +17,12 @@ LANDDADIR=${CYCLEDIR}/DA_update/ # if calling from submit_cycle.sh
 ############################
 # DA options
 
-# DA algorithm and state being updated
-# options: "letkfoi_snow" , "letkf_snow"
-DAtype=
-
 # JEDI input obs. options : IMS, GHCN, GTS, SYNTH 
 OBS_TYPES=()   # format: ("OBS1" "OBS2") 
 # JEDI call type for each obs_type above. options: DA, HOFX
 JEDI_TYPES=()   # format ("DA" "HOFX") 
+
+#OBSDIR= # base directory for observations
 
 #  DA window lenth. Will generally be the same as the FCSTLEN 
 WINLEN=
@@ -39,8 +37,7 @@ YAML_HOFX=construct
 # if using different JEDI VERSION, will likely need to edit your yamls.
 #JEDI_EXECDIR=   # JEDI FV3 build directory
 #IODA_BUILD_DIR= # JEDI IODA-converter source directory
-#IMShr= # is assimilating IMS at hour other than 18, specify here.
-#OBSDIR= # to override default OBSDIR
+#fv3bundle_vn= # date for JEDI fv3 bundle checkout (used to select correct yaml)
 
 # OPTIONAL:delete workdirectory after DA update (do not use for within cycle_workflow)
 #KEEPJEDIDIR=

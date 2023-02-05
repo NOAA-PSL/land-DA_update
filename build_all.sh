@@ -2,7 +2,7 @@
 
 source land_mods_hera
 
-for source in add_jedi_incr IMS_proc 
+for source in add_jedi_incr 
 do 
 cd $source 
 echo 'compiling '$source
@@ -13,7 +13,4 @@ done
 # create links 
 echo 'creating jedi links'
 cd jedi/fv3-jedi/Data/
-make_links.sh
-cd ../../../
-cd jedi/ioda/
 make_links.sh

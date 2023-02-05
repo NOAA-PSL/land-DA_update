@@ -3,7 +3,6 @@
 #
 # 1. stage the restarts. 
 # 2. stage and process obs. 
-#    note: IMS obs prep currently requires model background, then conversion to IODA format.
 # 3. create the JEDI yamls.
 # 4. create pseudo ensemble (LETKF-OI).
 # 5. run JEDI.
@@ -28,7 +27,7 @@ echo "reading DA settings from $config_file"
 
 GFSv17=${GFSv17:-"NO"}
 
-fv3bundle_vn=20220921
+fv3bundle_vn=${fv3bundle_vn:-"20220921"}
 
 source $config_file
 
@@ -36,7 +35,6 @@ LOGDIR=${OUTDIR}/DA/logs/
 OBSDIR=${OBSDIR:-"/scratch2/NCEPDEV/land/data/DA/"}
 
 # executable directories
-FIMS_EXECDIR=${LANDDADIR}/IMS_proc/exec/   
 INCR_EXECDIR=${LANDDADIR}/add_jedi_incr/exec/   
 
 # JEDI directories
@@ -45,26 +43,17 @@ IODA_BUILD_DIR=${IODA_BUILD_DIR:-"/scratch2/BMC/gsienkf/UFS-RNR/UFS-RNR-stack/ex
 JEDI_STATICDIR=${LANDDADIR}/jedi/fv3-jedi/Data/
 
 # storage settings 
-SAVE_IMS="YES" # "YES" to save processed IMS IODA file
 SAVE_INCR="YES" # "YES" to save increment (add others?) JEDI output
 SAVE_TILE=${SAVE_TILE:-"NO"} # "YES" to save background in tile space
-REDUCE_HOFX="NO" # "YES" to remove duplicate hofx files (one per processor)
 KEEPJEDIDIR=${KEEPJEDIDIR:-"NO"} # delete DA workdir 
 
 echo 'THISDATE in land DA, '$THISDATE
-
-############################################################################################
-# TEMPORARY, UNTIL WE SORT OUT THE LATENCY ON THE IMS OBS
-# IMS data in file is from day before the file's time stamp 
-IMStiming=OBSDATE # FILEDATE - use IMS data for file's time stamp =THISDATE (NRT option) 
-                   # OBSDATE  - use IMS data for observation time stamp = THISDATE + 24 (hindcast option)
 
 ############################################################################################
 
 # create output directories.
 if [[ ! -e ${OUTDIR}/DA ]]; then
     mkdir -p ${OUTDIR}/DA
-    mkdir ${OUTDIR}/DA/IMSproc
     mkdir ${OUTDIR}/DA/jedi_incr
     mkdir ${OUTDIR}/DA/logs
     mkdir ${OUTDIR}/DA/hofx
@@ -146,28 +135,6 @@ do
      obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYY}/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc
   elif [ ${OBS_TYPES[$ii]} == "SYNTH" ]; then 
      obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}${HH}.nc
-  elif [ ${OBS_TYPES[$ii]} == "IMS" ]; then 
-     if [[ $IMStiming == "FILEDATE" ]]; then 
-            IMSDAY=${THISDATE} 
-     elif [[ $IMStiming == "OBSDATE" ]]; then
-            IMSDAY=`${INCDATE} ${THISDATE} +24`
-     else
-            echo 'UNKNOWN IMStiming selection, exiting' 
-            exit 10 
-     fi
-     YYYN=`echo $IMSDAY | cut -c1-4`
-     MN=`echo $IMSDAY | cut -c5-6`
-     DN=`echo $IMSDAY | cut -c7-8`
-     DOY=$(date -d "${YYYN}-${MN}-${DN}" +%j)
-     echo DOY is ${DOY}
-
-     if [[ $THISDATE -gt 2014120200 ]];  then
-        ims_vsn=1.3
-     else 
-        ims_vsn=1.2
-     fi
-     imsres='4km'
-     obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_${imsres}_v${ims_vsn}.nc
   else
      echo "do_landDA: Unknown obs type requested ${OBS_TYPES[$ii]}, exiting" 
      exit 1 
@@ -176,54 +143,10 @@ do
   # check obs are available
   if [[ -e $obsfile ]]; then
     echo "do_landDA: ${OBS_TYPES[$ii]} observations found: $obsfile"
-    if [ ${OBS_TYPES[$ii]} != "IMS" ]; then 
-       ln -fs $obsfile  ${OBS_TYPES[$ii]}_${YYYY}${MM}${DD}${HH}.nc
-    fi 
   else
     echo "${OBS_TYPES[$ii]} observations not found: $obsfile"
     JEDI_TYPES[$ii]="SKIP"
   fi
-
-  # pre-process and call IODA converter for IMS obs.
-  if [[ ${OBS_TYPES[$ii]} == "IMS"  && ${JEDI_TYPES[$ii]} != "SKIP" ]]; then
-
-    if [[ -e fims.nml ]]; then
-        rm -rf fims.nml 
-    fi
-cat >> fims.nml << EOF
- &fIMS_nml
-  idim=$RES, jdim=$RES,
-  otype=${TSTUB},
-  jdate=${YYYY}${DOY},
-  yyyymmddhh=${YYYY}${MM}${DD}.${HH},
-  imsformat=2,
-  imsversion=${ims_vsn},
-  imsres=${imsres},
-  IMS_OBS_PATH="${OBSDIR}/snow_ice_cover/IMS/${YYYY}/",
-  IMS_IND_PATH="${OBSDIR}/snow_ice_cover/IMS/index_files/"
-  /
-EOF
-    echo 'do_landDA: calling fIMS'
-    source ${LANDDADIR}/land_mods_hera
-
-    ${FIMS_EXECDIR}/calcfIMS
-    if [[ $? != 0 ]]; then
-        echo "fIMS failed"
-        exit 10
-    fi
-
-    IMS_IODA=imsfv3_scf2ioda_obs40.py
-    cp ${LANDDADIR}/jedi/ioda/${IMS_IODA} $JEDIWORKDIR
-
-    echo 'do_landDA: calling ioda converter' 
-    source ${LANDDADIR}/ioda_mods_hera
-
-    python ${IMS_IODA} -i IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc -o ${JEDIWORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc 
-    if [[ $? != 0 ]]; then
-        echo "IMS IODA converter failed"
-        exit 10
-    fi
-  fi #IMS
 
 done # OBS_TYPES
 
@@ -437,25 +360,9 @@ fi
 # 7. CLEAN UP
 ################################################
 
-# keep IMS IODA file
-if [ $SAVE_IMS == "YES"  ]; then
-   if [[ -e ${JEDIWORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ]]; then
-      cp ${JEDIWORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ${OUTDIR}/DA/IMSproc/
-   fi
-fi 
-
 # keep increments
 if [ $SAVE_INCR == "YES" ] && [ $do_DA == "YES" ]; then
    cp ${JEDIWORKDIR}/${FILEDATE}.xainc.sfc_data.tile*.nc  ${OUTDIR}/DA/jedi_incr/
-fi 
-
-# keep only one copy of each hofx files  
-# all obs are on every processor, or is this only for Ineffcient Distribution?
-if [ $REDUCE_HOFX == "YES" ]; then 
-   for file in $(ls ${OUTDIR}/DA/hofx/*${YYYY}${MM}${DD}*00[123456789].nc) 
-   do 
-    rm $file 
-   done
 fi 
 
 # clean up 

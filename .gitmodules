@@ -1,7 +1,3 @@
-[submodule "IMS_proc"]
-	path = IMS_proc
-	url = https://github.com/NOAA-PSL/land-IMS_proc.git
-	branch = release/EPIC1.0
 
 [submodule "add_jedi_incr"]
 	path = add_jedi_incr
