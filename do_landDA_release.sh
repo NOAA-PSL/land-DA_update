@@ -16,6 +16,7 @@
 # source namelist and setup directories
 #########################################
 
+set -x
 if [[ $# -gt 0 ]]; then 
     config_file=$1
 else
@@ -28,14 +29,23 @@ echo "reading DA settings from $config_file"
 GFSv17=${GFSv17:-"NO"}
 
 fv3bundle_vn=${fv3bundle_vn:-"release-v1.0"}
+#fv3bundle_vn=${fv3bundle_vn:-"20220921"}
 
 source $config_file
 
 LOGDIR=${OUTDIR}/DA/logs/
 OBSDIR=${OBSDIR:-"/scratch2/NCEPDEV/land/data/DA/"}
 
-# executable directories
-INCR_EXECDIR=${LANDDADIR}/add_jedi_incr/exec/   
+# executables
+calcfIMS_EXEC=${BUILDDIR}/bin/calcfIMS.exe
+apply_incr_EXEC=${BUILDDIR}/bin/apply_incr.exe
+
+# JEDI directories
+
+JEDI_EXECDIR=${JEDI_EXECDIR:-"${JEDI_INSTALL}/fv3-bundle/build/bin"}
+IODA_BUILD_DIR=${JEDI_INSTALL}/ioda-bundle/build
+JEDI_STATICDIR=${LANDDADIR}/jedi/fv3-jedi/Data/
+
 
 # JEDI directories
 JEDI_EXECDIR=${JEDI_EXECDIR:-"/scratch2/NCEPDEV/land/data/jedi/fv3-bundle/build/bin/"}
@@ -58,12 +68,15 @@ if [[ ! -e ${OUTDIR}/DA ]]; then
     mkdir ${OUTDIR}/DA/logs
     mkdir ${OUTDIR}/DA/hofx
 fi 
+export JEDIWORKDIR=${LANDDAROOT}/outputs/workdir/jedi
+OROG_PATH=${LANDDAROOT}/inputs/forcing/C96/orog_files
 
 if [[ ! -e $JEDIWORKDIR ]]; then 
     mkdir $JEDIWORKDIR
 fi
 
 
+echo $JEDIWORKDIR
 cd $JEDIWORKDIR 
 
 ################################################
@@ -96,8 +109,9 @@ do
 cp ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${RSTRDIR}/${FILEDATE}.sfc_data_back.tile${tile}.nc
 done
 fi 
-
+echo $JEDIWORKDIR
 #stage restarts for applying JEDI update (files will get directly updated)
+echo $JEDIWORKDIR
 for tile in 1 2 3 4 5 6 
 do
   ln -fs ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc ${JEDIWORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc
@@ -203,6 +217,7 @@ if [[ $do_DA == "YES" ]]; then
    sed -i -e "s/XXMP/${MP}/g" letkf_land.yaml
    sed -i -e "s/XXDP/${DP}/g" letkf_land.yaml
    sed -i -e "s/XXHP/${HP}/g" letkf_land.yaml
+   sed -i -e "s#DATAPATH#${OROG_PATH}#g" letkf_land.yaml
 
    sed -i -e "s/XXTSTUB/${TSTUB}/g" letkf_land.yaml
    sed -i -e "s#XXTPATH#${TPATH}#g" letkf_land.yaml
@@ -347,7 +362,7 @@ EOF
 #   source ${LANDDADIR}/land_mods_hera
 
     # (n=6) -> this is fixed, at one task per tile (with minor code change, could run on a single proc). 
-    ${MPIEXEC} -n 6 ${INCR_EXECDIR}/apply_incr ${LOGDIR}/apply_incr.log
+    ${MPIEXEC} -n 6 ${apply_incr_EXEC} ${LOGDIR}/apply_incr.log
     if [[ $? != 0 ]]; then
         echo "apply snow increment failed"
         exit 10

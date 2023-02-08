@@ -2,11 +2,20 @@ geometry:
   fms initialization:
     namelist filename: Data/fv3files/fmsmpp.nml
     field table filename: Data/fv3files/field_table
-  akbk: Data/fv3files/akbk64.nc4
+  akbk: Data/fv3files/akbk127.nc4
   npx: XXREP
   npy: XXREP
-  npz: 64
+  npz: 127
   field metadata override: Data/fieldmetadata/gfs-land.yaml
+  time invariant fields:
+    state fields:
+      datetime: XXYYYY-XXMM-XXDDTXXHH:00:00Z
+      filetype: fms restart
+      skip coupler file: true
+      state variables: [orog_filt]
+      datapath: DATAPATH
+      filename_orog: oro_C96.mx100.nc
+
 
 window begin: XXYYYP-XXMP-XXDPTXXHP:00:00Z
 window length: PT6H
