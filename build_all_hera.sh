@@ -14,6 +14,3 @@ done
 echo 'creating jedi links'
 cd jedi/fv3-jedi/Data/
 make_links.sh
-cd ../../../
-cd jedi/ioda/
-make_links.sh

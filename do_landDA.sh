@@ -25,21 +25,22 @@ else
 fi
 
 echo "reading DA settings from $config_file"
-
-GFSv17=${GFSv17:-"NO"}
-
 source $config_file
 
-LOGDIR=${OUTDIR}/DA/logs/
-RSTRDIR=${RSTRDIR:-$WORKDIR/restarts/tile/} # if running offline cycling will be here
+GFSv17=${GFSv17:-"NO"}
+machine=${machine:-"hera"}
+IMS_INDEX_FILE_PATH=${IMS_INDEX_FILE_PATH:-"${OBSDIR}/snow_ice_cover/IMS/index_files/"}
+
+export LOGDIR=${OUTDIR}/DA/logs/
+RSTRDIR=${RSTRDIR:-$JEDIWORKDIR/restarts/tile/} # if running offline cycling will be here
 OBSDIR=${OBSDIR:-"/scratch2/NCEPDEV/land/data/DA/"}
 
 # executable directories
-FIMS_EXECDIR=${LANDDADIR}/IMS_proc/exec/   
-INCR_EXECDIR=${LANDDADIR}/add_jedi_incr/exec/   
+export FIMS_EXECDIR=${LANDDADIR}/IMS_proc/exec/   
+export INCR_EXECDIR=${LANDDADIR}/add_jedi_incr/exec/   
 
 # JEDI directories
-JEDI_EXECDIR=${JEDI_EXECDIR:-"/scratch2/NCEPDEV/land/data/jedi/fv3-bundle/build/bin/"}
+export JEDI_EXECDIR=${JEDI_EXECDIR:-"/scratch2/NCEPDEV/land/data/jedi/fv3-bundle/build/bin/"}
 IODA_BUILD_DIR=${IODA_BUILD_DIR:-"/scratch2/BMC/gsienkf/UFS-RNR/UFS-RNR-stack/external/ioda-bundle/build/"}
 JEDI_STATICDIR=${LANDDADIR}/jedi/fv3-jedi/Data/
 
@@ -69,12 +70,12 @@ if [[ ! -e ${OUTDIR}/DA ]]; then
     mkdir ${OUTDIR}/DA/hofx
 fi 
 
-if [[ ! -e $WORKDIR ]]; then 
-    mkdir $WORKDIR
+if [[ ! -e $JEDIWORKDIR ]]; then 
+    mkdir $JEDIWORKDIR
 fi
 
 
-cd $WORKDIR 
+cd $JEDIWORKDIR 
 
 ################################################
 # 1. FORMAT DATE STRINGS AND STAGE RESTARTS
@@ -82,22 +83,22 @@ cd $WORKDIR
 
 INCDATE=${LANDDADIR}/incdate.sh
 
-YYYY=`echo $THISDATE | cut -c1-4`
-MM=`echo $THISDATE | cut -c5-6`
-DD=`echo $THISDATE | cut -c7-8`
-HH=`echo $THISDATE | cut -c9-10`
+export YYYY=`echo $THISDATE | cut -c1-4`
+export MM=`echo $THISDATE | cut -c5-6`
+export DD=`echo $THISDATE | cut -c7-8`
+export HH=`echo $THISDATE | cut -c9-10`
 
 PREVDATE=`${INCDATE} $THISDATE -$WINLEN`
 
-YYYP=`echo $PREVDATE | cut -c1-4`
-MP=`echo $PREVDATE | cut -c5-6`
-DP=`echo $PREVDATE | cut -c7-8`
-HP=`echo $PREVDATE | cut -c9-10`
+export YYYP=`echo $PREVDATE | cut -c1-4`
+export MP=`echo $PREVDATE | cut -c5-6`
+export DP=`echo $PREVDATE | cut -c7-8`
+export HP=`echo $PREVDATE | cut -c9-10`
 
-FILEDATE=${YYYY}${MM}${DD}.${HH}0000
+export FILEDATE=${YYYY}${MM}${DD}.${HH}0000
 
-if [[ ! -e ${WORKDIR}/output ]]; then
-ln -s ${OUTDIR} ${WORKDIR}/output
+if [[ ! -e ${JEDIWORKDIR}/output ]]; then
+ln -s ${OUTDIR} ${JEDIWORKDIR}/output
 fi 
 
 if  [[ $SAVE_TILE == "YES" ]]; then
@@ -110,9 +111,9 @@ fi
 #stage restarts for applying JEDI update (files will get directly updated)
 for tile in 1 2 3 4 5 6 
 do
-  ln -fs ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc ${WORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc
+  ln -fs ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc ${JEDIWORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc
 done
-cres_file=${WORKDIR}/${FILEDATE}.coupler.res
+cres_file=${JEDIWORKDIR}/${FILEDATE}.coupler.res
 if [[ -e  ${RSTRDIR}/${FILEDATE}.coupler.res ]]; then 
     ln -sf ${RSTRDIR}/${FILEDATE}.coupler.res $cres_file
 else #  if not present, need to create coupler.res for JEDI 
@@ -145,6 +146,11 @@ do
      #obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYY}/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc
      # GHCN obs have been time stamped at 18 on fileday. If assimilating at 00, will need previous day's file.
      obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYP}v3/ghcn_snwd_ioda_${YYYP}${MP}${DP}.nc
+     if [ $machine == 'aws' ]; then
+        obsfile=$OBSDIR/snow/ghcn/${YYYP}/${MP}/ghcn_snwd_ioda_${YYYP}${MP}${DP}.nc
+     else
+        obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYP}/ghcn_snwd_ioda_${YYYP}${MP}${DP}.nc
+     fi
   elif [ ${OBS_TYPES[$ii]} == "SYNTH" ]; then 
      obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}${HH}.nc
   elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
@@ -167,9 +173,13 @@ do
 
      if [[ $IMSDAY -gt  2004060100 ]]; then   # do not assimilate before 2004, as have only 24 km obs
         if [[ $IMSDAY -gt 2014120200 ]]; then  ims_vsn=1.3 ; else  ims_vsn=1.2 ; fi
-        obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_4km_v${ims_vsn}.nc
+        if [ $machine == 'aws' ]; then
+           obsfile=${OBSDIR}/IMS/${YYYY}/${MN}/ims${YYYY}${DOY}_4km_v${ims_vsn}.nc
+        else
+           obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_4km_v${ims_vsn}.nc
+        fi
      else
-        JEDI_TYPES[$ii]="SKIP"
+        obsfile=${OBSDIR}/noIMSobs # set to junk file name, if before obs are available
      fi
 
   else
@@ -178,11 +188,42 @@ do
   fi
 
   # check obs are available
-  if [[ -e $obsfile && ${JEDI_TYPES[$ii]} != "SKIP" ]]; then
+  if [ $machine == 'aws' ]; then
+       awsls=$(aws s3 ls $obsfile)
+       if [ -z "$awsls" ]; then
+          file_exists=false
+       else
+          file_exists=true
+       fi
+  else
+     if [[ -e $obsfile ]]; then
+        file_exists=false
+     else
+        file_exists=true
+     fi
+  fi
+  if [[ $file_exists == "true" ]]; then
     echo "do_landDA: ${OBS_TYPES[$ii]} observations found: $obsfile"
-    if [ ${OBS_TYPES[$ii]} != "IMS" ]; then 
-       ln -fs $obsfile  ${OBS_TYPES[$ii]}_${YYYY}${MM}${DD}${HH}.nc
-    fi 
+
+    if [ $machine == 'aws' ]; then
+    # stage obs on AWS 
+       echo "staging obs data from s3.."
+       if [ ${OBS_TYPES[$ii]} != "IMS" ]; then
+          # for GHCN, stage obs, convert v2 to v3
+          export obsfile_updated=${OBS_TYPES[$ii]}_${YYYY}${MM}${DD}${HH}.nc
+          export obsfile_tmp="${obsfile_updated}.tmp"
+          aws s3 cp $obsfile $obsfile_tmp
+
+          # convert from IODA v2 to v3
+          singularity exec --bind /lustre:/lustre ${JEDI_EXECDIR}/jcsda-internal.gnu-openmpi.sif sh ${LANDDADIR}/run_iodav2tov3.sh $obsfile_tmp $obsfile_updated
+          /bin/rm -f $obsfile_tmp
+       fi
+    else
+    # stage obs on hera
+       if [ ${OBS_TYPES[$ii]} != "IMS" ]; then
+          ln -fs $obsfile .
+       fi
+    fi
   else
     echo "${OBS_TYPES[$ii]} observations not found: $obsfile"
     JEDI_TYPES[$ii]="SKIP"
@@ -190,6 +231,13 @@ do
 
   # pre-process and call IODA converter for IMS obs.
   if [[ ${OBS_TYPES[$ii]} == "IMS"  && ${JEDI_TYPES[$ii]} != "SKIP" ]]; then
+
+    if [[ $machine == "aws" ]]; then 
+          # stage input file
+          aws s3 cp $obsfile .
+    else 
+          ln -f $obsdir ${JEDIWORKDIR}
+    fi
 
     if [[ -e fims.nml ]]; then
         rm -rf fims.nml 
@@ -202,12 +250,17 @@ cat >> fims.nml << EOF
   yyyymmddhh=${YYYY}${MM}${DD}.${HH},
   imsformat=2,
   imsversion=${ims_vsn},
-  IMS_OBS_PATH="${OBSDIR}/snow_ice_cover/IMS/${YYYY}/",
-  IMS_IND_PATH="${OBSDIR}/snow_ice_cover/IMS/index_files/"
+  IMS_OBS_PATH="${JEDIWORKDIR}",
+  IMS_IND_PATH="${IMS_INDEX_FILE_PATH}/"
   /
 EOF
     echo 'do_landDA: calling fIMS'
-    source ${LANDDADIR}/land_mods_hera
+
+    if [ $machine == "hera" ]; then
+       source ${LANDDADIR}/land_mods_hera
+    else
+       source ${LANDDADIR}/land_mods_aws
+    fi
 
     ${FIMS_EXECDIR}/calcfIMS
     if [[ $? != 0 ]]; then
@@ -215,25 +268,40 @@ EOF
         exit 10
     fi
 
-    IMS_IODA=imsfv3_scf2ioda_obs40.py
-    cp ${LANDDADIR}/jedi/ioda/${IMS_IODA} $WORKDIR
+    export IMS_IODA=${LANDDADIR}/jedi/ioda/imsfv3_scf2ioda_obs40.py
 
     echo 'do_landDA: calling ioda converter' 
-    source ${LANDDADIR}/ioda_mods_hera
+    if [ $machine == 'aws' ]; then
+       export JEDIWORKDIR=$JEDIWORKDIR
+       export TSTUB=$TSTUB
+       singularity exec --bind /lustre:/lustre ${JEDI_EXECDIR}/jcsda-internal.gnu-openmpi.sif sh ${LANDDADIR}/run_ioda_converter.sh
+    else
+       source ${LANDDADIR}/ioda_mods_hera
+       python ${IMS_IODA} -i IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc -o ${JEDIWORKDIR}iodav2.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc
+    fi
 
-    python ${IMS_IODA} -i IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc -o ${WORKDIR}iodav2.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc 
     if [[ $? != 0 ]]; then
         echo "IMS IODA converter failed"
         exit 10
     fi
+    # convert from IODA v2 to v3
 
-    # still using IODAv2 converter. Need to convert v2 to v3. 
-    # ObsSpace coppied from: fv3-bundle/src/ioda/share/ioda/yaml/validation/ObsSpace.yaml
-    # on hera
-    export iodablddir=${JEDI_EXECDIR}/..
-    export LD_LIBRARY_PATH=${iodablddir}/lib:$LD_LIBRARY_PATH
-    echo 'converting iodav2 to iodav3' 
-    ${JEDI_EXECDIR}/ioda-upgrade-v2-to-v3.x ${WORKDIR}iodav2.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc ${LANDDADIR}/ObsSpace.yaml
+    if [ $machine == 'aws' ]; then
+       obsfile=${JEDIWORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc
+       obsfile_updated="${obsfile}.tmp"
+       singularity exec --bind /lustre:/lustre ${JEDI_EXECDIR}/jcsda-internal.gnu-openmpi.sif sh ${LANDDADIR}/run_iodav2tov3.sh $obsfile $obsfile_updated
+       /bin/mv -f $obsfile_updated $obsfile
+    else
+        # ObsSpace coppied from: fv3-bundle/src/ioda/share/ioda/yaml/validation/ObsSpace.yaml
+        export iodablddir=${JEDI_EXECDIR}/..
+        export LD_LIBRARY_PATH=${iodablddir}/lib:$LD_LIBRARY_PATH
+        echo 'converting iodav2 to iodav3' 
+        ${JEDI_EXECDIR}/ioda-upgrade-v2-to-v3.x ${JEDIWORKDIR}iodav2.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc ${JEDIWORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc ${LANDDADIR}/ObsSpace.yaml
+       if [[ $? != 0 ]]; then
+           echo "IMS IODA v2 to v3 converter failed"
+           exit 10
+       fi
+    fi
     
   fi #IMS
 
@@ -268,7 +336,7 @@ if [[ $do_DA == "YES" ]]; then
 
    if [[ $YAML_DA == "construct" ]];then  # construct the yaml
 
-      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${WORKDIR}/letkf_land.yaml
+      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${JEDIWORKDIR}/letkf_land.yaml
 
       for ii in "${!OBS_TYPES[@]}";
       do 
@@ -279,7 +347,7 @@ if [[ $do_DA == "YES" ]]; then
 
    else # use specified yaml 
       echo "Using user specified YAML: ${YAML_DA}"
-      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${YAML_DA} ${WORKDIR}/letkf_land.yaml
+      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${YAML_DA} ${JEDIWORKDIR}/letkf_land.yaml
    fi
 
    sed -i -e "s/XXYYYY/${YYYY}/g" letkf_land.yaml
@@ -306,7 +374,7 @@ if [[ $do_HOFX == "YES" ]]; then
 
    if [[ $YAML_HOFX == "construct" ]];then  # construct the yaml
 
-      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${WORKDIR}/hofx_land.yaml
+      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${JEDIWORKDIR}/hofx_land.yaml
 
       for ii in "${!OBS_TYPES[@]}";
       do 
@@ -316,7 +384,7 @@ if [[ $do_HOFX == "YES" ]]; then
       done
    else # use specified yaml 
       echo "Using user specified YAML: ${YAML_HOFX}"
-      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${YAML_HOFX} ${WORKDIR}/hofx_land.yaml
+      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${YAML_HOFX} ${JEDIWORKDIR}/hofx_land.yaml
    fi
 
    sed -i -e "s/XXYYYY/${YYYY}/g" hofx_land.yaml
@@ -346,49 +414,47 @@ fi
 
 if [[ ${DAtype} == 'letkfoi_snow' ]]; then 
 
-    JEDI_EXEC="fv3jedi_letkf.x"
+    export JEDI_EXEC="fv3jedi_letkf.x"
 
     if [ $GFSv17 == "YES" ]; then
-        SNOWDEPTHVAR="snodl" 
+        export SNOWDEPTHVAR="snodl" 
         # field overwrite file with GFSv17 variables.
-        cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-land-v17.yaml ${WORKDIR}/gfs-land-v17.yaml
+        cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-land-v17.yaml ${JEDIWORKDIR}/gfs-land-v17.yaml
     else
-        SNOWDEPTHVAR="snwdph"
+        export SNOWDEPTHVAR="snwdph"
     fi
 
-    B=30  # back ground error std for LETKFOI
+    export B=30  # back ground error std for LETKFOI
 
     # FOR LETKFOI, CREATE THE PSEUDO-ENSEMBLE
     for ens in pos neg 
     do
-        if [ -e $WORKDIR/mem_${ens} ]; then 
-                rm -r $WORKDIR/mem_${ens}
+        if [ -e $JEDIWORKDIR/mem_${ens} ]; then 
+                rm -r $JEDIWORKDIR/mem_${ens}
         fi
-        mkdir $WORKDIR/mem_${ens} 
+        mkdir $JEDIWORKDIR/mem_${ens} 
         for tile in 1 2 3 4 5 6
         do
-        cp ${WORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${WORKDIR}/mem_${ens}/${FILEDATE}.sfc_data.tile${tile}.nc
+        cp ${JEDIWORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${JEDIWORKDIR}/mem_${ens}/${FILEDATE}.sfc_data.tile${tile}.nc
         done
-        cp ${WORKDIR}/${FILEDATE}.coupler.res ${WORKDIR}/mem_${ens}/${FILEDATE}.coupler.res
+        cp ${JEDIWORKDIR}/${FILEDATE}.coupler.res ${JEDIWORKDIR}/mem_${ens}/${FILEDATE}.coupler.res
     done
        
 
     echo 'do_landDA: calling create ensemble' 
 
-    # using ioda mods to get a python version with netCDF4
-    source ${LANDDADIR}/ioda_mods_hera
-
-    python ${LANDDADIR}/letkf_create_ens.py $FILEDATE $SNOWDEPTHVAR $B
+    if [ $machine == "aws" ]; then
+       export LANDDADIR=$LANDDADIR
+       singularity exec --bind /lustre:/lustre ${JEDI_EXECDIR}/jcsda-internal.gnu-openmpi.sif sh ${LANDDADIR}/run_create_ens.sh
+    else
+       # using ioda mods to get a python version with netCDF4
+       source ${LANDDADIR}/ioda_mods_hera
+       python ${LANDDADIR}/letkf_create_ens.py $FILEDATE $SNOWDEPTHVAR $B
+    fi
     if [[ $? != 0 ]]; then
         echo "letkf create failed"
         exit 10
     fi
-
-elif [[ ${DAtype} == 'letkfoi_smc' ]]; then 
-
-    JEDI_EXEC="fv3jedi_letkf.x"
-
-    cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-soilMoisture.yaml ${WORKDIR}/gfs-soilMoisture.yaml
 
 fi
 
@@ -396,24 +462,33 @@ fi
 # 5. RUN JEDI
 ################################################
 
-NPROC_JEDI=6
+export NPROC_JEDI=6
 
 if [[ ! -e Data ]]; then
     ln -s $JEDI_STATICDIR Data 
 fi
 
 echo 'do_landDA: calling fv3-jedi' 
-source ${JEDI_EXECDIR}/../../../fv3_mods_Wei_gnu
 
 if [[ $do_DA == "YES" ]]; then
-    srun -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} letkf_land.yaml ${LOGDIR}/jedi_letkf.log
-    if [[ $? != 0 ]]; then
-        echo "JEDI DA failed"
-        exit 10
+    if [ $machine == 'aws' ]; then
+       singularity exec --bind /lustre:/lustre ${JEDI_EXECDIR}/jcsda-internal.gnu-openmpi.sif $LANDDADIR/run_jedi_letkf.sh
+    else
+       source ${JEDI_EXECDIR}/../../../fv3_mods_Wei_gnu
+       srun -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} letkf_land.yaml ${LOGDIR}/jedi_letkf.log
     fi
-fi 
+fi
+if [[ $? != 0 ]]; then
+    echo "JEDI DA failed"
+    exit 10
+fi
 if [[ $do_HOFX == "YES" ]]; then  
-    srun -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} hofx_land.yaml ${LOGDIR}/jedi_hofx.log
+    if [ $machine == 'aws' ]; then
+       singularity exec --bind /lustre:/lustre ${JEDI_EXECDIR}/jcsda-internal.gnu-openmpi.sif /opt/view/bin/mpirun -np $NPROC_JEDI --oversubscribe ${JEDI_EXECDIR}/${JEDI_EXEC} hofx_land.yaml ${LOGDIR}/jedi_hofx.log
+    else
+       source ${JEDI_EXECDIR}/../../../fv3_mods_Wei_gnu
+       srun -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} hofx_land.yaml ${LOGDIR}/jedi_hofx.log
+    fi
     if [[ $? != 0 ]]; then
         echo "JEDI hofx failed"
         exit 10
@@ -440,10 +515,16 @@ cat << EOF > apply_incr_nml
 EOF
 
     echo 'do_landDA: calling apply snow increment'
-    source ${LANDDADIR}/land_mods_hera
-
-    # (n=6) -> this is fixed, at one task per tile (with minor code change, could run on a single proc). 
-    srun '--export=ALL' -n 6 ${INCR_EXECDIR}/apply_incr ${LOGDIR}/apply_incr.log
+    if [ $machine == "aws" ]; then
+       source ${LANDDADIR}/land_mods_aws
+       module list
+       ldd ${INCR_EXECDIR}/apply_incr
+       # (n=6) -> this is fixed, at one task per tile (with minor code change, could run on a single proc). 
+       srun --mpi=pmi2 -l --export=ALL -n 6 -N 1 ${INCR_EXECDIR}/apply_incr ${LOGDIR}/apply_incr.log
+    elif [ $machine == "hera" ]; then
+       source ${LANDDADIR}/land_mods_hera
+       srun '--export=ALL' -n 6 -N 1 ${INCR_EXECDIR}/apply_incr ${LOGDIR}/apply_incr.log
+    fi
     if [[ $? != 0 ]]; then
         echo "apply snow increment failed"
         exit 10
@@ -459,14 +540,14 @@ fi
 
 # keep IMS IODA file
 if [ $SAVE_IMS == "YES"  ]; then
-   if [[ -e ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ]]; then
-      cp ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ${OUTDIR}/DA/IMSproc/
+   if [[ -e ${JEDIWORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ]]; then
+      cp ${JEDIWORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ${OUTDIR}/DA/IMSproc/
    fi
 fi 
 
 # keep increments
 if [ $SAVE_INCR == "YES" ] && [ $do_DA == "YES" ]; then
-   cp ${WORKDIR}/${FILEDATE}.xainc.sfc_data.tile*.nc  ${OUTDIR}/DA/jedi_incr/
+   cp ${JEDIWORKDIR}/${FILEDATE}.xainc.sfc_data.tile*.nc  ${OUTDIR}/DA/jedi_incr/
 fi 
 
 # keep only one copy of each hofx files  
@@ -480,5 +561,5 @@ fi
 
 # clean up 
 if [[ $KEEPDADIR == "NO" ]]; then
-   rm -rf ${WORKDIR} 
+   rm -rf ${JEDIWORKDIR} 
 fi 
