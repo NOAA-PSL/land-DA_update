@@ -9,13 +9,14 @@ geometry:
   field metadata override: Data/fieldmetadata/gfs-land.yaml
 #  field metadata override: gfs-land-v17.yaml
 
-  time invariant state fields:
-    datetime: XXYYYP-XXMP-XXDPTXXHP:00:00Z
-    filetype: fms restart
-    skip coupler file: true
-    state variables: [orog_filt]
-    datapath: XXTPATH
-    filename_orog: XXTSTUB.nc
+  time invariant fields:
+    state fields:
+      datetime: XXYYYP-XXMP-XXDPTXXHP:00:00Z
+      filetype: fms restart
+      skip coupler file: true
+      state variables: [orog_filt]
+      datapath: XXTPATH
+      filename_orog: XXTSTUB.nc
 
 window begin: XXYYYP-XXMP-XXDPTXXHP:00:00Z
 window length: PTXXWINLENH
@@ -89,18 +90,18 @@ observations:
     - filter: Domain Check # land only, no sea ice
       where:
       - variable:
-          name: slmsk@GeoVaLs
+          name: GeoVaLs/slmsk
         minvalue: 0.5
         maxvalue: 1.5
     #- filter: Domain Check # land only, no sea ice
     #  where:
     #  - variable:
-    #      name: fraction_of_ice@GeoVaLs
+    #      name: GeoVaLs/fraction_of_ice
     #    maxvalue: 0.0
     - filter: RejectList  # no land-ice
       where:
       - variable:
-          name: vtype@GeoVaLs
+          name: GeoVaLs/vtype
         minvalue: 14.5
         maxvalue: 15.5
     - filter: Background Check # gross error check
@@ -142,23 +143,23 @@ observations:
     - filter: Domain Check # missing station elevation (-999.9)
       where:
       - variable:
-          name: height@MetaData
+          name: MetaData/height
         minvalue: -999.0
     - filter: Domain Check # land only, no sea ice
       where:
       - variable:
-          name: slmsk@GeoVaLs
+          name: GeoVaLs/slmsk
         minvalue: 0.5
         maxvalue: 1.5
     #- filter: Domain Check # land only, no sea ice
     #  where:
     #  - variable:
-    #      name: fraction_of_ice@GeoVaLs
+    #      name: GeoVaLs/fraction_of_ice
     #    maxvalue: 0.0
     - filter: RejectList  # no land-ice
       where:
       - variable:
-          name: vtype@GeoVaLs
+          name: GeoVaLs/vtype
         minvalue: 14.5
         maxvalue: 15.5
     - filter: Background Check # gross error check

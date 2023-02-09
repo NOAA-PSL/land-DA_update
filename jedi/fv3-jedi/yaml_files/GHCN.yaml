@@ -1,5 +1,5 @@
   - obs space:
-      name: Simulate
+      name: SnowDepthGHCN
       distribution: 
         name: Halo
         halo size: 250e3
@@ -31,24 +31,23 @@
     - filter: Domain Check # missing station elevation (-999.9)
       where:
       - variable:
-          name: height@MetaData
+          name: MetaData/height
         minvalue: -999.0
-    - filter: Domain Check # land only
+    - filter: Domain Check # land only, no sea ice
       where:
       - variable:
-          name: slmsk@GeoVaLs
+          name: GeoVaLs/slmsk
         minvalue: 0.5
         maxvalue: 1.5
-    # GFSv17 only.
-    #- filter: Domain Check # no sea ice
-    #  where:
-    #  - variable:
-    #      name: fraction_of_ice@GeoVaLs
-    #    maxvalue: 0.0
+    - filter: Domain Check # land only, no sea ice
+      where:
+      - variable:
+          name: GeoVaLs/fraction_of_ice
+        maxvalue: 0.0
     - filter: RejectList  # no land-ice
       where:
       - variable:
-          name: vtype@GeoVaLs
+          name: GeoVaLs/vtype
         minvalue: 14.5
         maxvalue: 15.5
     - filter: Background Check # gross error check

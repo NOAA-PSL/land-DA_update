@@ -144,7 +144,7 @@ do
   elif [ ${OBS_TYPES[$ii]} == "GHCN" ]; then 
      #obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYY}/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc
      # GHCN obs have been time stamped at 18 on fileday. If assimilating at 00, will need previous day's file.
-     obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYP}/ghcn_snwd_ioda_${YYYP}${MP}${DP}.nc
+     obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYP}v3/ghcn_snwd_ioda_${YYYP}${MP}${DP}.nc
   elif [ ${OBS_TYPES[$ii]} == "SYNTH" ]; then 
      obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}${HH}.nc
   elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
@@ -221,11 +221,20 @@ EOF
     echo 'do_landDA: calling ioda converter' 
     source ${LANDDADIR}/ioda_mods_hera
 
-    python ${IMS_IODA} -i IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc -o ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc 
+    python ${IMS_IODA} -i IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc -o ${WORKDIR}iodav2.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc 
     if [[ $? != 0 ]]; then
         echo "IMS IODA converter failed"
         exit 10
     fi
+
+    # still using IODAv2 converter. Need to convert v2 to v3. 
+    # ObsSpace coppied from: fv3-bundle/src/ioda/share/ioda/yaml/validation/ObsSpace.yaml
+    # on hera
+    export iodablddir=${JEDI_EXECDIR}/..
+    export LD_LIBRARY_PATH=${iodablddir}/lib:$LD_LIBRARY_PATH
+    echo 'converting iodav2 to iodav3' 
+    ${JEDI_EXECDIR}/ioda-upgrade-v2-to-v3.x ${WORKDIR}iodav2.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc ${WORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc ${LANDDADIR}/ObsSpace.yaml
+    
   fi #IMS
 
 done # OBS_TYPES
@@ -394,7 +403,7 @@ if [[ ! -e Data ]]; then
 fi
 
 echo 'do_landDA: calling fv3-jedi' 
-source ${JEDI_EXECDIR}/../../../fv3_mods_hera
+source ${JEDI_EXECDIR}/../../../fv3_mods_Wei_gnu
 
 if [[ $do_DA == "YES" ]]; then
     srun -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} letkf_land.yaml ${LOGDIR}/jedi_letkf.log

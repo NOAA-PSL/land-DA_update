@@ -7,13 +7,14 @@ geometry:
   npy: 49
   npz: 127
   field metadata override: Data/fieldmetadata/gfs-land.yaml
-  time invariant state fields:
-    datetime: 2019-12-15T18:00:00Z
-    filetype: fms restart
-    skip coupler file: true
-    state variables: [orog_filt]
-    datapath: Data/inputs/gfs_land_c48/grid/
-    filename_orog: C48_oro_data.nc
+  time invariant fields:
+    state fields:
+      datetime: 2019-12-15T18:00:00Z
+      filetype: fms restart
+      skip coupler file: true
+      state variables: [orog_filt]
+      datapath: Data/inputs/gfs_land_c48/grid/
+      filename_orog: C48_oro_data.nc
 
 window begin: 2019-12-15T15:00:00Z
 window length: PT6H
@@ -64,18 +65,18 @@ observations:
     - filter: Domain Check # missing station elevation (-999.9)
       where:
       - variable:
-          name: height@MetaData
+          name: MetaData/height
         minvalue: -999.0
     - filter: Domain Check # land only
       where:
       - variable:
-          name: slmsk@GeoVaLs
+          name: GeoVaLs/slmsk
         minvalue: 0.5
         maxvalue: 1.5
     - filter: RejectList  # no land-ice
       where:
       - variable:
-          name: vtype@GeoVaLs
+          name: GeoVaLs/vtype
         minvalue: 14.5
         maxvalue: 15.5
     - filter: Background Check # gross error check

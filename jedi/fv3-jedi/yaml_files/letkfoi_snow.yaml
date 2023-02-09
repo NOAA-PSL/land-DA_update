@@ -6,31 +6,32 @@ geometry:
   npx: XXREP
   npy: XXREP
   npz: 64
-  field metadata override: Data/fieldmetadata/gfs-land.yaml
+  field metadata override: gfs-land-v17.yaml
 
-  time invariant state fields:
-    datetime: XXYYYP-XXMP-XXDPTXXHP:00:00Z
-    filetype: fms restart
-    skip coupler file: true
-    state variables: [orog_filt]
-    datapath: XXTPATH
-    filename_orog: XXTSTUB.nc
+  time invariant fields:
+    state fields:
+      datetime: XXYYYP-XXMP-XXDPTXXHP:00:00Z
+      filetype: fms restart
+      skip coupler file: true
+      state variables: [orog_filt]
+      datapath: XXTPATH
+      filename_orog: XXTSTUB.nc
 
 window begin: XXYYYP-XXMP-XXDPTXXHP:00:00Z
-window length: PT6H
+window length: PTXXWINLENH
 
 background:
  date: &date XXYYYY-XXMM-XXDDTXXHH:00:00Z
  members:
    - datetime: XXYYYY-XXMM-XXDDTXXHH:00:00Z
      filetype: fms restart
-     state variables: [snwdph,vtype,slmsk]
+     state variables: [snwdph,vtype,slmsk,fice]
      datapath: mem_pos/
      filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
      filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
    - datetime: XXYYYY-XXMM-XXDDTXXHH:00:00Z
      filetype: fms restart
-     state variables: [snwdph,vtype,slmsk]
+     state variables: [snwdph,vtype,slmsk,fice]
      datapath: mem_neg/
      filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
      filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
