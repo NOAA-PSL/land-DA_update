@@ -207,11 +207,18 @@ do
   if [[ $file_exists = true ]]  && [[ ${JEDI_TYPES[$ii]} != "SKIP" ]]; then
     echo "do_landDA: ${OBS_TYPES[$ii]} observations found: $obsfile"
     if [ $machine == 'aws' ]; then
-       echo "staging IMS data.."
+       echo "staging obs data from s3.."
        if [ ${OBS_TYPES[$ii]} != "IMS" ]; then 
-          aws s3 cp $obsfile ${OBS_TYPES[$ii]}_${YYYY}${MM}${DD}${HH}.nc 
+          export obsfile_updated=${OBS_TYPES[$ii]}_${YYYY}${MM}${DD}${HH}.nc
+          export obsfile_tmp="${obsfile_updated}.tmp"
+          aws s3 cp $obsfile $obsfile_tmp
        else
           aws s3 cp $obsfile .
+       fi
+       if [ ${OBS_TYPES[$ii]} != "IMS" ]; then 
+          # convert from IODA v2 to v3
+          singularity exec --bind /lustre:/lustre ${JEDI_EXECDIR}/jcsda-internal.gnu-openmpi.sif sh ${LANDDADIR}/run_iodav2tov3.sh $obsfile_tmp $obsfile_updated
+          /bin/rm -f $obsfile_tmp
        fi
     else
        if [ ${OBS_TYPES[$ii]} != "IMS" ]; then 
@@ -244,7 +251,12 @@ cat >> fims.nml << EOF
   /
 EOF
     echo 'do_landDA: calling fIMS'
-    source ${LANDDADIR}/land_mods_hera
+
+    if [ $machine == "hera" ]; then
+       source ${LANDDADIR}/land_mods_hera
+    else
+       source ${LANDDADIR}/land_mods_aws
+    fi
 
     ${FIMS_EXECDIR}/calcfIMS
     if [[ $? != 0 ]]; then
@@ -262,6 +274,17 @@ EOF
     else
        source ${LANDDADIR}/ioda_mods_hera
        python ${IMS_IODA} -i IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc -o ${JEDIWORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc 
+    fi
+    # convert from IODA v2 to v3
+    if [ $machine == 'aws' ]; then
+       obsfile=${JEDIWORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc
+       obsfile_updated="${obsfile}.tmp"
+       singularity exec --bind /lustre:/lustre ${JEDI_EXECDIR}/jcsda-internal.gnu-openmpi.sif sh ${LANDDADIR}/run_iodav2tov3.sh $obsfile $obsfile_updated
+       if [[ $? != 0 ]]; then
+           echo "IMS IODA v2 to v3 converter failed"
+           exit 10
+       fi
+       /bin/mv -f $obsfile_updated $obsfile
     fi
     if [[ $? != 0 ]]; then
         echo "IMS IODA converter failed"
@@ -485,14 +508,19 @@ cat << EOF > apply_incr_nml
 EOF
 
     echo 'do_landDA: calling apply snow increment'
-    source ${LANDDADIR}/land_mods_hera
+    if [ $machine == "hera" ]; then
+       source ${LANDDADIR}/land_mods_hera
+    elif [ $machine == "aws" ]; then
+       source ${LANDDADIR}/land_mods_aws
+       module list
+       ldd ${INCR_EXECDIR}/apply_incr
+    fi
 
     # (n=6) -> this is fixed, at one task per tile (with minor code change, could run on a single proc). 
-    if [ $machine == 'aws' ]; then
-       singularity exec --bind /lustre:/lustre ${JEDI_EXECDIR}/jcsda-internal.gnu-openmpi.sif /opt/view/bin/mpirun -np 6 --oversubscribe ${INCR_EXECDIR}/apply_incr ${LOGDIR}/apply_incr.log
-       cat ${LOGDIR}/apply_incr.log
+    if [ "$machine" == "aws" ];then
+       srun --mpi=pmi2 -l --export=ALL -n 6 -N 1 ${INCR_EXECDIR}/apply_incr ${LOGDIR}/apply_incr.log
     else
-       srun '--export=ALL' -n 6 ${INCR_EXECDIR}/apply_incr ${LOGDIR}/apply_incr.log
+       srun '--export=ALL' -n 6 -N 1 ${INCR_EXECDIR}/apply_incr ${LOGDIR}/apply_incr.log
     fi
     if [[ $? != 0 ]]; then
         echo "apply snow increment failed"
