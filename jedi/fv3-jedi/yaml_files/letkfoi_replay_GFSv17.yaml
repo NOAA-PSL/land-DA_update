@@ -6,7 +6,8 @@ geometry:
   npx: XXREP
   npy: XXREP
   npz: 64
-  field metadata override: gfs-land-v17.yaml
+  field metadata override: Data/fieldmetadata/gfs-land.yaml
+#  field metadata override: gfs-land-v17.yaml
 
   time invariant state fields:
     datetime: XXYYYP-XXMP-XXDPTXXHP:00:00Z
@@ -24,13 +25,15 @@ background:
  members:
    - datetime: XXYYYY-XXMM-XXDDTXXHH:00:00Z
      filetype: fms restart
-     state variables: [snwdph,vtype,slmsk,fice]
+     state variables: [snwdph,vtype,slmsk]
+     #state variables: [snwdph,vtype,slmsk,fice]
      datapath: mem_pos/
      filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
      filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
    - datetime: XXYYYY-XXMM-XXDDTXXHH:00:00Z
      filetype: fms restart
-     state variables: [snwdph,vtype,slmsk,fice]
+     state variables: [snwdph,vtype,slmsk]
+     #state variables: [snwdph,vtype,slmsk,fice]
      datapath: mem_neg/
      filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
      filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
@@ -89,11 +92,11 @@ observations:
           name: slmsk@GeoVaLs
         minvalue: 0.5
         maxvalue: 1.5
-    - filter: Domain Check # land only, no sea ice
-      where:
-      - variable:
-          name: fraction_of_ice@GeoVaLs
-        maxvalue: 0.0
+    #- filter: Domain Check # land only, no sea ice
+    #  where:
+    #  - variable:
+    #      name: fraction_of_ice@GeoVaLs
+    #    maxvalue: 0.0
     - filter: RejectList  # no land-ice
       where:
       - variable:
@@ -107,7 +110,7 @@ observations:
       action:
         name: reject
   - obs space:
-      name: Simulate
+      name: SnowDepthGHCN
       distribution: 
         name: Halo
         halo size: 250e3
@@ -147,11 +150,11 @@ observations:
           name: slmsk@GeoVaLs
         minvalue: 0.5
         maxvalue: 1.5
-    - filter: Domain Check # land only, no sea ice
-      where:
-      - variable:
-          name: fraction_of_ice@GeoVaLs
-        maxvalue: 0.0
+    #- filter: Domain Check # land only, no sea ice
+    #  where:
+    #  - variable:
+    #      name: fraction_of_ice@GeoVaLs
+    #    maxvalue: 0.0
     - filter: RejectList  # no land-ice
       where:
       - variable:

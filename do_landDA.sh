@@ -55,7 +55,7 @@ echo 'THISDATE in land DA, '$THISDATE
 ############################################################################################
 # TEMPORARY, UNTIL WE SORT OUT THE LATENCY ON THE IMS OBS
 # IMS data in file is from day before the file's time stamp 
-IMStiming=OBSDATE # FILEDATE - use IMS data for file's time stamp =THISDATE (NRT option) 
+IMStiming=FILEDATE # FILEDATE - use IMS data for file's time stamp =THISDATE (NRT option) 
                    # OBSDATE  - use IMS data for observation time stamp = THISDATE + 24 (hindcast option)
 
 ############################################################################################
