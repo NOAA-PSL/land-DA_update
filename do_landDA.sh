@@ -54,12 +54,6 @@ KEEPDADIR=${KEEPDADIR:-"YES"} # delete DA workdir
 echo 'THISDATE in land DA, '$THISDATE
 
 ############################################################################################
-# TEMPORARY, UNTIL WE SORT OUT THE LATENCY ON THE IMS OBS
-# IMS data in file is from day before the file's time stamp 
-IMStiming=FILEDATE # FILEDATE - use IMS data for file's time stamp =THISDATE (NRT option) 
-                   # OBSDATE  - use IMS data for observation time stamp = THISDATE + 24 (hindcast option)
-
-############################################################################################
 
 # create output directories.
 if [[ ! -e ${OUTDIR}/DA ]]; then
@@ -145,11 +139,10 @@ do
   elif [ ${OBS_TYPES[$ii]} == "GHCN" ]; then 
      #obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYY}/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc
      # GHCN obs have been time stamped at 18 on fileday. If assimilating at 00, will need previous day's file.
-     obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYP}v3/ghcn_snwd_ioda_${YYYP}${MP}${DP}.nc
      if [ $machine == 'aws' ]; then
         obsfile=$OBSDIR/snow/ghcn/${YYYP}/${MP}/ghcn_snwd_ioda_${YYYP}${MP}${DP}.nc
      else
-        obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYP}/ghcn_snwd_ioda_${YYYP}${MP}${DP}.nc
+        obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYP}v3/ghcn_snwd_ioda_${YYYP}${MP}${DP}.nc
      fi
   elif [ ${OBS_TYPES[$ii]} == "SYNTH" ]; then 
      obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}${HH}.nc
@@ -157,22 +150,15 @@ do
      obsfile=$OBSDIR/soil_moisture/SMAP/data_proc/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
 # Zofia - any processing of the SMAP obs goes here.
   elif [ ${OBS_TYPES[$ii]} == "IMS" ]; then 
-     if [[ $IMStiming == "FILEDATE" ]]; then 
-            IMSDAY=${THISDATE} 
-     elif [[ $IMStiming == "OBSDATE" ]]; then
-            IMSDAY=`${INCDATE} ${THISDATE} +24`
-     else
-            echo 'UNKNOWN IMStiming selection, exiting' 
-            exit 10 
-     fi
-     YYYN=`echo $IMSDAY | cut -c1-4`
-     MN=`echo $IMSDAY | cut -c5-6`
-     DN=`echo $IMSDAY | cut -c7-8`
+
+     YYYN=`echo $THISDATE | cut -c1-4`
+     MN=`echo $THISDATE | cut -c5-6`
+     DN=`echo $THISDATE | cut -c7-8`
      DOY=$(date -d "${YYYN}-${MN}-${DN}" +%j)
      echo DOY is ${DOY}
 
-     if [[ $IMSDAY -gt  2004060100 ]]; then   # do not assimilate before 2004, as have only 24 km obs
-        if [[ $IMSDAY -gt 2014120200 ]]; then  ims_vsn=1.3 ; else  ims_vsn=1.2 ; fi
+     if [[ $THISDATE -gt  2004060100 ]]; then   # do not assimilate before 2004, as have only 24 km obs
+        if [[ $THISDATE -gt 2014120200 ]]; then  ims_vsn=1.3 ; else  ims_vsn=1.2 ; fi
         if [ $machine == 'aws' ]; then
            obsfile=${OBSDIR}/IMS/${YYYY}/${MN}/ims${YYYY}${DOY}_4km_v${ims_vsn}.nc
         else
