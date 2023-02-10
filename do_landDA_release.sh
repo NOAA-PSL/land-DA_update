@@ -55,7 +55,7 @@ JEDI_STATICDIR=${LANDDADIR}/jedi/fv3-jedi/Data/
 # storage settings 
 SAVE_INCR="YES" # "YES" to save increment (add others?) JEDI output
 SAVE_TILE=${SAVE_TILE:-"NO"} # "YES" to save background in tile space
-KEEPJEDIDIR=${KEEPJEDIDIR:-"NO"} # delete DA workdir 
+KEEPJEDIDIR=${KEEPJEDIDIR:-"YES"} # delete DA workdir 
 
 echo 'THISDATE in land DA, '$THISDATE
 
@@ -68,7 +68,7 @@ if [[ ! -e ${OUTDIR}/DA ]]; then
     mkdir ${OUTDIR}/DA/logs
     mkdir ${OUTDIR}/DA/hofx
 fi 
-export JEDIWORKDIR=${LANDDAROOT}/outputs/workdir/jedi
+export JEDIWORKDIR=${LANDDAROOT}/workdir/mem000/jedi
 OROG_PATH=${LANDDAROOT}/inputs/forcing/C96/orog_files
 
 if [[ ! -e $JEDIWORKDIR ]]; then 
@@ -303,7 +303,7 @@ if [[ ${DAtype} == 'letkfoi_snow' ]]; then
     # using ioda mods to get a python version with netCDF4
 #   source ${LANDDADIR}/ioda_mods_hera
 
-    python ${LANDDADIR}/letkf_create_ens.py $FILEDATE $SNOWDEPTHVAR $B
+    ${PYTHON} ${LANDDADIR}/letkf_create_ens.py $FILEDATE $SNOWDEPTHVAR $B
     if [[ $? != 0 ]]; then
         echo "letkf create failed"
         exit 10
