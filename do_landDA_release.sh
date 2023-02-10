@@ -72,7 +72,7 @@ export JEDIWORKDIR=${LANDDAROOT}/outputs/workdir/jedi
 OROG_PATH=${LANDDAROOT}/inputs/forcing/C96/orog_files
 
 if [[ ! -e $JEDIWORKDIR ]]; then 
-    mkdir $JEDIWORKDIR
+    mkdir -p $JEDIWORKDIR
 fi
 
 
@@ -289,7 +289,7 @@ if [[ ${DAtype} == 'letkfoi_snow' ]]; then
         if [ -e $JEDIWORKDIR/mem_${ens} ]; then 
                 rm -r $JEDIWORKDIR/mem_${ens}
         fi
-        mkdir $JEDIWORKDIR/mem_${ens} 
+        mkdir -p $JEDIWORKDIR/mem_${ens} 
         for tile in 1 2 3 4 5 6
         do
         cp ${JEDIWORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${JEDIWORKDIR}/mem_${ens}/${FILEDATE}.sfc_data.tile${tile}.nc
