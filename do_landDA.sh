@@ -29,11 +29,11 @@ source $config_file
 
 GFSv17=${GFSv17:-"NO"}
 machine=${machine:-"hera"}
-IMS_INDEX_FILE_PATH=${IMS_INDEX_FILE_PATH:-"${OBSDIR}/snow_ice_cover/IMS/index_files/"}
 
 export LOGDIR=${OUTDIR}/DA/logs/
 RSTRDIR=${RSTRDIR:-$JEDIWORKDIR/restarts/tile/} # if running offline cycling will be here
 OBSDIR=${OBSDIR:-"/scratch2/NCEPDEV/land/data/DA/"}
+IMS_INDEX_FILE_PATH=${IMS_INDEX_FILE_PATH:-"${OBSDIR}/snow_ice_cover/IMS/index_files/"}
 
 # executable directories
 export FIMS_EXECDIR=${LANDDADIR}/IMS_proc/exec/   
@@ -138,11 +138,19 @@ do
      obsfile=$OBSDIR/snow_depth/GTS/data_proc/${YYYY}${MM}/adpsfc_snow_${YYYY}${MM}${DD}${HH}.nc4
   elif [ ${OBS_TYPES[$ii]} == "GHCN" ]; then 
      #obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYY}/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc
-     # GHCN obs have been time stamped at 18 on fileday. If assimilating at 00, will need previous day's file.
      if [ $machine == 'aws' ]; then
+        if [ HH == '00' ]; then 
+        # GHCN obs have been time stamped at 18 on fileday. If assimilating at 00, will need previous day's file.
         obsfile=$OBSDIR/snow/ghcn/${YYYP}/${MP}/ghcn_snwd_ioda_${YYYP}${MP}${DP}.nc
+        else
+        obsfile=$OBSDIR/snow/ghcn/${YYYY}/${MM}/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc
+        fi
      else
+        if [ HH == '00' ]; then 
         obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYP}v3/ghcn_snwd_ioda_${YYYP}${MP}${DP}.nc
+        else 
+        obsfile=$OBSDIR/snow_depth/GHCN/data_proc/${YYYY}v3/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc
+        fi
      fi
   elif [ ${OBS_TYPES[$ii]} == "SYNTH" ]; then 
      obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}${HH}.nc
@@ -183,9 +191,9 @@ do
        fi
   else
      if [[ -e $obsfile ]]; then
-        file_exists=false
-     else
         file_exists=true
+     else
+        file_exists=false
      fi
   fi
   if [[ $file_exists == "true" ]]; then
@@ -207,7 +215,7 @@ do
     else
     # stage obs on hera
        if [ ${OBS_TYPES[$ii]} != "IMS" ]; then
-          ln -fs $obsfile .
+          ln -fs $obsfile ${OBS_TYPES[$ii]}_${YYYY}${MM}${DD}${HH}.nc
        fi
     fi
   else
@@ -222,7 +230,7 @@ do
           # stage input file
           aws s3 cp $obsfile .
     else 
-          ln -f $obsdir ${JEDIWORKDIR}
+          cp $obsfile ${JEDIWORKDIR}
     fi
 
     if [[ -e fims.nml ]]; then

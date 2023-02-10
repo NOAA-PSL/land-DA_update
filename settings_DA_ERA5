@@ -1,20 +1,27 @@
 # template for settings for calling do_landDA.sh 
 
+# for replay, these are specified in earlier scripts: 
+OCNRES=mx025
+FIXDIR=/scratch1/NCEPDEV/nems/emc.nemspara/RT/NEMSfv3gfs/input-data-20220414
+
 ############################
 # if calling from submit_cycle,vars in this section will already be set. Otherwise, need to be set here.
 
-exp_name=ORIG
-THISDATE=2016010200
-WORKDIR=/scratch2/BMC/gsienkf/${USER}/era5_workdir/  # temporary directory where experiment is run from
-RSTRDIR=${WORKDIR}/restarts/
+exp_name=test_jeff
+THISDATE=2019073121
+JEDIWORKDIR=/scratch2/BMC/gsienkf/${USER}/era5_workdir/  # temporary directory where experiment is run from
+RSTRDIR=/scratch2/BMC/gsienkf/Clara.Draper/aws_jeff/control/INPUT/
 OUTDIR=/scratch2/BMC/gsienkf/${USER}/era5_workdir/${exp_name}/  # temporary directory where experiment is run from
 # RSTRDIR= #  if not specified, is constructed from $WORKDIR 
-RES=96 #resolution
-TPATH=/scratch2/BMC/gsienkf/Clara.Draper/data_RnR/orog_files_Mike/ # directory for orography files.
-TSTUB=oro_C96.mx100 # filename stub for orography files. oro_C${RES} for atm only, oro_C${RES}.mx100 for atm/ocean.
+
+RES=384 #FV3 resolution
+TSTUB=oro_C${RES}.${OCNRES}
+TPATH=${FIXDIR}/FV3_fix_tiled/C${RES}/
+GFSv17=YES
+
 
 # directory where do_landDA.sh script is 
-LANDDADIR=/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/DA_ERA5/ # if calling from submit_cycle.sh
+LANDDADIR=/scratch2/BMC/gsienkf/Clara.Draper/gerrit-hera/landDA_ERA5/ # if calling from submit_cycle.sh
 
 ############################
 # DA options
