@@ -1,4 +1,4 @@
-#!/bin/bash -le
+#!/bin/bash -l 
 # script to run the land DA. Currently only option is the snow LETKFOI.
 #
 # 1. stage the restarts. 
@@ -173,6 +173,7 @@ do
            obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_4km_v${ims_vsn}.nc
         fi
      else
+        echo "no IMS obs available before 2004060100"
         obsfile=${OBSDIR}/noIMSobs # set to junk file name, if before obs are available
      fi
 
@@ -184,7 +185,7 @@ do
   # check obs are available
   if [ $machine == 'aws' ]; then
        awsls=$(aws s3 ls $obsfile)
-       if [ -z "$awsls" ]; then
+       if [ $? -ne 0 ] || [ -z "$awsls" ]; then
           file_exists=false
        else
           file_exists=true
