@@ -69,7 +69,7 @@ if [[ ! -e ${OUTDIR}/DA ]]; then
     mkdir ${OUTDIR}/DA/hofx
 fi 
 export JEDIWORKDIR=${LANDDAROOT}/workdir/mem000/jedi
-OROG_PATH=${LANDDAROOT}/inputs/forcing/C96/orog_files
+OROG_PATH=${LANDDAROOT}/inputs/forcing/${atmos_forc}/orog_files
 
 if [[ ! -e $JEDIWORKDIR ]]; then 
     mkdir -p $JEDIWORKDIR
