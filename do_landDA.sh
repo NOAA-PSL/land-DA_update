@@ -1,4 +1,4 @@
-#!/bin/bash -le
+#!/bin/bash 
 # script to run the land DA. Currently only option is the snow LETKFOI.
 #
 # 1. stage the restarts. 
@@ -16,6 +16,7 @@
 # source namelist and setup directories
 #########################################
 
+set -x
 if [[ $# -gt 0 ]]; then 
     config_file=$1
 else
@@ -27,15 +28,23 @@ echo "reading DA settings from $config_file"
 
 GFSv17=${GFSv17:-"NO"}
 
-fv3bundle_vn=${fv3bundle_vn:-"20220921"}
+fv3bundle_vn=${fv3bundle_vn:-"release-v1.0"}
 
 source $config_file
 
 LOGDIR=${OUTDIR}/DA/logs/
 OBSDIR=${OBSDIR:-"/scratch2/NCEPDEV/land/data/DA/"}
 
-# executable directories
-INCR_EXECDIR=${LANDDADIR}/add_jedi_incr/exec/   
+# executables
+calcfIMS_EXEC=${BUILDDIR}/bin/calcfIMS.exe
+apply_incr_EXEC=${BUILDDIR}/bin/apply_incr.exe
+
+# JEDI directories
+
+JEDI_EXECDIR=${JEDI_EXECDIR:-"${JEDI_INSTALL}/fv3-bundle/build/bin"}
+IODA_BUILD_DIR=${JEDI_INSTALL}/ioda-bundle/build
+JEDI_STATICDIR=${LANDDADIR}/jedi/fv3-jedi/Data/
+
 
 # JEDI directories
 JEDI_EXECDIR=${JEDI_EXECDIR:-"/scratch2/NCEPDEV/land/data/jedi/fv3-bundle/build/bin/"}
@@ -45,7 +54,7 @@ JEDI_STATICDIR=${LANDDADIR}/jedi/fv3-jedi/Data/
 # storage settings 
 SAVE_INCR="YES" # "YES" to save increment (add others?) JEDI output
 SAVE_TILE=${SAVE_TILE:-"NO"} # "YES" to save background in tile space
-KEEPJEDIDIR=${KEEPJEDIDIR:-"NO"} # delete DA workdir 
+KEEPJEDIDIR=${KEEPJEDIDIR:-"YES"} # delete DA workdir 
 
 echo 'THISDATE in land DA, '$THISDATE
 
@@ -58,9 +67,11 @@ if [[ ! -e ${OUTDIR}/DA ]]; then
     mkdir ${OUTDIR}/DA/logs
     mkdir ${OUTDIR}/DA/hofx
 fi 
+export JEDIWORKDIR=${WORKDIR}/mem000/jedi
+OROG_PATH=${LANDDA_INPUTS}/forcing/${atmos_forc}/orog_files
 
 if [[ ! -e $JEDIWORKDIR ]]; then 
-    mkdir $JEDIWORKDIR
+    mkdir -p $JEDIWORKDIR
 fi
 
 
@@ -96,7 +107,6 @@ do
 cp ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${RSTRDIR}/${FILEDATE}.sfc_data_back.tile${tile}.nc
 done
 fi 
-
 #stage restarts for applying JEDI update (files will get directly updated)
 for tile in 1 2 3 4 5 6 
 do
@@ -203,6 +213,7 @@ if [[ $do_DA == "YES" ]]; then
    sed -i -e "s/XXMP/${MP}/g" letkf_land.yaml
    sed -i -e "s/XXDP/${DP}/g" letkf_land.yaml
    sed -i -e "s/XXHP/${HP}/g" letkf_land.yaml
+   sed -i -e "s#DATAPATH#${OROG_PATH}#g" letkf_land.yaml
 
    sed -i -e "s/XXTSTUB/${TSTUB}/g" letkf_land.yaml
    sed -i -e "s#XXTPATH#${TPATH}#g" letkf_land.yaml
@@ -274,7 +285,7 @@ if [[ ${DAtype} == 'letkfoi_snow' ]]; then
         if [ -e $JEDIWORKDIR/mem_${ens} ]; then 
                 rm -r $JEDIWORKDIR/mem_${ens}
         fi
-        mkdir $JEDIWORKDIR/mem_${ens} 
+        mkdir -p $JEDIWORKDIR/mem_${ens} 
         for tile in 1 2 3 4 5 6
         do
         cp ${JEDIWORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${JEDIWORKDIR}/mem_${ens}/${FILEDATE}.sfc_data.tile${tile}.nc
@@ -286,9 +297,8 @@ if [[ ${DAtype} == 'letkfoi_snow' ]]; then
     echo 'do_landDA: calling create ensemble' 
 
     # using ioda mods to get a python version with netCDF4
-    source ${LANDDADIR}/ioda_mods_hera
 
-    python ${LANDDADIR}/letkf_create_ens.py $FILEDATE $SNOWDEPTHVAR $B
+    ${PYTHON} ${LANDDADIR}/letkf_create_ens.py $FILEDATE $SNOWDEPTHVAR $B
     if [[ $? != 0 ]]; then
         echo "letkf create failed"
         exit 10
@@ -307,17 +317,16 @@ if [[ ! -e Data ]]; then
 fi
 
 echo 'do_landDA: calling fv3-jedi' 
-source ${JEDI_EXECDIR}/../../../fv3_mods_hera
 
 if [[ $do_DA == "YES" ]]; then
-    srun -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} letkf_land.yaml ${LOGDIR}/jedi_letkf.log
+    ${MPIEXEC} -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} letkf_land.yaml ${LOGDIR}/jedi_letkf.log
     if [[ $? != 0 ]]; then
         echo "JEDI DA failed"
         exit 10
     fi
 fi 
 if [[ $do_HOFX == "YES" ]]; then  
-    srun -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} hofx_land.yaml ${LOGDIR}/jedi_hofx.log
+    ${MPIEXEC} -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} hofx_land.yaml ${LOGDIR}/jedi_hofx.log
     if [[ $? != 0 ]]; then
         echo "JEDI hofx failed"
         exit 10
@@ -344,10 +353,9 @@ cat << EOF > apply_incr_nml
 EOF
 
     echo 'do_landDA: calling apply snow increment'
-    source ${LANDDADIR}/land_mods_hera
 
     # (n=6) -> this is fixed, at one task per tile (with minor code change, could run on a single proc). 
-    srun '--export=ALL' -n 6 ${INCR_EXECDIR}/apply_incr ${LOGDIR}/apply_incr.log
+    ${MPIEXEC} -n 6 ${apply_incr_EXEC} ${LOGDIR}/apply_incr.log
     if [[ $? != 0 ]]; then
         echo "apply snow increment failed"
         exit 10
