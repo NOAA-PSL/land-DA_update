@@ -68,8 +68,8 @@ if [[ ! -e ${OUTDIR}/DA ]]; then
     mkdir ${OUTDIR}/DA/logs
     mkdir ${OUTDIR}/DA/hofx
 fi 
-export JEDIWORKDIR=${LANDDAROOT}/workdir/mem000/jedi
-OROG_PATH=${LANDDAROOT}/inputs/forcing/${atmos_forc}/orog_files
+export JEDIWORKDIR=${WORKDIR}/mem000/jedi
+OROG_PATH=${LANDDA_INPUTS}/forcing/${atmos_forc}/orog_files
 
 if [[ ! -e $JEDIWORKDIR ]]; then 
     mkdir -p $JEDIWORKDIR
