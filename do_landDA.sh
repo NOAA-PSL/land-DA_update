@@ -36,20 +36,11 @@ LOGDIR=${OUTDIR}/DA/logs/
 OBSDIR=${OBSDIR:-"/scratch2/NCEPDEV/land/data/DA/"}
 
 # executables
-calcfIMS_EXEC=${BUILDDIR}/bin/calcfIMS.exe
-apply_incr_EXEC=${BUILDDIR}/bin/apply_incr.exe
-
-# JEDI directories
-
-JEDI_EXECDIR=${JEDI_EXECDIR:-"${JEDI_INSTALL}/fv3-bundle/build/bin"}
-IODA_BUILD_DIR=${JEDI_INSTALL}/ioda-bundle/build
-JEDI_STATICDIR=${LANDDADIR}/jedi/fv3-jedi/Data/
-
-
-# JEDI directories
-JEDI_EXECDIR=${JEDI_EXECDIR:-"/scratch2/NCEPDEV/land/data/jedi/fv3-bundle/build/bin/"}
-IODA_BUILD_DIR=${IODA_BUILD_DIR:-"/scratch2/BMC/gsienkf/UFS-RNR/UFS-RNR-stack/external/ioda-bundle/build/"}
-JEDI_STATICDIR=${LANDDADIR}/jedi/fv3-jedi/Data/
+if [[ -e ${BUILDDIR}/bin/apply_incr.exe ]]; then #prefer cmake-built executables
+  apply_incr_EXEC=${BUILDDIR}/bin/apply_incr.exe
+else
+  apply_incr_EXEC=${CYCLEDIR}/DA_update/add_jedi_incr/exec/apply_incr
+fi
 
 # storage settings 
 SAVE_INCR="YES" # "YES" to save increment (add others?) JEDI output
@@ -250,6 +241,7 @@ if [[ $do_HOFX == "YES" ]]; then
    sed -i -e "s/XXMP/${MP}/g" hofx_land.yaml
    sed -i -e "s/XXDP/${DP}/g" hofx_land.yaml
    sed -i -e "s/XXHP/${HP}/g" hofx_land.yaml
+   sed -i -e "s#DATAPATH#${OROG_PATH}#g" hofx_land.yaml
 
    sed -i -e "s#XXTPATH#${TPATH}#g" hofx_land.yaml
    sed -i -e "s/XXTSTUB/${TSTUB}/g" hofx_land.yaml
