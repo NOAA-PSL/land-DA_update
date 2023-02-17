@@ -1,4 +1,4 @@
-#!/bin/ksh 
+#!/bin/bash 
 
 if [ $# == 1 ]; then 
         echo "setting jedi path to input $1"
