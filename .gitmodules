@@ -1,3 +1,4 @@
 [submodule "IMS_proc"]
 	path = IMS_proc
 	url = https://github.com/noaa-psd/land-IMS_proc.git
+	branch = feature/aws

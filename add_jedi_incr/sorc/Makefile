@@ -1,4 +1,4 @@
-SHELL=	/bin/ksh
+SHELL=	/bin/bash
 FC      =$(FCMP)
 LIBS    =$(LIBSM)
 OBJS	=apply_incr_noahmp_snow.o NoahMPdisag_module.o

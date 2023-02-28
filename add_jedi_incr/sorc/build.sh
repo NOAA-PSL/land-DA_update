@@ -17,4 +17,4 @@ if [ ! -d "./exec" ]; then
 fi
 
 cd ./sorc/
-./Makefile.sh
+./makefile.sh
