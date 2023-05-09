@@ -50,7 +50,6 @@ JEDI_STATICDIR=${LANDDADIR}/jedi/fv3-jedi/Data/
 SAVE_IMS=${SAVE_IMS:-"YES"} # "YES" to save processed IMS IODA file
 SAVE_INCR=${SAVE_INCR:-"YES"} # "YES" to save increment (add others?) JEDI output
 SAVE_TILE=${SAVE_TILE:-"NO"} # "YES" to save background in tile space
-REDUCE_HOFX="NO" # "YES" to remove duplicate hofx files (one per processor)
 KEEPJEDIDIR=${KEEPJEDIDIR:-"NO"} # delete DA workdir 
 
 echo 'THISDATE in land DA, '$THISDATE
@@ -455,15 +454,6 @@ fi
 # keep increments
 if [ $SAVE_INCR == "YES" ] && [ $do_DA == "YES" ]; then
    cp ${JEDIWORKDIR}/${FILEDATE}.xainc.sfc_data.tile*.nc  ${OUTDIR}/DA/jedi_incr/
-fi 
-
-# keep only one copy of each hofx files  
-# all obs are on every processor, or is this only for Ineffcient Distribution?
-if [ $REDUCE_HOFX == "YES" ]; then 
-   for file in $(ls ${OUTDIR}/DA/hofx/*${YYYY}${MM}${DD}*00[123456789].nc) 
-   do 
-    rm $file 
-   done
 fi 
 
 # clean up 
