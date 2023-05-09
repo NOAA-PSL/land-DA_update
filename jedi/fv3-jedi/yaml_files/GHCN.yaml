@@ -1,5 +1,5 @@
   - obs space:
-      name: Simulate
+      name: SnowDepthGHCN
       distribution: 
         name: Halo
         halo size: 250e3
