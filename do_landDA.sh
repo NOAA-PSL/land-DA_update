@@ -47,19 +47,13 @@ IODA_BUILD_DIR=${IODA_BUILD_DIR:-"/scratch2/BMC/gsienkf/UFS-RNR/UFS-RNR-stack/ex
 JEDI_STATICDIR=${LANDDADIR}/jedi/fv3-jedi/Data/
 
 # storage settings 
-SAVE_IMS="YES" # "YES" to save processed IMS IODA file
-SAVE_INCR="YES" # "YES" to save increment (add others?) JEDI output
+SAVE_IMS=${SAVE_IMS:-"YES"} # "YES" to save processed IMS IODA file
+SAVE_INCR=${SAVE_INCR:-"YES"} # "YES" to save increment (add others?) JEDI output
 SAVE_TILE=${SAVE_TILE:-"NO"} # "YES" to save background in tile space
 REDUCE_HOFX="NO" # "YES" to remove duplicate hofx files (one per processor)
 KEEPJEDIDIR=${KEEPJEDIDIR:-"NO"} # delete DA workdir 
 
 echo 'THISDATE in land DA, '$THISDATE
-
-############################################################################################
-# TEMPORARY, UNTIL WE SORT OUT THE LATENCY ON THE IMS OBS
-# IMS data in file is from day before the file's time stamp 
-IMStiming=OBSDATE # FILEDATE - use IMS data for file's time stamp =THISDATE (NRT option) 
-                   # OBSDATE  - use IMS data for observation time stamp = THISDATE + 24 (hindcast option)
 
 ############################################################################################
 
@@ -150,20 +144,8 @@ do
      obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}${HH}.nc
   elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
      obsfile=$OBSDIR/soil_moisture/SMAP/data_proc/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
-# Zofia - any processing of the SMAP obs goes here.
   elif [ ${OBS_TYPES[$ii]} == "IMS" ]; then 
-     if [[ $IMStiming == "FILEDATE" ]]; then 
-            IMSDAY=${THISDATE} 
-     elif [[ $IMStiming == "OBSDATE" ]]; then
-            IMSDAY=`${INCDATE} ${THISDATE} +24`
-     else
-            echo 'UNKNOWN IMStiming selection, exiting' 
-            exit 10 
-     fi
-     YYYN=`echo $IMSDAY | cut -c1-4`
-     MN=`echo $IMSDAY | cut -c5-6`
-     DN=`echo $IMSDAY | cut -c7-8`
-     DOY=$(date -d "${YYYN}-${MN}-${DN}" +%j)
+     DOY=$(date -d "${YYYY}-${MM}-${DD}" +%j)
      echo DOY is ${DOY}
 
      if [[ $THISDATE -gt 2014120200 ]];  then

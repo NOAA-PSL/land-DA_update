@@ -101,7 +101,7 @@ class imsFV3(object):
         str_date = re.search(r'\d{8}', self.filename).group()
         my_date = datetime.strptime(str_date, "%Y%m%d")
         start_datetime = my_date.strftime('%Y-%m-%d')
-        base_datetime = start_datetime + 'T18:00:00Z'
+        base_datetime = start_datetime + 'T00:00:00Z'
 
         for i in range(len(lats)):
             times[i] = base_datetime
