@@ -8,5 +8,4 @@ else
 fi 
 
 ln -s ${jedi_path}/fv3-jedi/test/Data/fv3files . 
-ln -s ${jedi_path}/fv3-jedi/test/Data/fieldmetadata . 
-
+#ln -s ${jedi_path}/fv3-jedi/test/Data/fieldmetadata . 

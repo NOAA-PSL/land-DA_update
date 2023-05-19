@@ -1,9 +1,5 @@
 add_jedi_incr/exec/apply_incr
-jedi/fv3-jedi/Data/fieldsets
 jedi/fv3-jedi/Data/fv3files
-jedi/fv3-jedi/Data/fieldmetadata
-jedi/fv3-jedi/Data/glopara_fix
-jedi/fv3-jedi/Data/offline_fix
 jedi/ioda/imsfv3_scf2ioda.py
 landDA.out
 analdates.sh

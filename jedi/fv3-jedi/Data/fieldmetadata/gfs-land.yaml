@@ -1,0 +1,18 @@
+field metadata:
+
+- long name: slmsk
+  interpolation type: nearest
+
+- long name: totalSnowDepth
+  interpolation type: default
+  interpolation source point mask: slmsk
+
+- long name: vtype
+  interpolation type: nearest
+
+- long name: stc
+  io file: surface
+
+- long name: soilMoistureVolumetric
+  io file: surface
+

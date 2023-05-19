@@ -238,7 +238,7 @@ do_HOFX="NO"
 for ii in "${!OBS_TYPES[@]}"; # loop through requested obs
 do
    if [ ${JEDI_TYPES[$ii]} == "DA" ]; then 
-         do_DA="YES" 
+         export do_DA="YES" 
    elif [ ${JEDI_TYPES[$ii]} == "HOFX" ]; then
          do_HOFX="YES" 
    elif [ ${JEDI_TYPES[$ii]} != "SKIP" ]; then
@@ -343,6 +343,8 @@ if [[ ${DAtype} == 'letkfoi_snow' ]]; then
         SNOWDEPTHVAR="snwdph"
     fi
 
+    ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}
+
     B=30  # back ground error std for LETKFOI
 
     # FOR LETKFOI, CREATE THE PSEUDO-ENSEMBLE
@@ -383,7 +385,7 @@ fi
 # 5. RUN JEDI
 ################################################
 
-NPROC_JEDI=6
+NPROC_JEDI=$SLURM_NTASKS
 
 if [[ ! -e Data ]]; then
     ln -s $JEDI_STATICDIR Data 
