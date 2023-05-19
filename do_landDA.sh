@@ -383,7 +383,7 @@ fi
 # 5. RUN JEDI
 ################################################
 
-NPROC_JEDI=6
+NPROC_JEDI=$SLURM_NTASKS
 
 if [[ ! -e Data ]]; then
     ln -s $JEDI_STATICDIR Data 
