@@ -343,6 +343,8 @@ if [[ ${DAtype} == 'letkfoi_snow' ]]; then
         SNOWDEPTHVAR="snwdph"
     fi
 
+    ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}
+
     B=30  # back ground error std for LETKFOI
 
     # FOR LETKFOI, CREATE THE PSEUDO-ENSEMBLE
@@ -445,15 +447,10 @@ fi
 ################################################
 
 # keep IMS IODA file
-# YX: modify IMS IODA filenames, otherwise IMSscf files can never be saved (08/09/2023)
 if [ $SAVE_IMS == "YES"  ]; then
-  # if [[ -e ${JEDIWORKDIR}/ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ]]; then
-  #    cp ${JEDIWORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ${OUTDIR}/DA/IMSproc/
-  # fi
-  if [[ -e ${JEDIWORKDIR}/ioda.IMSscf.${YYYY}${MM}${DD}.oro_C${RES}.mx100.nc ]]; then
-      cp ${JEDIWORKDIR}/ioda.IMSscf.${YYYY}${MM}${DD}.oro_C${RES}.mx100.nc ${OUTDIR}/DA/IMSproc/
-  fi
-
+   if [[ -e ${JEDIWORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc ]]; then
+      cp ${JEDIWORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc ${OUTDIR}/DA/IMSproc/
+   fi
 fi 
 
 # keep increments
