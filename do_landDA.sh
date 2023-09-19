@@ -238,7 +238,7 @@ do_HOFX="NO"
 for ii in "${!OBS_TYPES[@]}"; # loop through requested obs
 do
    if [ ${JEDI_TYPES[$ii]} == "DA" ]; then 
-         export do_DA="YES" 
+         do_DA="YES" 
    elif [ ${JEDI_TYPES[$ii]} == "HOFX" ]; then
          do_HOFX="YES" 
    elif [ ${JEDI_TYPES[$ii]} != "SKIP" ]; then
@@ -448,8 +448,8 @@ fi
 
 # keep IMS IODA file
 if [ $SAVE_IMS == "YES"  ]; then
-   if [[ -e ${JEDIWORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ]]; then
-      cp ${JEDIWORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.C${RES}.nc ${OUTDIR}/DA/IMSproc/
+   if [[ -e ${JEDIWORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc ]]; then
+      cp ${JEDIWORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc ${OUTDIR}/DA/IMSproc/
    fi
 fi 
 
