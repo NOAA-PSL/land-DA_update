@@ -558,3 +558,5 @@ fi
 if [[ $KEEPDADIR == "NO" ]]; then
    rm -rf ${JEDIWORKDIR} 
 fi 
+rm -rf ${OUTDIR}
+rm -rf landDA/
