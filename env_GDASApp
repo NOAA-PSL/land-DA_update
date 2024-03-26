@@ -16,4 +16,4 @@ module use $GDASApp_root/modulefiles
 module load GDAS/${MACHINE_ID}.$COMPILER
 
 # set pythonpath for ioda converters
-export PYTHONPATH=$PYTHONPATH:/scratch2/NCEPDEV/land/data/DA/GDASApp/sorc/iodaconv/src/:/scratch2/NCEPDEV/land/data/DA/GDASApp/build/lib/python3.7
+export PYTHONPATH=$PYTHONPATH:/scratch2/NCEPDEV/land/data/DA/GDASApp/sorc/iodaconv/src/:/scratch2/NCEPDEV/land/data/DA/GDASApp/build/lib/python3.10
