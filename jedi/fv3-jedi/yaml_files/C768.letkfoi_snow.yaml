@@ -54,7 +54,8 @@ local ensemble DA:
 
 output increment:
   filetype: fms restart
-  filename_sfcd: xainc.sfc_data.nc
+  prefix: snowinc 
+  filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
 
 observations:
   observers:

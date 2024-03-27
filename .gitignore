@@ -1,5 +1,5 @@
-add_jedi_incr/exec/apply_incr
-jedi/fv3-jedi/Data/fv3files
-jedi/ioda/imsfv3_scf2ioda.py
+add_jedi_incr/exec/* 
+jedi/fv3-jedi/Data/*
+jedi/ioda/*
 landDA.out
-analdates.sh
+GDASApp

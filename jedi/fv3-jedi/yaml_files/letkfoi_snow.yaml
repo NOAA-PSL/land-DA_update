@@ -21,11 +21,11 @@ geometry:
       filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
     derived fields: [nominal_surface_pressure]
 
-window begin: XXYYYP-XXMP-XXDPTXXHP:00:00Z
-window length: PT24H
+time window:
+  begin: XXYYYP-XXMP-XXDPTXXHP:00:00Z
+  length: PT24H
 
 background:
- date: &date XXYYYY-XXMM-XXDDTXXHH:00:00Z
  members:
    - datetime: XXYYYY-XXMM-XXDDTXXHH:00:00Z
      filetype: fms restart
@@ -54,8 +54,9 @@ local ensemble DA:
     mult: 1.0
 
 output increment:
+  prefix: snowinc
   filetype: fms restart
-  filename_sfcd: xainc.sfc_data.nc
+  filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
 
 observations:
   observers:

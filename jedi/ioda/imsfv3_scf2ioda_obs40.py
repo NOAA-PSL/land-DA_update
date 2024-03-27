@@ -13,9 +13,9 @@ import re
 from datetime import datetime
 import os
 
-import lib_python.ioda_conv_engines as iconv
+import pyiodaconv.ioda_conv_engines as iconv
 from collections import defaultdict, OrderedDict
-from lib_python.orddicts import DefaultOrderedDict
+from pyiodaconv.orddicts import DefaultOrderedDict
 
 locationKeyList = [
     ("latitude", "float"),
@@ -106,7 +106,6 @@ class imsFV3(object):
         for i in range(len(lats)):
             times[i] = base_datetime
             #sndv[i] = 0.001*sndv[i]
-            sndv[i] = sndv[i] # restarts are in mm! 
 
         # add metadata variables
         self.outdata[('dateTime', 'MetaData')] = times
