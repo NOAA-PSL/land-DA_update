@@ -1,5 +1,5 @@
 add_jedi_incr/exec/* 
-jedi/fv3-jedi/Data/*
-jedi/ioda/*
+jedi/fv3-jedi/Data/fv3files
+jedi/fv3-jedi/Data/fv3files/*
 landDA.out
 GDASApp

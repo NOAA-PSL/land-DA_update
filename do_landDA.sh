@@ -76,6 +76,7 @@ fi
 
 if [[ ! -e $JEDIWORKDIR ]]; then 
     mkdir $JEDIWORKDIR
+    ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}
 fi
 
 
@@ -349,8 +350,6 @@ if [[ ${DAtype} == 'letkfoi_snow' ]]; then
     else
         SNOWDEPTHVAR="snwdph"
     fi
-
-    ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}
 
     B=30  # back ground error std for LETKFOI
 

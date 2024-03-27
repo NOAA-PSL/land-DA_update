@@ -4,8 +4,7 @@ field metadata:
   interpolation type: nearest
 
 - long name: totalSnowDepth
-  interpolation type: default
-  interpolation source point mask: slmsk
+  interpolation type: nearest
 
 - long name: vtype
   interpolation type: nearest

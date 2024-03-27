@@ -15,7 +15,7 @@ geometry:
       datetime: XXYYYP-XXMP-XXDPTXXHP:00:00Z
       filetype: fms restart
       skip coupler file: true
-      state variables: [orog_filt,slmsk]
+      state variables: [orog_filt]
       datapath: ./
       filename_orog: XXTSTUB.nc
       filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
