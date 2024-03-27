@@ -77,8 +77,8 @@ fi
 if [[ ! -e $JEDIWORKDIR ]]; then 
     mkdir $JEDIWORKDIR
     ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}
+    ln -s ${OUTDIR} ${JEDIWORKDIR}/output
 fi
-
 
 cd $JEDIWORKDIR 
 
@@ -101,10 +101,6 @@ DP=`echo $PREVDATE | cut -c7-8`
 HP=`echo $PREVDATE | cut -c9-10`
 
 FILEDATE=${YYYY}${MM}${DD}.${HH}0000
-
-if [[ ! -e ${JEDIWORKDIR}/output ]]; then
-ln -s ${OUTDIR} ${JEDIWORKDIR}/output
-fi 
 
 if  [[ $SAVE_TILE == "YES" ]]; then
 for tile in 1 2 3 4 5 6 
