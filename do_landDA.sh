@@ -13,10 +13,6 @@
 # Clara Draper, Oct 2021.
 # Aug 2020, generalized for all DA types.
 
-# to-do: 
-# check that slmsk is always taken from the forecast file (oro files has a different definition)
-# make sure documentation is updated.
-
 #########################################
 # source namelist and setup directories
 #########################################
@@ -39,16 +35,27 @@ source ${LANDDADIR}/env_GDASApp
 LOGDIR=${OUTDIR}/DA/logs/
 OBSDIR=${OBSDIR:-"/scratch2/NCEPDEV/land/data/DA/"}
 
-# executable directories
-FIMS_EXECDIR=${LANDDADIR}/IMS_proc/exec/bin/
-INCR_EXECDIR=${LANDDADIR}/add_jedi_incr/exec/bin/
+# set executable directories
 
-# set executable directories (not sure this goes here)
-export JEDI_EXECDIR=${GDASApp_root}/build/bin/
+export JEDI_EXECDIR=${JEDI_EXECDIR:-"${GDASApp_root}/build/bin/"}
 
+# create local copy of JEDI_STATICDIR, so can over-ride default files 
+# (March 2024, using own fieldMetaData override file)
 JEDI_STATICDIR=${LANDDADIR}/jedi/fv3-jedi/Data/
 
+# option to use apply_incr and IMS_proc execs from GDASApp
+UseGDASAppExec="NO"
+
+if [[ $UseGDASAppExec == "YES" ]]; then 
+    FIMS_EXECDIR=${LANDDADIR}/GDASApp/build/bin/
+    INCR_EXECDIR=${LANDDADIR}/GDASApp/build/bin/
+else
+    FIMS_EXECDIR=${LANDDADIR}/IMS_proc/exec/bin/
+    INCR_EXECDIR=${LANDDADIR}/add_jedi_incr/exec/bin/
+fi
+
 # storage settings 
+
 SAVE_IMS=${SAVE_IMS:-"YES"} # "YES" to save processed IMS IODA file
 SAVE_INCR=${SAVE_INCR:-"YES"} # "YES" to save increment (add others?) JEDI output
 SAVE_TILE=${SAVE_TILE:-"NO"} # "YES" to save background in tile space

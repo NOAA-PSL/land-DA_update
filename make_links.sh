@@ -10,11 +10,7 @@ fi
 # create link to GDASApp with executables:
 ln -s $GDASApp_path ./GDASApp
 
-# link converter (todo: remove this, link directly?)
-# uncomment until converter is updated in JEDI repo
-#ln -s ${GDASApp_path}/sorc/iodaconv/src/land/imsfv3_scf2ioda.py jedi/ioda/imsfv3_scf2ioda.py
-
-# link fv3files (todo: remove this, and change directory in the yamls?)
+# link fv3files 
 ln -s ${GDASApp_path}/build/fv3-jedi/test/Data/fv3files jedi/fv3-jedi/Data/fv3files
 
 
