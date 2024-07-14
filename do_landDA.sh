@@ -218,7 +218,7 @@ EOF
         exit 10
     fi
 
-    IMS_IODA=imsfv3_scf2ioda_obs40.py
+    IMS_IODA=imsfv3_scf2iodaTemp.py # 2024-07-12 temporary until GDASApp ioda converter updated.
     cp ${LANDDADIR}/jedi/ioda/${IMS_IODA} $JEDIWORKDIR
 
     echo 'do_landDA: calling ioda converter' 

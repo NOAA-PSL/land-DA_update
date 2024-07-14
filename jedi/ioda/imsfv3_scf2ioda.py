@@ -1,1 +1,0 @@
-/scratch2/NCEPDEV/land/data/DA/GDASApp/sorc//iodaconv/src/land/imsfv3_scf2ioda.py
