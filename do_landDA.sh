@@ -76,6 +76,7 @@ fi
 
 if [[ ! -e $JEDIWORKDIR ]]; then 
     mkdir $JEDIWORKDIR
+    mkdir $JEDIWORKDIR/restarts/
     ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}
     ln -s ${OUTDIR} ${JEDIWORKDIR}/output
 fi
@@ -112,9 +113,9 @@ fi
 #stage restarts for applying JEDI update (files will get directly updated)
 for tile in 1 2 3 4 5 6 
 do
-  ln -fs ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc ${JEDIWORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc
+  ln -fs ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc ${JEDIWORKDIR}/restarts/${FILEDATE}.sfc_data.tile${tile}.nc
 done
-cres_file=${JEDIWORKDIR}/${FILEDATE}.coupler.res
+cres_file=${JEDIWORKDIR}/restarts/${FILEDATE}.coupler.res
 if [[ -e  ${RSTRDIR}/${FILEDATE}.coupler.res ]]; then 
     ln -sf ${RSTRDIR}/${FILEDATE}.coupler.res $cres_file
 else #  if not present, need to create coupler.res for JEDI 
@@ -203,6 +204,7 @@ cat >> fims.nml << EOF
   otype=${TSTUB},
   jdate=${YYYY}${DOY},
   yyyymmddhh=${YYYY}${MM}${DD}.${HH},
+  fcst_path="./restarts/",
   imsformat=${imsformat},
   imsversion=${ims_vsn},
   imsres=${imsres},
@@ -242,9 +244,9 @@ do_HOFX="NO"
 for ii in "${!OBS_TYPES[@]}"; # loop through requested obs
 do
    if [ ${JEDI_TYPES[$ii]} == "DA" ]; then 
-         do_DA="YES" 
+         export do_DA="YES" 
    elif [ ${JEDI_TYPES[$ii]} == "HOFX" ]; then
-         do_HOFX="YES" 
+         export do_HOFX="YES" 
    elif [ ${JEDI_TYPES[$ii]} != "SKIP" ]; then
          echo "do_landDA:Unknown obs action ${JEDI_TYPES[$ii]}, exiting" 
          exit 1
@@ -261,73 +263,73 @@ if [[ $do_DA == "YES" ]]; then
 
    if [[ $YAML_DA == "construct" ]];then  # construct the yaml
 
-      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${JEDIWORKDIR}/letkf_land.yaml
+      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAalg}/${analVar}.yaml ${JEDIWORKDIR}/jedi_DA.yaml
 
       for ii in "${!OBS_TYPES[@]}";
       do 
         if [ ${JEDI_TYPES[$ii]} == "DA" ]; then
-        cat ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${OBS_TYPES[$ii]}.yaml >> letkf_land.yaml
+        cat ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAalg}/${OBS_TYPES[$ii]}.yaml >> jedi_DA.yaml
         fi 
       done
 
    else # use specified yaml 
       echo "Using user specified YAML: ${YAML_DA}"
-      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${YAML_DA} ${JEDIWORKDIR}/letkf_land.yaml
+      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${YAML_DA} ${JEDIWORKDIR}/jedi_DA.yaml
    fi
 
-   sed -i -e "s/XXYYYY/${YYYY}/g" letkf_land.yaml
-   sed -i -e "s/XXMM/${MM}/g" letkf_land.yaml
-   sed -i -e "s/XXDD/${DD}/g" letkf_land.yaml
-   sed -i -e "s/XXHH/${HH}/g" letkf_land.yaml
+   sed -i -e "s/XXYYYY/${YYYY}/g" jedi_DA.yaml
+   sed -i -e "s/XXMM/${MM}/g" jedi_DA.yaml
+   sed -i -e "s/XXDD/${DD}/g" jedi_DA.yaml
+   sed -i -e "s/XXHH/${HH}/g" jedi_DA.yaml
 
-   sed -i -e "s/XXYYYP/${YYYP}/g" letkf_land.yaml
-   sed -i -e "s/XXMP/${MP}/g" letkf_land.yaml
-   sed -i -e "s/XXDP/${DP}/g" letkf_land.yaml
-   sed -i -e "s/XXHP/${HP}/g" letkf_land.yaml
+   sed -i -e "s/XXYYYP/${YYYP}/g" jedi_DA.yaml
+   sed -i -e "s/XXMP/${MP}/g" jedi_DA.yaml
+   sed -i -e "s/XXDP/${DP}/g" jedi_DA.yaml
+   sed -i -e "s/XXHP/${HP}/g" jedi_DA.yaml
 
-   sed -i -e "s/XXTSTUB/${TSTUB}/g" letkf_land.yaml
-   sed -i -e "s#XXTPATH#${TPATH}#g" letkf_land.yaml
-   sed -i -e "s/XXRES/${RES}/g" letkf_land.yaml
+   sed -i -e "s/XXTSTUB/${TSTUB}/g" jedi_DA.yaml
+   sed -i -e "s#XXTPATH#${TPATH}#g" jedi_DA.yaml
+   sed -i -e "s/XXRES/${RES}/g" jedi_DA.yaml
    RESP1=$((RES+1))
-   sed -i -e "s/XXREP/${RESP1}/g" letkf_land.yaml
+   sed -i -e "s/XXREP/${RESP1}/g" jedi_DA.yaml
 
-   sed -i -e "s/XXHOFX/false/g" letkf_land.yaml  # do DA
+   sed -i -e "s/XXHOFX/false/g" jedi_DA.yaml  # do DA
 fi
 
 if [[ $do_HOFX == "YES" ]]; then 
 
    if [[ $YAML_HOFX == "construct" ]];then  # construct the yaml
 
-      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAtype}.yaml ${JEDIWORKDIR}/hofx_land.yaml
+      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAalg}/${analVar}.yaml ${JEDIWORKDIR}/jedi_hofx.yaml
 
       for ii in "${!OBS_TYPES[@]}";
       do 
         if [ ${JEDI_TYPES[$ii]} == "HOFX" ]; then
-        cat ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${OBS_TYPES[$ii]}.yaml >> hofx_land.yaml
+        cat ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAalg}/${OBS_TYPES[$ii]}.yaml >> jedi_hofx.yaml
         fi 
       done
    else # use specified yaml 
       echo "Using user specified YAML: ${YAML_HOFX}"
-      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${YAML_HOFX} ${JEDIWORKDIR}/hofx_land.yaml
+      cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${YAML_HOFX} ${JEDIWORKDIR}/jedi_hofx.yaml
    fi
 
-   sed -i -e "s/XXYYYY/${YYYY}/g" hofx_land.yaml
-   sed -i -e "s/XXMM/${MM}/g" hofx_land.yaml
-   sed -i -e "s/XXDD/${DD}/g" hofx_land.yaml
-   sed -i -e "s/XXHH/${HH}/g" hofx_land.yaml
+   sed -i -e "s/XXYYYY/${YYYY}/g" jedi_hofx.yaml
+   sed -i -e "s/XXMM/${MM}/g" jedi_hofx.yaml
+   sed -i -e "s/XXDD/${DD}/g" jedi_hofx.yaml
+   sed -i -e "s/XXHH/${HH}/g" jedi_hofx.yaml
 
-   sed -i -e "s/XXYYYP/${YYYP}/g" hofx_land.yaml
-   sed -i -e "s/XXMP/${MP}/g" hofx_land.yaml
-   sed -i -e "s/XXDP/${DP}/g" hofx_land.yaml
-   sed -i -e "s/XXHP/${HP}/g" hofx_land.yaml
+   sed -i -e "s/XXYYYP/${YYYP}/g" jedi_hofx.yaml
+   sed -i -e "s/XXMP/${MP}/g" jedi_hofx.yaml
+   sed -i -e "s/XXDP/${DP}/g" jedi_hofx.yaml
+   sed -i -e "s/XXHP/${HP}/g" jedi_hofx.yaml
 
-   sed -i -e "s#XXTPATH#${TPATH}#g" hofx_land.yaml
-   sed -i -e "s/XXTSTUB/${TSTUB}/g" hofx_land.yaml
-   sed -i -e "s/XXRES/${RES}/g" hofx_land.yaml
+   sed -i -e "s#XXTPATH#${TPATH}#g" jedi_hofx.yaml
+   sed -i -e "s/XXTSTUB/${TSTUB}/g" jedi_hofx.yaml
+   sed -i -e "s/XXRES/${RES}/g" jedi_hofx.yaml
    RESP1=$((RES+1))
-   sed -i -e "s/XXREP/${RESP1}/g" hofx_land.yaml
+   sed -i -e "s/XXREP/${RESP1}/g" jedi_hofx.yaml
 
-   sed -i -e "s/XXHOFX/true/g" hofx_land.yaml  # do HOFX
+   sed -i -e "s/XXHOFX/true/g" jedi_hofx.yaml  # do HOFX
 
 fi
 
@@ -335,7 +337,8 @@ fi
 # 4. CREATE BACKGROUND ENSEMBLE (LETKFOI)
 ################################################
 
-if [[ ${DAtype} == 'letkfoi_snow' ]]; then 
+if [[ ${DAalg} == 'letkfoi' ]]; then 
+#To-do: make this section generic (currently assumes snow)
 
     JEDI_EXEC="fv3jedi_letkf.x"
 
@@ -358,9 +361,9 @@ if [[ ${DAtype} == 'letkfoi_snow' ]]; then
         mkdir $JEDIWORKDIR/mem_${ens} 
         for tile in 1 2 3 4 5 6
         do
-        cp ${JEDIWORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${JEDIWORKDIR}/mem_${ens}/${FILEDATE}.sfc_data.tile${tile}.nc
+        cp ${JEDIWORKDIR}/restarts/${FILEDATE}.sfc_data.tile${tile}.nc  ${JEDIWORKDIR}/mem_${ens}/${FILEDATE}.sfc_data.tile${tile}.nc
         done
-        cp ${JEDIWORKDIR}/${FILEDATE}.coupler.res ${JEDIWORKDIR}/mem_${ens}/${FILEDATE}.coupler.res
+        cp ${JEDIWORKDIR}/restarts/${FILEDATE}.coupler.res ${JEDIWORKDIR}/mem_${ens}/${FILEDATE}.coupler.res
     done
        
 
@@ -372,12 +375,25 @@ if [[ ${DAtype} == 'letkfoi_snow' ]]; then
         exit 10
     fi
 
-elif [[ ${DAtype} == 'letkfoi_smc' ]]; then 
+elif [[ ${DAalg} == 'letkfoi_smc' ]]; then 
+# To-do : combine this with the above
 
     JEDI_EXEC="fv3jedi_letkf.x"
 
     cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-soilMoisture.yaml ${JEDIWORKDIR}/gfs-soilMoisture.yaml
 
+elif [[ ${DAalg} == '2DVar' ]]; then 
+
+    JEDI_EXEC="fv3jedi_var.x"
+
+    # to do: move this out of the DAalg loop
+    if [ $GFSv17 == "YES" ]; then
+        SNOWDEPTHVAR="snodl" 
+        # field overwrite file with GFSv17 variables.
+        cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-land-v17.yaml ${JEDIWORKDIR}/gfs-land-v17.yaml
+    else
+        SNOWDEPTHVAR="snwdph"
+    fi
 fi
 
 ################################################
@@ -393,14 +409,14 @@ fi
 echo 'do_landDA: calling fv3-jedi' 
 
 if [[ $do_DA == "YES" ]]; then
-    srun -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} letkf_land.yaml ${LOGDIR}/jedi_letkf.log
+    srun -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} jedi_DA.yaml ${LOGDIR}/jedi_DA.log
     if [[ $? != 0 ]]; then
         echo "JEDI DA failed"
         exit 10
     fi
 fi 
 if [[ $do_HOFX == "YES" ]]; then  
-    srun -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} hofx_land.yaml ${LOGDIR}/jedi_hofx.log
+    srun -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} jedi_hofx.yaml ${LOGDIR}/jedi_hofx.log
     if [[ $? != 0 ]]; then
         echo "JEDI hofx failed"
         exit 10
@@ -413,8 +429,12 @@ fi
 
 if [[ $do_DA == "YES" ]]; then 
 
-  if [[ $DAtype == "letkfoi_snow" ]]; then 
+    for tile in 1 2 3 4 5 6 
+    do
+      ln -fs ${JEDIWORKDIR}/restarts/${FILEDATE}.sfc_data.tile${tile}.nc ${JEDIWORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc
+    done
 
+  if [[ $analVar == "snow" ]]; then
 cat << EOF > apply_incr_nml
 &noahmp_snow
  date_str=${YYYY}${MM}${DD}
@@ -458,4 +478,4 @@ fi
 # clean up 
 if [[ $KEEPJEDIDIR == "NO" ]]; then
    rm -rf ${JEDIWORKDIR} 
-fi 
+fi

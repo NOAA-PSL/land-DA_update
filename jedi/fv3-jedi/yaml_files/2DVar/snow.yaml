@@ -1,0 +1,128 @@
+cost function:
+  cost type: 3D-Var
+  time window:
+    begin: XXYYYP-XXMP-XXDPT12:00:00Z
+    length: PT24H
+  analysis variables: [totalSnowDepth] 
+  geometry:
+    npx: XXREP
+    npy: XXREP
+    npz: 127
+    ntiles: 6
+    layout:
+    - 3
+    - 4
+    io_layout:
+    - 1
+    - 1
+    _resol_name: c768
+    akbk: Data/fv3files/akbk127.nc4
+    fms initialization:
+      namelist filename: Data/fv3files/fmsmpp.nml
+      field table filename: Data/fv3files/field_table
+    field metadata override: Data/fieldmetadata/gfs-land.yaml
+  analysis variables:
+  - totalSnowDepth
+
+  background:
+    filetype: fms restart
+    skip coupler file: true
+    datetime: XXYYYY-XXMM-XXDDTXXHH:00:00Z
+    datapath: ./restarts/
+    filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
+    filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
+    state variables: [totalSnowDepth,vtype,slmsk]
+  background error:
+    covariance model: SABER
+    saber central block:
+      saber block name: BUMP_NICAS
+      read:
+        general:
+          universe length-scale: 300000.0
+        drivers:
+          multivariate strategy: univariate
+          read global nicas: true
+        nicas:
+          explicit length-scales: true
+          horizontal length-scale:
+          - groups:
+            - totalSnowDepth_fakeLevels
+            value: 250000.0
+          vertical length-scale:
+          - groups:
+            - totalSnowDepth_fakeLevels
+            value: 0.0
+          interpolation type:
+          - groups:
+            - totalSnowDepth_fakeLevels
+            type: c0
+          same horizontal convolution: true
+        io:
+          data directory: /scratch2/BMC/gsienkf/Clara.Draper/jedi/bump_snow/
+          files prefix: snow_bump_nicas_250km_fakelevels
+    saber outer blocks:
+    - saber block name: FakeLevels
+      fields metadata:
+        totalSnowDepth:
+          vert_coord: filtered_orography
+      calibration:
+        number of fake levels: 50
+        lowest fake level: -450.0
+        highest fake level: 8850.0
+        vertical length-scale: 2000.0
+    - saber block name: BUMP_StdDev
+      read:
+        drivers:
+          compute variance: true
+        variance:
+          explicit stddev: true
+          stddev:
+          - variables:
+            - totalSnowDepth
+            value: 40.0
+output:
+  filetype: fms restart
+  #filename: sfc_anal.nc
+  datapath: ./
+  prefix: sfc_anal
+
+final:
+  diagnostics:
+    departures: oman
+
+variational:
+  minimizer:
+    algorithm: RPCG
+  iterations:
+  - ninner: 50
+    gradient norm reduction: 1e-10
+    geometry:                           # minimization at lower resolution
+      akbk: Data/fv3files/akbk127.nc4
+      npx: XXREP
+      npy: XXREP
+      npz: 127
+      ntiles: 6
+      layout: [3,4]
+      io_layout: [1,1]
+      #field metadata override: Data/fieldmetadata/gfs_v17-land.yaml
+      time invariant fields:
+        state fields:
+          datetime: XXYYYP-XXMP-XXDPT12:00:00Z
+          filetype: fms restart
+          skip coupler file: true
+          state variables:
+          - orog_filt
+          datapath: /scratch2/NCEPDEV/land/data/fix/20220805/C768/
+          filename_orog: C768_oro_data.nc
+      _resol_name: c768
+    online diagnostics:
+      write increment: true
+      increment:
+        state component:
+          filetype: fms restart
+          datapath: ./
+          prefix: XXYYYYXXMMXXDD.XXHH0000.xainc
+
+  observations:
+    obs perturbations: false
+    observers:
