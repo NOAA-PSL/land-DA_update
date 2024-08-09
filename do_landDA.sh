@@ -3,7 +3,7 @@
 #
 # 1. stage the restarts. 
 # 2. stage and process obs. 
-#    note: IMS obs prep currently requires model background, then conversion to IODA format.
+#    note: IMS/VIIRS obs prep currently requires model background, then conversion to IODA format.
 # 3. create the JEDI yamls.
 # 4. create pseudo ensemble (LETKF-OI).
 # 5. run JEDI.
@@ -43,20 +43,21 @@ export JEDI_EXECDIR=${JEDI_EXECDIR:-"${GDASApp_root}/build/bin/"}
 # (March 2024, using own fieldMetaData override file)
 JEDI_STATICDIR=${LANDDADIR}/jedi/fv3-jedi/Data/
 
-# option to use apply_incr and IMS_proc execs from GDASApp
+# option to use apply_incr and SCF_proc execs from GDASApp
 UseGDASAppExec="NO"
 
 if [[ $UseGDASAppExec == "YES" ]]; then 
-    FIMS_EXECDIR=${LANDDADIR}/GDASApp/build/bin/
+    FSCF_EXECDIR=${LANDDADIR}/GDASApp/build/bin/ #YX: placeholder
     INCR_EXECDIR=${LANDDADIR}/GDASApp/build/bin/
 else
-    FIMS_EXECDIR=${LANDDADIR}/IMS_proc/exec/bin/
+    FSCF_EXECDIR=${LANDDADIR}/SCF_proc/exec/bin/
     INCR_EXECDIR=${LANDDADIR}/add_jedi_incr/exec/bin/
 fi
 
 # storage settings 
 
 SAVE_IMS=${SAVE_IMS:-"YES"} # "YES" to save processed IMS IODA file
+SAVE_VIIRS=${SAVE_VIIRS:-"YES"} # "YES" to save processed VIIRS IODA file
 SAVE_INCR=${SAVE_INCR:-"YES"} # "YES" to save increment (add others?) JEDI output
 SAVE_TILE=${SAVE_TILE:-"NO"} # "YES" to save background in tile space
 KEEPJEDIDIR=${KEEPJEDIDIR:-"NO"} # delete DA workdir 
@@ -69,6 +70,7 @@ echo 'THISDATE in land DA, '$THISDATE
 if [[ ! -e ${OUTDIR}/DA ]]; then
     mkdir -p ${OUTDIR}/DA
     mkdir ${OUTDIR}/DA/IMSproc
+    mkdir ${OUTDIR}/DA/VIIRSproc
     mkdir ${OUTDIR}/DA/jedi_incr
     mkdir ${OUTDIR}/DA/logs
     mkdir ${OUTDIR}/DA/hofx
@@ -176,6 +178,9 @@ do
         ascii='ascii'
      fi
     obsfile=${OBSDIR}/snow_ice_cover/IMS/${YYYY}/ims${YYYY}${DOY}_${imsres}_v${ims_vsn}.${fsuf}
+  elif [ ${OBS_TYPES[$ii]} == "VIIRS" ]; then
+     DOY=$(date -d "${YYYY}-${MM}-${DD}" +%j)
+     obsfile=${OBSDIR}/snow_ice_cover/VIIRS/${YYYY}/VNP10C1.A${YYYY}${DOY}.002.h5 
   else
      echo "do_landDA: Unknown obs type requested ${OBS_TYPES[$ii]}, exiting" 
      exit 1 
@@ -184,7 +189,7 @@ do
   # check obs are available
   if [[ -e $obsfile ]]; then
     echo "do_landDA: ${OBS_TYPES[$ii]} observations found: $obsfile"
-    if [ ${OBS_TYPES[$ii]} != "IMS" ]; then 
+    if [ ${OBS_TYPES[$ii]} != "IMS" ]  && [ ${OBS_TYPES[$ii]} != "VIIRS" ]; then
        ln -fs $obsfile  ${OBS_TYPES[$ii]}_${YYYY}${MM}${DD}${HH}.nc
     fi 
   else
@@ -195,11 +200,12 @@ do
   # pre-process and call IODA converter for IMS obs.
   if [[ ${OBS_TYPES[$ii]} == "IMS"  && ${JEDI_TYPES[$ii]} != "SKIP" ]]; then
 
-    if [[ -e fims.nml ]]; then
-        rm -rf fims.nml 
+    if [[ -e fscf.nml ]]; then
+        rm -rf fscf.nml 
     fi
-cat >> fims.nml << EOF
- &fIMS_nml
+cat >> fscf.nml << EOF
+ &fSCF_nml
+  source=1,
   idim=$RES, jdim=$RES,
   otype=${TSTUB},
   jdate=${YYYY}${DOY},
@@ -212,11 +218,11 @@ cat >> fims.nml << EOF
   IMS_IND_PATH="${OBSDIR}/snow_ice_cover/IMS/index_files/"
   /
 EOF
-    echo 'do_landDA: calling fIMS'
+    echo 'do_landDA: calling fSCF'
 
-    ${FIMS_EXECDIR}/calcfIMS.exe
+    ${FSCF_EXECDIR}/calcfSCF.exe
     if [[ $? != 0 ]]; then
-        echo "fIMS failed"
+        echo "fSCF failed"
         exit 10
     fi
 
@@ -231,6 +237,50 @@ EOF
         exit 10
     fi
   fi #IMS
+
+  # VIIRS L3 product does not have a time stamp associated
+  # For now, hard coded at 12UTC (YX: Aug. 2024)
+  # pre-process and call IODA converter for VIIRS obs.
+  if [[ ${OBS_TYPES[$ii]} == "VIIRS"  && ${JEDI_TYPES[$ii]} != "SKIP" ]]; then
+
+    if [[ -e fscf.nml ]]; then
+        rm -rf fscf.nml
+    fi
+  # Users can specify viirs_threshold below when constructing the namelist file
+  # Tested thresholds are: 0.1, 0.3(default), 0.5
+cat >> fscf.nml << EOF
+ &fSCF_nml
+  source=2,
+  idim=$RES, jdim=$RES,
+  otype=${TSTUB},
+  jdate=${YYYY}${DOY},
+  yyyymmddhh=${YYYY}${MM}${DD}.${HH},
+  fcst_path="./restarts/",
+  viirsversion="002",
+  viirs_threshold=0.3,
+  VIIRS_OBS_PATH="${OBSDIR}/snow_ice_cover/VIIRS/${YYYY}/",
+  VIIRS_IND_PATH="${OBSDIR}/snow_ice_cover/VIIRS/index_files/"
+  /
+EOF
+    echo 'do_landDA: calling fSCF'
+
+    ${FSCF_EXECDIR}/calcfSCF.exe
+    if [[ $? != 0 ]]; then
+        echo "fSCF failed"
+        exit 10
+    fi
+
+    VIIRS_IODA=viirsfv3_scf2ioda_obs40.py #YX: temporary viirs ioda converter, will merge with ims converter later (Aug.2024)
+    cp ${LANDDADIR}/jedi/ioda/${VIIRS_IODA} $JEDIWORKDIR
+
+    echo 'do_landDA: calling ioda converter'
+
+    python ${VIIRS_IODA} -i VIIRSscf.${YYYY}${MM}${DD}.${TSTUB}.nc -o ${JEDIWORKDIR}/ioda.VIIRSscf.${YYYY}${MM}${DD}.${TSTUB}.nc
+    if [[ $? != 0 ]]; then
+        echo "VIIRS IODA converter failed"
+        exit 10
+    fi
+  fi #VIIRS
 
 done # OBS_TYPES
 
@@ -469,6 +519,13 @@ if [ $SAVE_IMS == "YES"  ]; then
       cp ${JEDIWORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc ${OUTDIR}/DA/IMSproc/
    fi
 fi 
+
+# keep VIIRS IODA file
+if [ $SAVE_VIIRS == "YES"  ]; then
+   if [[ -e ${JEDIWORKDIR}ioda.VIIRSscf.${YYYY}${MM}${DD}.${TSTUB}.nc ]]; then
+      cp ${JEDIWORKDIR}/ioda.VIIRSscf.${YYYY}${MM}${DD}.${TSTUB}.nc ${OUTDIR}/DA/VIIRSproc/
+   fi
+fi
 
 # keep increments
 if [ $SAVE_INCR == "YES" ] && [ $do_DA == "YES" ]; then
