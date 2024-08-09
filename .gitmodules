@@ -1,5 +1,5 @@
 [submodule "IMS_proc"]
-	path = IMS_proc
+	path = SCF_proc
 	url = https://github.com/yuanxue2870/land-SCF_proc.git
 	branch = feature/addVIIRS
 
