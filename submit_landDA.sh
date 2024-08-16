@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#BATCH --job-name=landDA
+#SBATCH --job-name=landDA
 #SBATCH -t 00:05:00
 #SBATCH -A gsienkf 
 ##SBATCH --qos=debug
