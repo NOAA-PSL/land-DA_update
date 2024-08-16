@@ -21,7 +21,7 @@ geometry:
     derived fields: [nominal_surface_pressure]
 
 window begin: XXYYYP-XXMP-XXDPTXXHP:00:00Z
-window length: PT24H
+window length: PTXXWINLENH
 
 background:
  date: &date XXYYYY-XXMM-XXDDTXXHH:00:00Z

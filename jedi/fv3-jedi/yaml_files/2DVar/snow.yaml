@@ -2,7 +2,7 @@ cost function:
   cost type: 3D-Var
   time window:
     begin: XXYYYP-XXMP-XXDPT12:00:00Z
-    length: PT24H
+    length: PTXXWINLENH
   analysis variables: [totalSnowDepth] 
   geometry:
     npx: XXREP

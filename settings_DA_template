@@ -21,7 +21,7 @@ LANDDADIR=${CYCLEDIR}/DA_update/ # if calling from submit_cycle.sh
 # options: "letkfoi_snow" , "letkf_snow"
 DAtype=
 
-# JEDI input obs. options : IMS, GHCN, GTS, SYNTH 
+# JEDI input obs. options : IMS(or VIIRS), GHCN, GTS, SYNTH 
 OBS_TYPES=()   # format: ("OBS1" "OBS2") 
 # JEDI call type for each obs_type above. options: DA, HOFX
 JEDI_TYPES=()   # format ("DA" "HOFX") 
