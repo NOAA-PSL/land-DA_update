@@ -19,7 +19,7 @@ geometry:
 
 time window:
   begin: 2023-05-01T00:00:00Z
-  length: PT24H
+  length: PTXXWINLENH
 
 background:
  members:
