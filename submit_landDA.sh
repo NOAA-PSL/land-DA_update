@@ -2,11 +2,11 @@
 
 #BATCH --job-name=landDA
 #SBATCH -t 00:05:00
-#SBATCH -A gsienkf
+#SBATCH -A gsienkf 
 ##SBATCH --qos=debug
 #SBATCH --qos=batch
 #SBATCH -o landDA.out
-#SBATCH -e landDA.out
+#SBATCH -e landDA.err
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=6
 
