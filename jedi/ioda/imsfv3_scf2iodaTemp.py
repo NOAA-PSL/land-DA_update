@@ -92,7 +92,7 @@ class imsFV3(object):
         qdflg = 0*sndv.astype('int32')
         errsc = 0.0*sncv
         errsd = 0.0*sndv
-        errsd[:] = 40.
+        errsd[:] = 80.
         ncd.close()
 
         times = np.empty_like(sncv, dtype=object)

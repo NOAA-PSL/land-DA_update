@@ -30,8 +30,8 @@ variational:
           skip coupler file: true
           state variables:
           - orog_filt
-          datapath: /scratch2/NCEPDEV/land/data/fix/20231027/C768/
-          filename_orog: C768.mx025_oro_data.nc 
+          datapath: /scratch2/NCEPDEV/land/data/fix/20220805/C768/
+          filename_orog: C768_oro_data.nc
       _resol_name: c768
     online diagnostics:
       write increment: true
@@ -78,41 +78,8 @@ cost function:
   background error:
     covariance model: SABER
     saber central block:
-      saber block name: BUMP_NICAS
-      read:
-        general:
-          universe length-scale: 300000.0
-        drivers:
-          multivariate strategy: univariate
-          read global nicas: true
-        nicas:
-          explicit length-scales: true
-          horizontal length-scale:
-          - groups:
-            - totalSnowDepth_fakeLevels
-            value: 250000.0
-          vertical length-scale:
-          - groups:
-            - totalSnowDepth_fakeLevels
-            value: 0.0
-          interpolation type:
-          - groups:
-            - totalSnowDepth_fakeLevels
-            type: c0
-          same horizontal convolution: true
-        io:
-          data directory: /scratch2/BMC/gsienkf/Clara.Draper/jedi/bump_snow/
-          files prefix: snow_bump_nicas_250km_fakelevels
+      saber block name: ID
     saber outer blocks:
-    - saber block name: FakeLevels
-      fields metadata:
-        totalSnowDepth:
-          vert_coord: filtered_orography
-      calibration:
-        number of fake levels: 50
-        lowest fake level: -450.0
-        highest fake level: 8850.0
-        vertical length-scale: 2000.0
     - saber block name: BUMP_StdDev
       read:
         drivers:
