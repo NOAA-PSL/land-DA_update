@@ -30,8 +30,8 @@ variational:
           skip coupler file: true
           state variables:
           - orog_filt
-          datapath: /scratch2/NCEPDEV/land/data/fix/20220805/C768/
-          filename_orog: C768_oro_data.nc
+          datapath: /scratch2/NCEPDEV/land/data/fix/20231027/C768/
+          filename_orog: C768.mx025_oro_data.nc
       _resol_name: c768
     online diagnostics:
       write increment: true
