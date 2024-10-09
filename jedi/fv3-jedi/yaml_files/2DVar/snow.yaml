@@ -74,7 +74,8 @@ cost function:
     datapath: ./restarts/
     filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
     filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
-    state variables: [totalSnowDepth,vtype,slmsk]
+    filename_orog: C768.mx025_oro_data.nc
+    state variables: [totalSnowDepth,vtype,slmsk,orog_filt]
   background error:
     covariance model: SABER
     saber central block:

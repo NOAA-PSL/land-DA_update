@@ -56,8 +56,8 @@ fi
 
 # storage settings 
 
-SAVE_IMS=${SAVE_IMS:-"YES"} # "YES" to save processed IMS IODA file
-SAVE_INCR=${SAVE_INCR:-"YES"} # "YES" to save increment (add others?) JEDI output
+SAVE_IMS=${SAVE_IMS:-"NO"} # "YES" to save processed IMS IODA file
+SAVE_INCR=${SAVE_INCR:-"NO"} # "YES" to save increment (add others?) JEDI output
 SAVE_TILE=${SAVE_TILE:-"NO"} # "YES" to save background in tile space
 KEEPJEDIDIR=${KEEPJEDIDIR:-"NO"} # delete DA workdir 
 
@@ -78,6 +78,7 @@ if [[ ! -e $JEDIWORKDIR ]]; then
     mkdir $JEDIWORKDIR
     mkdir $JEDIWORKDIR/restarts/
     ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}
+    ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}/restarts/ # to-do. change to only need one copy.
     ln -s ${OUTDIR} ${JEDIWORKDIR}/output
 fi
 
@@ -209,7 +210,7 @@ cat >> fims.nml << EOF
   imsversion=${ims_vsn},
   imsres=${imsres},
   IMS_OBS_PATH="${OBSDIR}/snow_ice_cover/IMS/${YYYY}/",
-  IMS_IND_PATH="${OBSDIR}/snow_ice_cover/IMS/index_files/"
+  IMS_IND_PATH="${OBSDIR}/snow_ice_cover/IMS/index_files/",
   /
 EOF
     echo 'do_landDA: calling fIMS'
@@ -238,7 +239,7 @@ done # OBS_TYPES
 # 3. DETERMINE REQUESTED JEDI TYPE, CONSTRUCT YAMLS
 ################################################
 
-do_DA="NO"
+export do_DA="NO"
 do_HOFX="NO"
 
 for ii in "${!OBS_TYPES[@]}"; # loop through requested obs
