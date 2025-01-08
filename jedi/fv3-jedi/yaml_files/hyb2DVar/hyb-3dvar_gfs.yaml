@@ -1,0 +1,375 @@
+cost function:
+  cost type: 3D-Var
+  time window:
+    begin: 2020-12-14T21:00:00Z
+    length: PT6H
+  analysis variables: &3dvars
+  - eastward_wind
+  - northward_wind
+  - air_temperature
+  - air_pressure_at_surface
+  - water_vapor_mixing_ratio_wrt_moist_air
+  - cloud_liquid_water
+  - ozone_mass_mixing_ratio
+  geometry:
+    fms initialization:
+      namelist filename: Data/fv3files/fmsmpp.nml
+      field table filename: Data/fv3files/field_table_gfdl
+    akbk: Data/fv3files/akbk127.nc4
+    layout:
+    - 1
+    - 2
+    npx: 25
+    npy: 25
+    npz: 127
+    field metadata override: Data/fieldmetadata/gfs-restart.yaml
+  background:
+    datetime: 2020-12-15T00:00:00Z
+    filetype: fms restart
+    datapath: Data/
+    filename_core: 20201215.000000.c24.fv_core.res.nc
+    filename_trcr: 20201215.000000.c24.fv_tracer.res.nc
+    filename_sfcd: 20201215.000000.c24.sfc_data.nc
+    filename_sfcw: 20201215.000000.c24.fv_srf_wnd.res.nc
+    filename_cplr: 20201215.000000.c24.coupler.res
+    state variables:
+    - ua
+    - va
+    - t
+    - delp
+    - ps
+    - sphum
+    - ice_wat
+    - liq_wat
+    - o3mr
+    - phis
+    - slmsk
+    - sheleg
+    - tsea
+    - vtype
+    - stype
+    - vfrac
+    - stc
+    - smc
+    - snwdph
+    - u_srf
+    - v_srf
+    - f10m
+  background error:
+    covariance model: hybrid
+    components:
+    - covariance:
+        covariance model: SABER
+        saber central block:
+          saber block name: BUMP_NICAS
+          active variables: &active_vars
+          - air_horizontal_streamfunction
+          - air_horizontal_velocity_potential
+          - air_temperature
+          - air_pressure_at_surface
+          - water_vapor_mixing_ratio_wrt_moist_air
+          - cloud_liquid_water
+          - ozone_mass_mixing_ratio
+          read:
+            io:
+              data directory: Data/staticb
+              files prefix: nicas_gfs
+            drivers:
+              multivariate strategy: univariate
+              read universe radius: true
+              read local nicas: true
+            grids:
+            - model:
+                variables:
+                - air_horizontal_streamfunction
+                - air_horizontal_velocity_potential
+                - air_temperature
+                - water_vapor_mixing_ratio_wrt_moist_air
+                - cloud_liquid_water
+                - ozone_mass_mixing_ratio
+              io:
+                overriding universe radius file: cor_3D_gfs_universe_radius
+            - model:
+                variables:
+                - air_pressure_at_surface
+              io:
+                overriding universe radius file: cor_2D_gfs_universe_radius
+        saber outer blocks:
+        - saber block name: StdDev
+          active variables: *active_vars
+          read:
+            model file:
+              datetime: 2020-12-15T00:00:00Z
+              set datetime on read: true
+              filetype: fms restart
+              psinfile: true
+              datapath: Data/staticb/
+              filename_core: 20201215.000000.stddev.fv_core.res.nc
+              filename_trcr: 20201215.000000.stddev.fv_tracer.res.nc
+              filename_sfcd: 20201215.000000.stddev.sfc_data.nc
+              filename_sfcw: 20201215.000000.stddev.fv_srf_wnd.res.nc
+              filename_cplr: 20201215.000000.stddev.coupler.res
+        - saber block name: BUMP_VerticalBalance
+          active variables:
+          - air_horizontal_streamfunction
+          - air_horizontal_velocity_potential
+          - air_temperature
+          - air_pressure_at_surface
+          read:
+            general:
+              universe length-scale: 2000.0e3
+            io:
+              data directory: Data/staticb
+              files prefix: vbal_gfs
+              overriding sampling file: vbal_2020121421_gfs_sampling
+            drivers:
+              read local sampling: true
+              read vertical balance: true
+            vertical balance:
+              vbal:
+              - balanced variable: air_horizontal_velocity_potential
+                unbalanced variable: air_horizontal_streamfunction
+              - balanced variable: air_temperature
+                unbalanced variable: air_horizontal_streamfunction
+              - balanced variable: air_pressure_at_surface
+                unbalanced variable: air_horizontal_streamfunction
+        linear variable change:
+          linear variable change name: Control2Analysis
+          input variables:
+          - air_horizontal_streamfunction
+          - air_horizontal_velocity_potential
+          - air_temperature
+          - air_pressure_at_surface
+          - water_vapor_mixing_ratio_wrt_moist_air
+          - cloud_liquid_water
+          - ozone_mass_mixing_ratio
+          output variables: *3dvars
+      weight:
+        value: 0.1
+    - covariance:
+        covariance model: ensemble
+        members from template:
+          template:
+            datetime: 2020-12-15T00:00:00Z
+            filetype: fms restart
+            state variables: *3dvars
+            datapath: Data/inputs/gfs_c12/mem%mem%/
+            filename_core: 20201215.000000.fv_core.res.nc
+            filename_trcr: 20201215.000000.fv_tracer.res.nc
+            filename_sfcd: 20201215.000000.sfc_data.nc
+            filename_sfcw: 20201215.000000.fv_srf_wnd.res.nc
+            filename_cplr: 20201215.000000.coupler.res
+          pattern: '%mem%'
+          nmembers: 10
+          zero padding: 3
+        localization:
+          localization method: SABER
+          saber central block:
+            saber block name: BUMP_NICAS
+            active variables: *3dvars
+            read:
+              io:
+                data directory: Data/ensembleb
+                files prefix: nicas_gfs
+              drivers:
+                multivariate strategy: duplicated
+                read local nicas: true
+      weight:
+        value: 0.9
+  observations:
+    observers:
+    - obs space:
+        name: Aircraft
+        obsdatain:
+          engine:
+            type: H5File
+            obsfile: Data/obs/testinput_tier_1/aircraft_obs_2020121500_m.nc4
+        obsdataout:
+          engine:
+            type: H5File
+            obsfile: Data/hofx/aircraft_hyb-3dvar-1-gfs_2020121500_m.nc4
+        simulated variables:
+        - windEastward
+        - windNorthward
+        - airTemperature
+      obs operator:
+        name: VertInterp
+        vertical coordinate: air_pressure
+        observation vertical coordinate: pressure
+        observation vertical coordinate group: MetaData
+        interpolation method: log-linear
+      obs error:
+        covariance model: diagonal
+      obs filters:
+      - filter: PreQC
+        maxvalue: 3
+      - filter: Background Check
+        filter variables:
+        - name: windEastward
+        - name: windNorthward
+        - name: airTemperature
+        threshold: 6.0
+    - obs space:
+        name: Radiosonde
+        obsdatain:
+          engine:
+            type: H5File
+            obsfile: Data/obs/testinput_tier_1/sondes_obs_2020121500_m.nc4
+        obsdataout:
+          engine:
+            type: H5File
+            obsfile: Data/hofx/sondes_hyb-3dvar-1-gfs_2020121500_m.nc4
+        simulated variables:
+        - windEastward
+        - windNorthward
+        - airTemperature
+      obs operator:
+        name: VertInterp
+        vertical coordinate: air_pressure
+        observation vertical coordinate: pressure
+        observation vertical coordinate group: MetaData
+        interpolation method: log-linear
+      obs error:
+        covariance model: diagonal
+      obs filters:
+      - filter: PreQC
+        maxvalue: 3
+      - filter: Background Check
+        filter variables:
+        - name: windEastward
+        - name: windNorthward
+        - name: airTemperature
+        threshold: 6.0
+    - obs space:
+        name: GnssroBndNBAM
+        obsdatain:
+          engine:
+            type: H5File
+            obsfile: Data/obs/testinput_tier_1/gnssro_obs_2020121500_m.nc4
+        obsdataout:
+          engine:
+            type: H5File
+            obsfile: Data/hofx/gnssro_hyb-3dvar-1-gfs_2020121500_m.nc4
+        simulated variables:
+        - bendingAngle
+      obs operator:
+        name: GnssroBndNBAM
+        obs options:
+          sr_steps: 2
+          vertlayer: full
+          use_compress: 1
+          super_ref_qc: NBAM
+      obs error:
+        covariance model: diagonal
+      obs filters:
+      - filter: Domain Check
+        filter variables:
+        - name: bendingAngle
+        where:
+        - variable:
+            name: MetaData/impactHeightRO
+          minvalue: 0
+          maxvalue: 50000
+      - filter: ROobserror
+        filter variables:
+        - name: bendingAngle
+        errmodel: NBAM
+      - filter: Background Check RONBAM
+        filter variables:
+        - name: bendingAngle
+    - obs space:
+        name: AMSUA-NOAA19
+        obsdatain:
+          engine:
+            type: H5File
+            obsfile: Data/obs/testinput_tier_1/amsua_n19_obs_2020121500_m.nc4
+        obsdataout:
+          engine:
+            type: H5File
+            obsfile: Data/hofx/amsua_n19_hyb-3dvar-1-gfs_2020121500_m.nc4
+        simulated variables:
+        - brightnessTemperature
+        channels: 1-15
+      obs operator:
+        name: CRTM
+        Absorbers:
+        - H2O
+        - O3
+        obs options:
+          Sensor_ID: amsua_n19
+          EndianType: little_endian
+          CoefficientPath: Data/crtm/
+      obs error:
+        covariance model: diagonal
+      obs filters:
+      - filter: Bounds Check
+        filter variables:
+        - name: brightnessTemperature
+          channels: 1-15
+        minvalue: 100.0
+        maxvalue: 500.0
+      - filter: Background Check
+        filter variables:
+        - name: brightnessTemperature
+          channels: 1-15
+        threshold: 3.0
+    - obs space:
+        name: SfcObs
+        obsdatain:
+          engine:
+            type: H5File
+            obsfile: Data/obs/testinput_tier_1/sfc_obs_2020121500_m.nc4
+        obsdataout:
+          engine:
+            type: H5File
+            obsfile: Data/hofx/sfc_hyb-3dvar-1-gfs_2020121500_m.nc4
+        simulated variables:
+        - stationPressure
+      obs operator:
+        name: SfcPCorrected
+        da_psfc_scheme: UKMO
+      linear obs operator:
+        name: Identity
+      obs error:
+        covariance model: diagonal
+      obs filters:
+      - filter: Background Check
+        threshold: 1000
+variational:
+  minimizer:
+    algorithm: DRPCG
+  iterations:
+  - ninner: 10
+    gradient norm reduction: 1e-10
+    test: on
+    geometry:
+      akbk: Data/fv3files/akbk127.nc4
+      layout:
+      - 1
+      - 2
+      npx: 13
+      npy: 13
+      npz: 127
+      field metadata override: Data/fieldmetadata/gfs-restart.yaml
+  - ninner: 5
+    gradient norm reduction: 1e-10
+    test: on
+    geometry:
+      akbk: Data/fv3files/akbk127.nc4
+      layout:
+      - 1
+      - 2
+      npx: 13
+      npy: 13
+      npz: 127
+      field metadata override: Data/fieldmetadata/gfs-restart.yaml
+output:
+  filetype: fms restart
+  datapath: Data/analysis/
+  prefix: hyb-3dvar-1-gfs.c24
+  frequency: PT1H
+test:
+  reference filename: testoutput/hyb-3dvar_gfs.ref
+  test output filename: testoutput/hyb-3dvar_gfs.test.out
+  float relative tolerance: 1.0e-3
+  float absolute tolerance: 1.0e-6
