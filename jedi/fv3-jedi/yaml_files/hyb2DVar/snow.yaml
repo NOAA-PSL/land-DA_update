@@ -15,14 +15,14 @@ variational:
   - ninner: 50
     gradient norm reduction: 1e-10
     geometry:                           # minimization at lower resolution
-      akbk: Data/fv3files/akbk127.nc4
+      akbk: Data/fv3files/akbkXXNPZ.nc4
       npx: XXREP
       npy: XXREP
-      npz: 127
-      ntiles: 6
-      #layout: [3,4]
-      #io_layout: [1,1]
-      #field metadata override: Data/fieldmetadata/gfs_v17-land.yaml
+      npz: XXNPZ
+      ntiles: XXNTIL
+      layout: [XXLX,XXLY] #[4,4]
+      io_layout: [XXIOLX,XXIOLY] #[1,1]
+      #field metadata override: Data/fieldmetadata/gfs-land.yaml  #snow.yaml #gfs_v17-land.yaml
       time invariant fields:
         state fields:
           datetime: XXYYYB-XXMB-XXDBTXXHB:00:00Z
@@ -31,7 +31,7 @@ variational:
           state variables:
           - orog_filt
           datapath: /scratch2/NCEPDEV/land/data/fix/20231027/CXXRES/
-          filename_orog: CXXRES.XXORES_oro_data.nc 
+          filename_orog: CXXRES.XXORES_oro_data.nc
       _resol_name: cXXRES
     online diagnostics:
       write increment: true
@@ -50,16 +50,12 @@ cost function:
   geometry:
     npx: XXREP
     npy: XXREP
-    npz: 127
-    ntiles: 6
-    #layout:
-    #- 3
-    #- 4
-    #io_layout:
-    #- 1
-    #- 1
+    npz: XXNPZ
+    ntiles: XXNTIL
+    layout: [XXLX,XXLY] #[4,4]
+    io_layout: [XXIOLX,XXIOLY] #[1,1]
     _resol_name: cXXRES
-    akbk: Data/fv3files/akbk127.nc4
+    akbk: Data/fv3files/akbkXXNPZ.nc4
     fms initialization:
       namelist filename: Data/fv3files/fmsmpp.nml
       field table filename: Data/fv3files/field_table
@@ -75,7 +71,7 @@ cost function:
     filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
     filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
     filename_orog: CXXRES.XXORES_oro_data.nc
-    state variables: [totalSnowDepth,vtype,slmsk,orog_filt]   # sheleg,stype,vfrac,stc,smc,snwdph
+    state variables: [totalSnowDepth,vtype,slmsk,orog_filt]
   background error:
     covariance model: hybrid
     components:
@@ -88,7 +84,7 @@ cost function:
               universe length-scale: 300000.0
             drivers:
               multivariate strategy: univariate
-              read global nicas: true     
+              read global nicas: true
             nicas:
               explicit length-scales: true
               horizontal length-scale:
@@ -105,19 +101,8 @@ cost function:
                 type: c0
               same horizontal convolution: true
             io:
-              data directory: /scratch2/BMC/gsienkf/Clara.Draper/jedi/bump_snow/  #Data/staticb
+              data directory: /scratch2/BMC/gsienkf/Clara.Draper/jedi/bump_snow/
               files prefix: snow_bump_nicas_300km_fakelevels
-            # grids:
-            # - model:
-            #     variables:
-            #     - 
-            #   io:
-            #     overriding universe radius file: cor_3D_gfs_universe_radius
-            # - model:
-            #     variables:
-            #     - 
-            #   io:
-            #     overriding universe radius file: cor_2D_gfs_universe_radius
         saber outer blocks:
         - saber block name: FakeLevels
           fields metadata:
@@ -139,7 +124,7 @@ cost function:
                 - totalSnowDepth
                 value: 30.0
       weight:
-        value: 0.5    # 0.1 weight of static covariance
+        value: 0.50
     - covariance:  # ensemble covariance
         covariance model: ensemble
         members from template:
@@ -148,7 +133,7 @@ cost function:
             filetype: fms restart
             skip coupler file: true
             state variables: [totalSnowDepth,vtype,slmsk,orog_filt]   # sheleg,stype,vfrac,stc,smc,snwdph
-            datapath: ./restarts/mem%mem%/
+            datapath: ./letkf/mem%mem%/
             filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
             filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
             filename_orog: CXXRES.XXORES_oro_data.nc
@@ -158,26 +143,39 @@ cost function:
         localization:
           localization method: SABER
           saber central block:
-            saber block name: BUMP_NICAS
+            saber block name: BUMP_NICAS  #saber block name: ID --simplest
+            # active variables: *bvars
             read:
-              # general:
-              #   universe length-scale: 300000.0
+              general:
+                universe length-scale: 500000.0
               drivers:
-                multivariate strategy: duplicated
-                read local nicas: true
+                multivariate strategy: univariate   # duplicated  #univariate   #
+                # read local nicas: true
+                compute nicas: true
+                write global nicas: true
+              # model:
+              #   level for 2d variables: last
               io:
-                data directory: Data/ensembleb
-                files prefix: nicas_gfs
-              # . . .
+                data directory: Data/ensembleb                                                  
+                files prefix: snow_bumpparameters_nicas_500km_XXYYYYXXMMXXDD_XXHH    #nicas_gfs 
               nicas:
+                resolution: 6
+                max horizontal grid size: 5000000
                 explicit length-scales: true
                 horizontal length-scale:
                 - groups: [totalSnowDepth]  # Note: no _fakeLevels suffix if not using fake levels block
                   value: 500000.0            # 500 km
-              # ...
+                # vertical length-scale:
+                # - groups:
+                #   - totalSnowDepth_fakeLevels
+                #   value: 0.0
+                # interpolation type:
+                # - groups:
+                #   - totalSnowDepth_fakeLevels
+                #   type: c0
+                # same horizontal convolution: true
       weight:
         value: 0.5    # 0.9 weight of ensemble covariance
-
   observations:
     obs perturbations: false
     observers:
