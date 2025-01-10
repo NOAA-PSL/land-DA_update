@@ -138,7 +138,7 @@ cost function:
             filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
             filename_orog: CXXRES.XXORES_oro_data.nc
           pattern: '%mem%'
-          nmembers: 20
+          nmembers: XXESZ
           zero padding: 3
         localization:
           localization method: SABER

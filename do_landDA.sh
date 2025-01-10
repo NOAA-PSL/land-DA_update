@@ -138,7 +138,7 @@ MP=`echo $PREVDATE | cut -c5-6`
 DP=`echo $PREVDATE | cut -c7-8`
 HP=`echo $PREVDATE | cut -c9-10`
 
-if [[ ${DAalg} == '2DVar' || ${DAalg} == 'letkf' ]]; then   # todo: check this further and possibly make this default?
+if [[ ${DAalg} == '2DVar' || ${DAalg} == 'letkf' || ${DAalg} == 'hyb2denvar' ]]; then   # todo: check this further and possibly make this default?
    HALFWINLEN=$(($WINLEN/2))
    DABEGIN=`${INCDATE} $THISDATE -$HALFWINLEN`
 else
@@ -150,10 +150,12 @@ MB=`echo $DABEGIN | cut -c5-6`
 DB=`echo $DABEGIN | cut -c7-8`
 HB=`echo $DABEGIN | cut -c9-10`
 
-# make sure letkf settings are consistent 
-if [[ ${DAalg} == 'letkf' && "$ensemble_size" -lt 2 ]]; then 
-    echo "Error! LETKF requires at least 2 ens members. Exiting"
-    exit
+# make sure letkf/hyb2denvar are running ensembles  
+if [[ ${DAalg} == 'letkf' || ${DAalg} == 'hyb2denvar' ]] then 
+    if [[ "$ensemble_size" -lt 2 ]]; then 
+        echo "Error! LETKF and hyb2dEnVar require at least 2 ens members. Exiting"
+        exit
+    fi
 fi
 
 FILEDATE=${YYYY}${MM}${DD}.${HH}0000
@@ -384,6 +386,7 @@ if [[ $do_DA == "YES" ]]; then
    sed -i -e "s/XXLY/${LayY}/g" jedi_DA.yaml
    sed -i -e "s/XXIOLX/${IOLayX}/g" jedi_DA.yaml #IO Layout
    sed -i -e "s/XXIOLY/${IOLayY}/g" jedi_DA.yaml
+   sed -i -e "s/XXESZ/${ensemble_size}/g" jedi_DA.yaml 
 
 fi
 
@@ -432,6 +435,7 @@ if [[ $do_HOFX == "YES" ]]; then
    sed -i -e "s/XXLY/${LayY}/g" jedi_hofx.yaml
    sed -i -e "s/XXIOLX/${IOLayX}/g" jedi_hofx.yaml #IO Layout
    sed -i -e "s/XXIOLY/${IOLayY}/g" jedi_hofx.yaml
+   sed -i -e "s/XXESZ/${ensemble_size}/g" jedi_DA.yaml 
 
 fi
 
