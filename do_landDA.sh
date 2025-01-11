@@ -46,7 +46,6 @@ LOGDIR=${OUTDIR}/DA/logs/
 OBSDIR=${OBSDIR:-"/scratch2/NCEPDEV/land/data/DA/"}
 
 # set executable directories
-
 export JEDI_EXECDIR=${JEDI_EXECDIR:-"${GDASApp_root}/build/bin/"}
 
 # create local copy of JEDI_STATICDIR, so can over-ride default files 
@@ -88,13 +87,19 @@ if [[ ! -e ${OUTDIR}/DA ]]; then
     mkdir ${OUTDIR}/DA/logs
     mkdir ${OUTDIR}/DA/hofx
     mkdir ${OUTDIR}/DA/jedi_anl
-    if [[ "$ensemble_size" -gt 1  ]]; then            
-       for ie in $(seq 0 $ensemble_size)     
-       do
-           mem_ens="mem`printf %03i $ie`"
-           mkdir ${OUTDIR}/DA/jedi_incr/${mem_ens}     
-           mkdir ${OUTDIR}/DA/jedi_anl/${mem_ens}
-       done    
+    if [[ "$ensemble_size" -gt 1  ]]; then           
+        for ie in $(seq 0 $ensemble_size)     
+        do
+            mem_ens="mem`printf %03i $ie`"
+            mkdir ${OUTDIR}/DA/jedi_incr/${mem_ens}     
+            mkdir ${OUTDIR}/DA/jedi_anl/${mem_ens}
+        done 
+        mem_ens="ensmean"   
+        # mem000 is ens mean in JEDI; TODO check
+        ln -s ${OUTDIR}/DA/jedi_incr/mem000 ${OUTDIR}/DA/jedi_incr/${mem_ens}          
+        ln -s ${OUTDIR}/DA/jedi_anl/mem000 ${OUTDIR}/DA/jedi_anl/${mem_ens}  
+        # mkdir ${OUTDIR}/DA/jedi_incr/${mem_ens}     
+        # mkdir ${OUTDIR}/DA/jedi_anl/${mem_ens}
     fi     
 fi 
 
@@ -102,17 +107,23 @@ if [[ ! -e $JEDIWORKDIR ]]; then
 
     mkdir $JEDIWORKDIR      
     mkdir ${JEDIWORKDIR}/restarts     
+    ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}
+    ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}/restarts/ # to-do. change to only need one copy.
 
     if [[ "$ensemble_size" -gt 1  ]]; then  
-        for ie in $(seq 0 $ensemble_size)
+        # for ie in $(seq 0 $ensemble_size)
+        for ie in $(seq 1 $ensemble_size)
         do
             mem_ens="mem`printf %03i $ie`"
             ln -s $WORKDIR/${mem_ens} $JEDIWORKDIR/${mem_ens}               
             ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}/${mem_ens} 
         done   
-    fi 
-    ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}
-    ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}/restarts/ # to-do. change to only need one copy.
+        mem_ens="ensmean"
+        ln -s $WORKDIR/${mem_ens} $JEDIWORKDIR/mem000        # mem000 is ens mean in JEDI; TODO check        
+        ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}/mem000
+        # ln -s $WORKDIR/${mem_ens} $JEDIWORKDIR/${mem_ens}               
+        # ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}/${mem_ens}
+    fi    
 
     ln -s ${OUTDIR}  ${JEDIWORKDIR}/output 
 
@@ -138,7 +149,7 @@ MP=`echo $PREVDATE | cut -c5-6`
 DP=`echo $PREVDATE | cut -c7-8`
 HP=`echo $PREVDATE | cut -c9-10`
 
-if [[ ${DAalg} == '2DVar' || ${DAalg} == 'letkf' || ${DAalg} == 'hyb2denvar' ]]; then   # todo: check this further and possibly make this default?
+if [[ ${DAalg} == '2DVar' || ${DAalg} == 'letkf' || ${DAalg} == 'hyb2DenVar' ]]; then   # todo: check this further and possibly make this default?
    HALFWINLEN=$(($WINLEN/2))
    DABEGIN=`${INCDATE} $THISDATE -$HALFWINLEN`
 else
@@ -151,10 +162,10 @@ DB=`echo $DABEGIN | cut -c7-8`
 HB=`echo $DABEGIN | cut -c9-10`
 
 # make sure letkf/hyb2denvar are running ensembles  
-if [[ ${DAalg} == 'letkf' || ${DAalg} == 'hyb2denvar' ]] then 
+if [[ ${DAalg} == 'letkf' || ${DAalg} == 'hyb2DenVar' ]] then 
     if [[ "$ensemble_size" -lt 2 ]]; then 
-        echo "Error! LETKF and hyb2dEnVar require at least 2 ens members. Exiting"
-        exit
+        echo "Error! ${DAalg} requires at least 2 ens members. Exiting"
+        exit 10
     fi
 fi
 
