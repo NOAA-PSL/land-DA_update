@@ -46,6 +46,7 @@ LOGDIR=${OUTDIR}/DA/logs/
 OBSDIR=${OBSDIR:-"/scratch2/NCEPDEV/land/data/DA/"}
 
 # set executable directories
+
 export JEDI_EXECDIR=${JEDI_EXECDIR:-"${GDASApp_root}/build/bin/"}
 
 # create local copy of JEDI_STATICDIR, so can over-ride default files 
@@ -94,12 +95,6 @@ if [[ ! -e ${OUTDIR}/DA ]]; then
             mkdir ${OUTDIR}/DA/jedi_incr/${mem_ens}     
             mkdir ${OUTDIR}/DA/jedi_anl/${mem_ens}
         done 
-        mem_ens="ensmean"   
-        # mem000 is ens mean in JEDI; TODO check
-        ln -s ${OUTDIR}/DA/jedi_incr/mem000 ${OUTDIR}/DA/jedi_incr/${mem_ens}          
-        ln -s ${OUTDIR}/DA/jedi_anl/mem000 ${OUTDIR}/DA/jedi_anl/${mem_ens}  
-        # mkdir ${OUTDIR}/DA/jedi_incr/${mem_ens}     
-        # mkdir ${OUTDIR}/DA/jedi_anl/${mem_ens}
     fi     
 fi 
 
@@ -107,23 +102,17 @@ if [[ ! -e $JEDIWORKDIR ]]; then
 
     mkdir $JEDIWORKDIR      
     mkdir ${JEDIWORKDIR}/restarts     
-    ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}
-    ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}/restarts/ # to-do. change to only need one copy.
-
+    
     if [[ "$ensemble_size" -gt 1  ]]; then  
-        # for ie in $(seq 0 $ensemble_size)
-        for ie in $(seq 1 $ensemble_size)
+        for ie in $(seq 0 $ensemble_size)             # mem000 ens mean   
         do
             mem_ens="mem`printf %03i $ie`"
             ln -s $WORKDIR/${mem_ens} $JEDIWORKDIR/${mem_ens}               
             ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}/${mem_ens} 
         done   
-        mem_ens="ensmean"
-        ln -s $WORKDIR/${mem_ens} $JEDIWORKDIR/mem000        # mem000 is ens mean in JEDI; TODO check        
-        ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}/mem000
-        # ln -s $WORKDIR/${mem_ens} $JEDIWORKDIR/${mem_ens}               
-        # ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}/${mem_ens}
-    fi    
+    fi  
+    ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}
+    ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}/restarts/ # to-do. change to only need one copy.  
 
     ln -s ${OUTDIR}  ${JEDIWORKDIR}/output 
 
@@ -171,33 +160,39 @@ fi
 
 FILEDATE=${YYYY}${MM}${DD}.${HH}0000
 
-mem_ens="mem000"
-RSTRDIR=${WORKDIR}/${mem_ens}
+if  [[ $SAVE_TILE == "YES" ]]; then   
 
-if  [[ $SAVE_TILE == "YES" ]]; then          
-    for tile in $(seq 1 $num_tiles)
-    do 
-    cp ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${RSTRDIR}/${FILEDATE}.sfc_data_back.tile${tile}.nc
-    done    
+    if [[ "$ensemble_size" -eq 1  || ${DAalg} == 'hyb2DenVar' ]]; then  
+        mem_ens="memdet"   
+        RSTRDIR=${WORKDIR}/${mem_ens}          
+        for tile in $(seq 1 $num_tiles)
+        do 
+            cp ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${RSTRDIR}/${FILEDATE}.sfc_data_back.tile${tile}.nc
+        done  
+    fi  
     
     if [[ "$ensemble_size" -gt 1  ]]; then 
         for ie in $(seq 0 $ensemble_size)
         do
             mem_ens="mem`printf %03i $ie`"     
-            for tile in $(seq 1 $num_tiles) 
+            RSTRDIR=${WORKDIR}/${mem_ens}          
+            for tile in $(seq 1 $num_tiles)
             do 
-            cp ${WORKDIR}/${mem_ens}/${FILEDATE}.sfc_data.tile${tile}.nc  ${WORKDIR}/${mem_ens}/${FILEDATE}.sfc_data_back.tile${tile}.nc
+                cp ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${RSTRDIR}/${FILEDATE}.sfc_data_back.tile${tile}.nc
             done    
         done  
     fi
 fi 
 
 #stage restarts for applying JEDI update (files will get directly updated)
-# for LETKF, mem000 (ensemble mean) used in IMS Calc 
-for tile in $(seq 1 $num_tiles) 
-do
-    ln -fs ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc ${JEDIWORKDIR}/restarts/${FILEDATE}.sfc_data.tile${tile}.nc
-done
+if [[ "$ensemble_size" -eq 1  || ${DAalg} == 'hyb2DenVar' ]]; then  
+    mem_ens="memdet"   
+    RSTRDIR=${WORKDIR}/${mem_ens} 
+    for tile in $(seq 1 $num_tiles) 
+    do
+        ln -fs ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc ${JEDIWORKDIR}/restarts/${FILEDATE}.sfc_data.tile${tile}.nc
+    done
+fi
 
 cres_file=${JEDIWORKDIR}/restarts/${FILEDATE}.coupler.res
 if [[ -e  ${RSTRDIR}/${FILEDATE}.coupler.res ]]; then 
@@ -218,7 +213,7 @@ else #  if not present, need to create coupler.res for JEDI
 fi 
 
 if [[ "$ensemble_size" -gt 1  ]]; then  
-    
+    # for LETKF, mem000 (ensemble mean) used in IMS Calc 
     for ie in $(seq 0 $ensemble_size)  
     do
         mem_ens="mem`printf %03i $ie`"
