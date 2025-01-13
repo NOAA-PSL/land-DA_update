@@ -133,7 +133,7 @@ cost function:
             filetype: fms restart
             skip coupler file: true
             state variables: [totalSnowDepth,vtype,slmsk,orog_filt]   # sheleg,stype,vfrac,stc,smc,snwdph
-            datapath: ./letkf/mem%mem%/
+            datapath: mem%mem%/
             filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
             filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
             filename_orog: CXXRES.XXORES_oro_data.nc
@@ -156,7 +156,7 @@ cost function:
               # model:
               #   level for 2d variables: last
               io:
-                data directory: Data/ensembleb                                                  
+                data directory: output/DA/                                                  
                 files prefix: snow_bumpparameters_nicas_500km_XXYYYYXXMMXXDD_XXHH    #nicas_gfs 
               nicas:
                 resolution: 6

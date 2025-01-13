@@ -169,9 +169,9 @@ if  [[ $SAVE_TILE == "YES" ]]; then
         do 
             cp ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${RSTRDIR}/${FILEDATE}.sfc_data_back.tile${tile}.nc
         done  
-    fi  
-    
-    if [[ "$ensemble_size" -gt 1  ]]; then 
+    # fi  
+    # if [[ "$ensemble_size" -gt 1  ]]; then 
+    else
         for ie in $(seq 0 $ensemble_size)
         do
             mem_ens="mem`printf %03i $ie`"     
@@ -185,14 +185,18 @@ if  [[ $SAVE_TILE == "YES" ]]; then
 fi 
 
 #stage restarts for applying JEDI update (files will get directly updated)
+# for LETKF, mem000 (ensemble mean) used in IMS Calc
+# TODO: calculate IMS snd for each ens member
 if [[ "$ensemble_size" -eq 1  || ${DAalg} == 'hyb2DenVar' ]]; then  
     mem_ens="memdet"   
-    RSTRDIR=${WORKDIR}/${mem_ens} 
-    for tile in $(seq 1 $num_tiles) 
-    do
-        ln -fs ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc ${JEDIWORKDIR}/restarts/${FILEDATE}.sfc_data.tile${tile}.nc
-    done
+else 
+    mem_ens="mem000"
 fi
+RSTRDIR=${WORKDIR}/${mem_ens}  
+for tile in $(seq 1 $num_tiles) 
+do
+    ln -fs ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc ${JEDIWORKDIR}/restarts/${FILEDATE}.sfc_data.tile${tile}.nc
+done
 
 cres_file=${JEDIWORKDIR}/restarts/${FILEDATE}.coupler.res
 if [[ -e  ${RSTRDIR}/${FILEDATE}.coupler.res ]]; then 
@@ -212,8 +216,8 @@ else #  if not present, need to create coupler.res for JEDI
 
 fi 
 
-if [[ "$ensemble_size" -gt 1  ]]; then  
-    # for LETKF, mem000 (ensemble mean) used in IMS Calc 
+if [[ "$ensemble_size" -gt 1 && ${DAalg} != 'hyb2DenVar' ]]; then  
+     
     for ie in $(seq 0 $ensemble_size)  
     do
         mem_ens="mem`printf %03i $ie`"
@@ -385,13 +389,13 @@ if [[ $do_DA == "YES" ]]; then
 
    sed -i -e "s/XXHOFX/false/g" jedi_DA.yaml  # do DA
    
-#    sed -i -e "s/XXDT/${WINLEN}/g" jedi_DA.yaml  #  DA window lenth
    sed -i -e "s/XXNTIL/${num_tiles}/g" jedi_DA.yaml  # Number of tiles
    sed -i -e "s/XXNPZ/${NPZ}/g" jedi_DA.yaml  # vertical layers
    sed -i -e "s/XXLX/${LayX}/g" jedi_DA.yaml  # Layout
    sed -i -e "s/XXLY/${LayY}/g" jedi_DA.yaml
    sed -i -e "s/XXIOLX/${IOLayX}/g" jedi_DA.yaml #IO Layout
    sed -i -e "s/XXIOLY/${IOLayY}/g" jedi_DA.yaml
+
    sed -i -e "s/XXESZ/${ensemble_size}/g" jedi_DA.yaml 
 
 fi
@@ -434,13 +438,13 @@ if [[ $do_HOFX == "YES" ]]; then
    
    sed -i -e "s/XXHOFX/true/g" jedi_hofx.yaml  # do only HOFX
 
-#    sed -i -e "s/XXDT/${WINLEN}/g" jedi_hofx.yaml  #  DA window lenth
    sed -i -e "s/XXNTIL/${num_tiles}/g" jedi_hofx.yaml  # Number of tiles
    sed -i -e "s/XXNPZ/${NPZ}/g" jedi_hofx.yaml  # vertical layers
    sed -i -e "s/XXLX/${LayX}/g" jedi_hofx.yaml  # Layout
    sed -i -e "s/XXLY/${LayY}/g" jedi_hofx.yaml
    sed -i -e "s/XXIOLX/${IOLayX}/g" jedi_hofx.yaml #IO Layout
    sed -i -e "s/XXIOLY/${IOLayY}/g" jedi_hofx.yaml
+
    sed -i -e "s/XXESZ/${ensemble_size}/g" jedi_DA.yaml 
 
 fi
@@ -547,6 +551,11 @@ elif [[ ${DAalg} == 'letkf' ]]; then
         
     fi
 
+elif [[ ${DAalg} == 'hyb2DenVar' ]]; then 
+
+    JEDI_EXEC="fv3jedi_var.x"
+    # JEDI_EXEC2="fv3jedi_letkf.x"
+
 fi
 
 ################################################
@@ -582,16 +591,18 @@ NPROC_INCR=$SLURM_NTASKS
 
 if [[ $do_DA == "YES" ]]; then 
 
-    if [[ "$ensemble_size" -gt 1  ]]; then 
-        rst_path="./"
-        inc_path="./output/DA/jedi_incr/"
-    else
+    if [[ "$ensemble_size" -eq 1  || ${DAalg} == 'hyb2DenVar' ]]; then  
         for tile in $(seq 1 $num_tiles)
         do
             ln -fs ${JEDIWORKDIR}/restarts/${FILEDATE}.sfc_data.tile${tile}.nc ${JEDIWORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc
         done
         rst_path="./"
         inc_path="./"
+        inc_ens_size=1
+    else                # if [[ "$ensemble_size" -gt 1  ]]; then 
+        rst_path="./"
+        inc_path="./output/DA/jedi_incr/"
+        inc_ens_size=${ensemble_size}
     fi
 
     frac_grid=.false.
@@ -611,7 +622,7 @@ cat << EOF > apply_incr_nml
  rst_path="$rst_path"
  inc_path="$inc_path"
  ntiles=$num_tiles
- ens_size=$ensemble_size
+ ens_size=$inc_ens_size
 /
 EOF
 
@@ -625,7 +636,7 @@ EOF
   fi
 
     # ensemble mean of non-jedi analysis, from add_jedi_incr
-    if [[ $do_enkf == "YES" && "$ensemble_size" -gt 1 ]]; then    
+    if [[ $do_enkf == "YES" && "$ensemble_size" -gt 1 && ${DAalg} != 'hyb2DenVar' ]]; then    
 
         for ie in $(seq $ensemble_size) 
         do
@@ -652,13 +663,13 @@ fi
 # keep IMS IODA file
 if [ $SAVE_IMS == "YES"  ]; then
   if [[ -e ${JEDIWORKDIR}/ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc ]]; then
-    yes |cp -u ${JEDIWORKDIR}/ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc ${OUTDIR}/DA/IMSproc/
+    yes |cp -u ${JEDIWORKDIR}/ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc ${OUTDIR}/DA/IMSproc/${DAalg}_ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc
   fi
 fi
 
 # keep increments
-if [ $SAVE_INCR == "YES" ] && [ $do_DA == "YES" ]; then
-   if [[ "$ensemble_size" -eq 1  ]]; then
+if [[ $SAVE_INCR == "YES"  &&  $do_DA == "YES" ]]; then
+   if [[ "$ensemble_size" -eq 1 || ${DAalg} == 'hyb2DenVar' ]]; then
     yes |cp -u ${JEDIWORKDIR}/snowinc.${FILEDATE}.sfc_data.tile*.nc  ${OUTDIR}/DA/jedi_incr/
    fi
 fi
