@@ -151,7 +151,7 @@ DB=`echo $DABEGIN | cut -c7-8`
 HB=`echo $DABEGIN | cut -c9-10`
 
 # make sure letkf/hyb2denvar are running ensembles  
-if [[ ${DAalg} == 'letkf' || ${DAalg} == 'hyb2DenVar' ]] then 
+if [[ ${DAalg} == 'letkf' || ${DAalg} == 'hyb2DenVar' ]]; then 
     if [[ "$ensemble_size" -lt 2 ]]; then 
         echo "Error! ${DAalg} requires at least 2 ens members. Exiting"
         exit 10
