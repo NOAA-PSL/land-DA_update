@@ -636,7 +636,7 @@ EOF
   fi
 
     # ensemble mean of non-jedi analysis, from add_jedi_incr
-    if [[ $do_enkf == "YES" && "$ensemble_size" -gt 1 && ${DAalg} != 'hyb2DenVar' ]]; then    
+    if [[ $do_enkf == "YES" && "$ensemble_size" -gt 1  ]]; then     # && ${DAalg} != 'hyb2DenVar'    
 
         for ie in $(seq $ensemble_size) 
         do
