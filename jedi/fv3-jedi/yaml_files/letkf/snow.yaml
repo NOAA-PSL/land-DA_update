@@ -74,7 +74,7 @@ output increment:
 output variance prior:
   date: XXYYYY-XXMM-XXDDTXXHH:00:00Z #*date
   filetype: fms restart
-  datapath: mem%{member}%
+  datapath: output/DA/jedi_anl/mem%{member}%
   filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
   prefix: prior_var
   state variables: [snwdph,vtype,slmsk]
@@ -82,7 +82,7 @@ output variance prior:
 output variance posterior:
   date: XXYYYY-XXMM-XXDDTXXHH:00:00Z #*date
   filetype: fms restart
-  datapath: mem%{member}%
+  datapath: output/DA/jedi_anl/mem%{member}%
   filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
   prefix: posterior_var
   state variables: [snwdph,vtype,slmsk]
