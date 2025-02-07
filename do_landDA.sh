@@ -448,7 +448,7 @@ fi
 
 if [[ ${DAalg} == '2DVar' ]]; then
 
-    JEDI_EXEC="fv3jedi_var.x"
+    JEDI_EXEC="gdas.x"
 
 elif [[ ${DAalg} == 'letkfoi' ]]; then
 #To-do: make this section generic (currently assumes snow)
@@ -550,7 +550,7 @@ fi
 echo 'do_landDA: calling fv3-jedi' 
 
 if [[ $do_DA == "YES" ]]; then
-    time srun -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} jedi_DA.yaml ${LOGDIR}/jedi_DA.log
+    time srun -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} fv3jedi variational jedi_DA.yaml ${LOGDIR}/jedi_DA.log
     if [[ $? != 0 ]]; then
         echo "JEDI DA failed"
         exit 10
