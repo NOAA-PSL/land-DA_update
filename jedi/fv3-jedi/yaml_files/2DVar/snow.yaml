@@ -15,9 +15,6 @@ variational:
   - ninner: 50
     gradient norm reduction: 1e-10
     geometry:                           # minimization at lower resolution
-      #fms initialization:
-      #  namelist filename: Data/fv3jedi/fmsmpp.nml
-      #  field table filename: Data/fv3jedi/field_table
       akbk: Data/fv3files/akbk127.nc4
       npx: XXREP
       npy: XXREP
