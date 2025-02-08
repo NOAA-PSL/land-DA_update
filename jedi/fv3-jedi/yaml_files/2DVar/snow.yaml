@@ -26,7 +26,6 @@ variational:
       layout: [3,4]
       io_layout: [1,1]
       field metadata override: Data/fieldmetadata/gfs-land.yaml
-      #field metadata override: Data/fieldmetadata/fv3jedi_fieldmetadata_restart.yaml
       time invariant fields:
         state fields:
           datetime: XXYYYB-XXMB-XXDBTXXHB:00:00Z
@@ -80,7 +79,6 @@ cost function:
     filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
     filename_orog: CXXRES.XXORES_oro_data.nc
     state variables: [totalSnowDepth,vtype,slmsk,sheleg,orog_filt]
-    #state variables: [snodl,vtype,slmsk,sheleg,orog_filt]
   background error:
     covariance model: SABER
     saber central block:
@@ -107,7 +105,7 @@ cost function:
             type: c0
           same horizontal convolution: true
         io:
-          data directory: /scratch1/NCEPDEV/global/Jiarui.Dong/JEDI/workflow/bump_snow/
+          data directory: /scratch2/NCEPDEV/land/data/DA/bump_snow/
           files prefix: snow_bump_nicas_250km_shadowlevels
     saber outer blocks:
     - saber block name: ShadowLevels
