@@ -446,14 +446,15 @@ else
     SNOWDEPTHVAR="snwdph"
 fi
 
+JEDI_EXEC="gdas.x"
 if [[ ${DAalg} == '2DVar' ]]; then
 
-    JEDI_EXEC="gdas.x"
+    SOLVER="variational"
 
 elif [[ ${DAalg} == 'letkfoi' ]]; then
 #To-do: make this section generic (currently assumes snow)
 
-    JEDI_EXEC="fv3jedi_letkf.x"
+    SOLVER="letkf"
     
     B=30  # back ground error std for LETKFOI
 
@@ -482,13 +483,13 @@ elif [[ ${DAalg} == 'letkfoi' ]]; then
 elif [[ ${DAalg} == 'letkfoi_smc' ]]; then
 # To-do : combine this with the above
 
-    JEDI_EXEC="fv3jedi_letkf.x"
+    SOLVER="letkf"
     
     cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-soilMoisture.yaml ${JEDIWORKDIR}/gfs-soilMoisture.yaml
 
 elif [[ ${DAalg} == 'letkf' ]]; then
 
-    JEDI_EXEC="fv3jedi_letkf.x"
+    SOLVER="letkf"
 
     if [[ $do_DA == "YES" && $YAML_DA == "construct" ]];then
 
@@ -550,7 +551,7 @@ fi
 echo 'do_landDA: calling fv3-jedi' 
 
 if [[ $do_DA == "YES" ]]; then
-    time srun -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} fv3jedi variational jedi_DA.yaml ${LOGDIR}/jedi_DA.log
+    time srun -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} fv3jedi ${SOLVER} jedi_DA.yaml ${LOGDIR}/jedi_DA.log
     if [[ $? != 0 ]]; then
         echo "JEDI DA failed"
         exit 10
