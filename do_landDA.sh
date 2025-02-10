@@ -558,7 +558,7 @@ if [[ $do_DA == "YES" ]]; then
     fi
 fi 
 if [[ $do_HOFX == "YES" ]]; then  
-    time srun -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} jedi_hofx.yaml ${LOGDIR}/jedi_hofx.log
+    time srun -n $NPROC_JEDI ${JEDI_EXECDIR}/${JEDI_EXEC} fv3jedi ${SOLVER} jedi_hofx.yaml ${LOGDIR}/jedi_hofx.log
     if [[ $? != 0 ]]; then
         echo "JEDI hofx failed"
         exit 10
