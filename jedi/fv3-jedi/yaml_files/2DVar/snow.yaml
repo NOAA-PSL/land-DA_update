@@ -46,6 +46,7 @@ cost function:
   time window:
     begin: XXYYYB-XXMB-XXDBTXXHB:00:00Z
     length: PTXXWINLENH
+    bound to include: begin
   analysis variables: [totalSnowDepth] 
   geometry:
     npx: XXREP
