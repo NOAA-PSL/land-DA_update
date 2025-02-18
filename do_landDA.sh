@@ -469,7 +469,7 @@ if [[ ${DAalg} == '2DVar' ]]; then
 elif [[ ${DAalg} == 'letkfoi' ]]; then
 #To-do: make this section generic (currently assumes snow)
 
-    SOLVER="letkf"
+    SOLVER="localensembleda"  #letkf"
     
     B=30  # back ground error std for LETKFOI
 
@@ -498,13 +498,13 @@ elif [[ ${DAalg} == 'letkfoi' ]]; then
 elif [[ ${DAalg} == 'letkfoi_smc' ]]; then
 # To-do : combine this with the above
 
-    SOLVER="letkf"
+    SOLVER="localensembleda"
     
     cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-soilMoisture.yaml ${JEDIWORKDIR}/gfs-soilMoisture.yaml
 
 elif [[ ${DAalg} == 'letkf' ]]; then
 
-    SOLVER="letkf"
+    SOLVER="localensembleda"
 
     if [[ $do_DA == "YES" && $YAML_DA == "construct" ]];then
 

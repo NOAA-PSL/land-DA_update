@@ -15,13 +15,13 @@ variational:
   - ninner: 50
     gradient norm reduction: 1e-10
     geometry:                           # minimization at lower resolution
-      akbk: Data/fv3files/akbk127.nc4
+      akbk: Data/fv3files/akbkXXNPZ.nc4
       npx: XXREP
       npy: XXREP
-      npz: 127
-      ntiles: 6
-      #layout: [3,4]
-      #io_layout: [1,1]
+      npz: XXNPZ
+      ntiles: XXNTIL
+      layout: [XXLX,XXLY] #[4,4]
+      io_layout: [XXIOLX,XXIOLY] #[1,1]
       #field metadata override: Data/fieldmetadata/gfs_v17-land.yaml
       time invariant fields:
         state fields:
@@ -51,16 +51,12 @@ cost function:
   geometry:
     npx: XXREP
     npy: XXREP
-    npz: 127
-    ntiles: 6
-    #layout:
-    #- 3
-    #- 4
-    #io_layout:
-    #- 1
-    #- 1
+    npz: XXNPZ
+    ntiles: XXNTIL
+    layout: [XXLX,XXLY] #[4,4]
+    io_layout: [XXIOLX,XXIOLY] #[1,1]
     _resol_name: cXXRES
-    akbk: Data/fv3files/akbk127.nc4
+    akbk: Data/fv3files/akbkXXNPZ.nc4
     fms initialization:
       namelist filename: Data/fv3files/fmsmpp.nml
       field table filename: Data/fv3files/field_table
