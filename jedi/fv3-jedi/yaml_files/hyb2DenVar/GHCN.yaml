@@ -66,5 +66,5 @@
       - filter: Difference Check # elevation check
         reference: MetaData/stationElevation
         value: GeoVaLs/filtered_orography
-        absolute threshold: 1500.
+        absolute threshold: 200.
 

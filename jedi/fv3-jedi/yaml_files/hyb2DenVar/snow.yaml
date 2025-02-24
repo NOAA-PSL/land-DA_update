@@ -133,7 +133,8 @@ cost function:
             datetime: XXYYYY-XXMM-XXDDTXXHH:00:00Z
             filetype: fms restart
             skip coupler file: true
-            state variables: [totalSnowDepth,vtype,slmsk,sheleg,orog_filt]   # sheleg,stype,vfrac,stc,smc,snwdph
+            state variables: [totalSnowDepth,vtype,slmsk,sheleg,orog_filt]   
+                             # stype,vfrac,stc,smc,snwdph
             datapath: mem%mem%/
             filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
             filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
@@ -144,8 +145,7 @@ cost function:
         localization:
           localization method: SABER
           saber central block:
-            saber block name: BUMP_NICAS  #saber block name: ID --simplest
-            # active variables: *bvars
+            saber block name: BUMP_NICAS  
             read:
               general:
                 universe length-scale: 500000.0
@@ -154,8 +154,6 @@ cost function:
                 # read local nicas: true
                 compute nicas: true
                 write global nicas: true
-              # model:
-              #   level for 2d variables: last
               io:
                 data directory: output/DA/                                                  
                 files prefix: snow_ens_bumpparameters_nicas_300km_XXYYYYXXMMXXDD_XXHH  
@@ -164,17 +162,8 @@ cost function:
                 max horizontal grid size: 500000
                 explicit length-scales: true
                 horizontal length-scale:
-                - groups: [totalSnowDepth]  # Note: no _fakeLevels suffix if not using fake levels block
-                  value: 500000.0            # 300 km
-                # vertical length-scale:
-                # - groups:
-                #   - totalSnowDepth_fakeLevels
-                #   value: 0.0
-                # interpolation type:
-                # - groups:
-                #   - totalSnowDepth_fakeLevels
-                #   type: c0
-                # same horizontal convolution: true
+                - groups: [totalSnowDepth]  # not using fake levels block
+                  value: 500000.0            
       weight:
         value: 0.5    # weight of ensemble covariance
   observations:
