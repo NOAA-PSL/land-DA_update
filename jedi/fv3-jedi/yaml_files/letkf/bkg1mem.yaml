@@ -1,6 +1,6 @@
    - datetime: XXYYYY-XXMM-XXDDTXXHH:00:00Z
      filetype: fms restart
-     state variables: [snwdph,vtype,slmsk,orog_filt] #,sheleg,snowxy,sneqvoxy,zsnsoxy,tsnoxy,snicexy,snliqxy,stc,smc,slc,tgxy]
+     state variables: [snwdph,vtype,slmsk,orog_filt,soilMoistureVolumetric, sheleg] #,sheleg,snowxy,sneqvoxy,zsnsoxy,tsnoxy,snicexy,snliqxy,stc,smc,slc,tgxy]
      datapath: XXMEM
      filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
      filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res

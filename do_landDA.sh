@@ -138,7 +138,7 @@ MP=`echo $PREVDATE | cut -c5-6`
 DP=`echo $PREVDATE | cut -c7-8`
 HP=`echo $PREVDATE | cut -c9-10`
 
-if [[ ${DAalg} == '2DVar' || ${DAalg} == 'letkf' || ${DAalg} == 'hyb2DenVar' ]]; then   # todo: check this further and possibly make this default?
+if [[ ${DAalg} == '2DVar' || ${DAalg} == 'hyb2DenVar' || ${DAalg} == 'letkf' ]]; then   #todo: check this further and possibly make this default?
    HALFWINLEN=$(($WINLEN/2))
    DABEGIN=`${INCDATE} $THISDATE -$HALFWINLEN`
 else
@@ -242,7 +242,8 @@ do
   elif [ ${OBS_TYPES[$ii]} == "SYNTH" ]; then 
      obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}${HH}.nc
   elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
-     obsfile=$OBSDIR/soil_moisture/SMAP/data_proc/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
+     #obsfile=$OBSDIR/soil_moisture/SMAP/data_proc/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
+     obsfile=$OBSDIR/soil_moisture/SMAP_Sample/smap_ioda_${YYYY}${MM}${DD}T${HH}00.nc
   elif [ ${OBS_TYPES[$ii]} == "IMS" ]; then 
      DOY=$(date -d "${YYYY}-${MM}-${DD}" +%j)
      echo DOY is ${DOY}
@@ -548,7 +549,7 @@ elif [[ ${DAalg} == 'letkf' ]]; then
         sed -i -e "s/XXMM/${MM}/g" jedi_hofx.yaml
         sed -i -e "s/XXDD/${DD}/g" jedi_hofx.yaml
         sed -i -e "s/XXHH/${HH}/g" jedi_hofx.yaml
-	    sed -i -e "s/XXRES/${RES}/g" jedi_hofx.yaml
+	sed -i -e "s/XXRES/${RES}/g" jedi_hofx.yaml
         sed -i -e "s/XXORES/${ORES}/g" jedi_hofx.yaml
         
     fi
