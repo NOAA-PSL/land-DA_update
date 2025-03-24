@@ -346,9 +346,14 @@ if [[ $do_DA == "YES" ]]; then
 
       for ii in "${!OBS_TYPES[@]}";
       do 
-        if [ ${JEDI_TYPES[$ii]} == "DA" ]; then
+        if [[ ${JEDI_TYPES[$ii]} == "DA" && ${OBS_TYPES[$ii]} != "GTS" ]]; then
         cat ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAalg}/${OBS_TYPES[$ii]}.yaml >> jedi_DA.yaml
         fi 
+        if [[ ${JEDI_TYPES[$ii]} == "DA" && ${OBS_TYPES[$ii]} == "GTS" ]]; then
+        M1=`echo $MM | cut -c1-1`
+        YYYY2=`expr $YYYY + $M1 - 1`
+        cat ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAalg}/t${HH}z/${OBS_TYPES[$ii]}_${YYYY2}.yaml >> jedi_DA.yaml
+        fi
       done
 
    else # use specified yaml 
