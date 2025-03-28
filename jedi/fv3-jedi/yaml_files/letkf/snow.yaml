@@ -44,7 +44,7 @@ local ensemble DA:
     rtps: 0.0
     rtpp: 0.0
     mult: 1.0
-
+    
 output:
   date: XXYYYY-XXMM-XXDDTXXHH:00:00Z
   filetype: fms restart
@@ -68,7 +68,7 @@ output increment:
   filetype: fms restart
   datapath: output/DA/jedi_incr/mem%{member}%
   filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
-  prefix: snowinc
+  prefix: ens_snowinc
   state variables: [snwdph,vtype,slmsk]
 
 output variance prior:
