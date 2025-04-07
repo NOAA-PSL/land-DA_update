@@ -1,14 +1,14 @@
     - obs space:
-        name: SnowDepthGTS
+        name: SnowDepthSFCSNO
         simulated variables: [totalSnowDepth]
         obsdatain:
           engine:
             type: H5File
-            obsfile: GTS_XXYYYYXXMMXXDDXXHH.nc
+            obsfile: SFCSNO_XXYYYYXXMMXXDDXXHH.nc
         obsdataout:
           engine:
             type: H5File
-            obsfile: output/DA/hofx/var_hofx_gts_XXYYYYXXMMXXDDXXHH.nc
+            obsfile: output/DA/hofx/var_hofx_sfcsno_XXYYYYXXMMXXDDXXHH.nc
       obs operator:
         name: Identity
       obs pre filters:
@@ -33,6 +33,11 @@
         minvalue: 0.0
         maxvalue: 20000.0
       - filter: Domain Check # missing station elevation
+        where:
+        - variable:
+            name: MetaData/stationElevation
+          value: is_valid 
+      - filter: Domain Check # invalid station elevation
         where:
         - variable:
             name: MetaData/stationElevation
