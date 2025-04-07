@@ -24,7 +24,7 @@ LANDDADIR=${CYCLEDIR}/DA_update/
 DAalg=letkfoi
 analVar=snow
 
-# JEDI input obs. options : IMS, GHCN, GTS, SYNTH 
+# JEDI input obs. options : IMS, GHCN, SFCSNO, SYNTH 
 OBS_TYPES=()   # format: ("OBS1" "OBS2") 
 # JEDI call type for each obs_type above. options: DA, HOFX
 JEDI_TYPES=()   # format ("DA" "HOFX") 
