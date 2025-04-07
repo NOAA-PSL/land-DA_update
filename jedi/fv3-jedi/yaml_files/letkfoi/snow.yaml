@@ -12,7 +12,7 @@ geometry:
 
   time invariant fields:
     state fields:
-      datetime: XXYYYP-XXMP-XXDPTXXHP:00:00Z
+      datetime: XXYYYB-XXMB-XXDBTXXHB:00:00Z
       filetype: fms restart
       skip coupler file: true
       state variables: [orog_filt]
@@ -22,8 +22,8 @@ geometry:
     derived fields: [nominal_surface_pressure]
 
 time window:
-  begin: XXYYYP-XXMP-XXDPTXXHP:00:00Z
-  length: PT24H
+  begin: XXYYYB-XXMB-XXDBTXXHB:00:00Z
+  length: PTXXWINLENH
 
 background:
  members:

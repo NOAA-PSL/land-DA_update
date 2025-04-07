@@ -11,17 +11,20 @@
 # TPATH= # directory for orography files.
 # TSTUB= # filename stub for orography files. oro_C${RES} for atm only, oro_C${RES}.mx100 for atm/ocean.
 
-# directory where do_landDA.sh script is 
-LANDDADIR=${CYCLEDIR}/DA_update/ # if calling from submit_cycle.sh
+RSTRDIR=${MEM_WORKDIR} # can vary for Do_ens=YES, constructed from $WORKDIR
+# if calling from submit_cycle.sh, do not change these:
+JEDIWORKDIR=${WORKDIR}/jedi/    ## directory where do_landDA.sh script is
+LANDDADIR=${CYCLEDIR}/DA_update/ 
 
 ############################
 # DA options
 
 # DA algorithm and state being updated
-# options: "letkfoi_snow" , "letkf_snow"
-DAtype=
+# options: "letkfoi" , "2DVar", "letkf"
+DAalg=letkfoi
+analVar=snow
 
-# JEDI input obs. options : IMS, GHCN, GTS, SYNTH 
+# JEDI input obs. options : IMS(or VIIRS), GHCN, GTS, SYNTH 
 OBS_TYPES=()   # format: ("OBS1" "OBS2") 
 # JEDI call type for each obs_type above. options: DA, HOFX
 JEDI_TYPES=()   # format ("DA" "HOFX") 
@@ -43,5 +46,11 @@ YAML_HOFX=construct
 #OBSDIR= # to override default OBSDIR
 
 # OPTIONAL:delete workdirectory after DA update (do not use for within cycle_workflow)
-#KEEPJEDIDIR=
+KEEPJEDIDIR="YES"
 
+# OPTIONAL : CLEAN UP
+SAVE_IMS="YES"
+SAVE_TILE="YES"
+SAVE_INCR="YES"
+SAVE_ANL="YES"
+SAVE_HOFX="YES"

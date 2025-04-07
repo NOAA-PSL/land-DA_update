@@ -25,7 +25,7 @@ variational:
       #field metadata override: Data/fieldmetadata/gfs_v17-land.yaml
       time invariant fields:
         state fields:
-          datetime: XXYYYP-XXMP-XXDPT12:00:00Z
+          datetime: XXYYYB-XXMB-XXDBTXXHB:00:00Z
           filetype: fms restart
           skip coupler file: true
           state variables:
@@ -44,8 +44,8 @@ variational:
 cost function:
   cost type: 3D-Var
   time window:
-    begin: XXYYYP-XXMP-XXDPT12:00:00Z
-    length: PT24H
+    begin: XXYYYB-XXMB-XXDBTXXHB:00:00Z
+    length: PTXXWINLENH
   analysis variables: [totalSnowDepth] 
   geometry:
     npx: XXREP

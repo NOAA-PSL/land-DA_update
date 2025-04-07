@@ -1,0 +1,91 @@
+geometry:
+  fms initialization:
+    namelist filename: Data/fv3files/fmsmpp.nml
+    field table filename: Data/fv3files/field_table_lam_cmaq
+  akbk: Data/fv3files/akbkXXNPZ.nc4
+  npx: XXREP
+  npy: XXREP
+  npz: XXNPZ
+  ntiles: XXNTIL
+  layout: [XXLX,XXLY] #[4,4]
+  io_layout: [XXIOLX,XXIOLY] #[1,1]
+  field metadata override: Data/fieldmetadata/gfs-land.yaml  #snow.yaml  
+
+  time invariant fields:
+    state fields:
+      datetime: XXYYYB-XXMB-XXDBTXXHB:00:00Z
+      filetype: fms restart
+      skip coupler file: true
+      state variables: [orog_filt]
+      datapath: ./   #XXTPATH
+      filename_orog: XXTSTUB.nc 
+      filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
+    derived fields: [nominal_surface_pressure]
+
+time window:
+  begin: 'XXYYYB-XXMB-XXDBTXXHB:00:00Z'
+  length: PTXXWINLENH
+
+driver:
+  save posterior mean: true
+  save posterior mean increment: true
+  save posterior ensemble: true
+  save posterior ensemble increments: true 
+# update obs config is set to true by default (which also implies halo distribution is used)
+# need set to false here when halo distribution is NOT used 
+#update obs config with geometry info: false
+  run as observer only: XXHOFX
+  save prior variance: true
+  save posterior variance: true
+
+local ensemble DA:
+  solver: LETKF
+  inflation:
+    rtps: 0.0
+    rtpp: 0.0
+    mult: 1.0
+
+output:
+  date: XXYYYY-XXMM-XXDDTXXHH:00:00Z
+  filetype: fms restart
+  datapath: output/DA/jedi_anl/mem%{member}%  
+  prefix: jedi_anl
+  filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
+  #filename_cplr: coupler.res
+  state variables: [snwdph,vtype,slmsk] 
+  #,sheleg,snowxy,sneqvoxy,zsnsoxy,tsnoxy,snicexy,snliqxy,stc,smc,slc,tgxy]
+
+output ensemble increments:
+  date: XXYYYY-XXMM-XXDDTXXHH:00:00Z #*date
+  filetype: fms restart
+  datapath: output/DA/jedi_incr/mem%{member}%
+  filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc  #xainc.sfc_data.nc
+  prefix: snowinc  #land_inc
+  state variables: [snwdph,vtype,slmsk]
+ 
+output increment:
+  date: XXYYYY-XXMM-XXDDTXXHH:00:00Z #*date
+  filetype: fms restart
+  datapath: output/DA/jedi_incr/mem%{member}%
+  filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
+  prefix: snowinc
+  state variables: [snwdph,vtype,slmsk]
+
+output variance prior:
+  date: XXYYYY-XXMM-XXDDTXXHH:00:00Z #*date
+  filetype: fms restart
+  datapath: mem%{member}%
+  filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
+  prefix: prior_var
+  state variables: [snwdph,vtype,slmsk]
+
+output variance posterior:
+  date: XXYYYY-XXMM-XXDDTXXHH:00:00Z #*date
+  filetype: fms restart
+  datapath: mem%{member}%
+  filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
+  prefix: posterior_var
+  state variables: [snwdph,vtype,slmsk]
+
+observations:
+  observers:

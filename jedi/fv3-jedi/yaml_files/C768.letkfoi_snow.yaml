@@ -12,7 +12,7 @@ geometry:
 
   time invariant fields:
     state fields:
-      datetime: XXYYYP-XXMP-XXDPTXXHP:00:00Z
+      datetime: XXYYYB-XXMB-XXDBTXXHB:00:00Z
       filetype: fms restart
       skip coupler file: true
       state variables: [orog_filt]
@@ -20,8 +20,8 @@ geometry:
       filename_orog: XXTSTUB.nc
     derived fields: [nominal_surface_pressure]
 
-window begin: XXYYYP-XXMP-XXDPTXXHP:00:00Z
-window length: PT24H
+window begin: XXYYYB-XXMB-XXDBTXXHB:00:00Z
+window length: PTXXWINLENH
 
 background:
  date: &date XXYYYY-XXMM-XXDDTXXHH:00:00Z
