@@ -84,6 +84,7 @@ class imsFV3(object):
         ncd = nc.Dataset(self.filename)
         lons = ncd.variables['lon'][:].ravel()
         lats = ncd.variables['lat'][:].ravel()
+        stid = ncd.variables['stid'][:].ravel()
         oros = ncd.variables['oro'][:].ravel()
         sncv = ncd.variables['IMSscf'][:].ravel()
         sncv[sncv == -999.] = float_missing_value
@@ -92,6 +93,7 @@ class imsFV3(object):
 
         lons = lons.astype('float32')
         lats = lats.astype('float32')
+        stid = stid.astype('int64') 
         oros = oros.astype('float32')
         sncv = sncv.astype('float32')
         sndv = sndv.astype('float32')
@@ -112,6 +114,7 @@ class imsFV3(object):
         self.varAttrs[('dateTime', metaDataName)]['_FillValue'] = long_missing_value
         self.outdata[('latitude', metaDataName)] = lats
         self.outdata[('longitude', metaDataName)] = lons
+        self.outdata[('stationIdentification', metaDataName)] = stid
         self.outdata[('stationElevation', metaDataName)] = oros
         self.varAttrs[('stationElevation', metaDataName)]['units'] = 'm'
 
