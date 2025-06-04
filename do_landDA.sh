@@ -446,7 +446,7 @@ if [[ $do_HOFX == "YES" ]]; then
    sed -i -e "s/XXIOLX/${IOLayX}/g" jedi_hofx.yaml #IO Layout
    sed -i -e "s/XXIOLY/${IOLayY}/g" jedi_hofx.yaml
 
-   sed -i -e "s/XXESZ/${ensemble_size}/g" jedi_DA.yaml 
+   sed -i -e "s/XXESZ/${ensemble_size}/g" jedi_hofx.yaml 
 
 fi
 
