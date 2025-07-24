@@ -43,7 +43,7 @@ IOLayY=${IOLayY:-1}
 source ${LANDDADIR}/env_GDASApp
 
 LOGDIR=${OUTDIR}/DA/logs/
-OBSDIR=${OBSDIR:-"/scratch2/NCEPDEV/land/data/DA/"}
+OBSDIR=${OBSDIR:-"/scratch4/NCEPDEV/land/data/DA/"}
 
 # set executable directories
 
@@ -228,7 +228,8 @@ do
   elif [ ${OBS_TYPES[$ii]} == "GHCN" ]; then 
   # GHCN are time-stamped at 18. If assimilating at 00, need to use previous day's obs, so that 
   # obs are within DA window.
-     obsfile=$OBSDIR/snow_depth/GHCN/data_proc/v3/${YYYP}/ghcn_snwd_ioda_${YYYP}${MP}${DP}.nc
+     #obsfile=$OBSDIR/snow_depth/GHCN/data_proc/v3/${YYYP}/ghcn_snwd_ioda_${YYYP}${MP}${DP}.nc
+     obsfile=$OBSDIR/snow_depth/GHCN/processed_data/${YYYY}/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc
   elif [ ${OBS_TYPES[$ii]} == "SYNTH" ]; then 
      obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}${HH}.nc
   elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
