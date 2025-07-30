@@ -226,10 +226,7 @@ do
   elif [ ${OBS_TYPES[$ii]} == "MADIS" ]; then
      obsfile=$OBSDIR/snow_depth/MADIS/data_proc/v3/${YYYY}/madis_snow_${YYYY}${MM}${DD}_${HH}00.nc
   elif [ ${OBS_TYPES[$ii]} == "GHCN" ]; then 
-  # GHCN are time-stamped at 18. If assimilating at 00, need to use previous day's obs, so that 
-  # obs are within DA window.
-     #obsfile=$OBSDIR/snow_depth/GHCN/data_proc/v3/${YYYP}/ghcn_snwd_ioda_${YYYP}${MP}${DP}.nc
-     obsfile=$OBSDIR/snow_depth/GHCN/processed_data/${YYYY}/ghcn_snwd_ioda_${YYYY}${MM}${DD}.nc
+     obsfile=$OBSDIR/snow_depth/GHCN/processed_data/${YYYY}/${YYYY}${MM}${DD}.csv
   elif [ ${OBS_TYPES[$ii]} == "SYNTH" ]; then 
      obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}${HH}.nc
   elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
@@ -266,20 +263,18 @@ do
   # check obs are available
   if [[ -e $obsfile ]]; then
     echo "do_landDA: ${OBS_TYPES[$ii]} observations found: $obsfile"
-    if [ ${OBS_TYPES[$ii]} != "IMS" ]; then 
-       ln -fs $obsfile  ${OBS_TYPES[$ii]}_${YYYY}${MM}${DD}${HH}.nc
-    fi 
   else
     echo "${OBS_TYPES[$ii]} observations not found: $obsfile"
     JEDI_TYPES[$ii]="SKIP"
   fi
 
-  # pre-process and call IODA converter for IMS obs.
-  if [[ ${OBS_TYPES[$ii]} == "IMS"  && ${JEDI_TYPES[$ii]} != "SKIP" ]]; then
+  # get the obs
+  if [[ ${JEDI_TYPES[$ii]} != "SKIP" ]]; then
+      if [[ ${OBS_TYPES[$ii]} == "IMS" ]]; then
 
-    if [[ -e fims.nml ]]; then
-        rm -rf fims.nml 
-    fi
+        if [[ -e fims.nml ]]; then
+            rm -rf fims.nml 
+        fi
 cat >> fims.nml << EOF
  &fIMS_nml
   idim=$RES, jdim=$RES,
@@ -294,27 +289,44 @@ cat >> fims.nml << EOF
   IMS_IND_PATH="${OBSDIR}/snow_ice_cover/IMS/index_files/",
   /
 EOF
-    echo 'do_landDA: calling fIMS'
+        echo 'do_landDA: calling fIMS'
 
-    ${FIMS_EXECDIR}/calcfIMS.exe
-    if [[ $? != 0 ]]; then
-        echo "fIMS failed"
-        exit 10
-    fi
+        ${FIMS_EXECDIR}/calcfIMS.exe
+        if [[ $? != 0 ]]; then
+            echo "fIMS failed"
+            exit 10
+        fi
 
-    IMS_IODA=imsfv3_scf2iodaTemp.py # 2024-07-12 temporary until GDASApp ioda converter updated.
-    cp ${LANDDADIR}/jedi/ioda/${IMS_IODA} $JEDIWORKDIR
+        IODA_CONV=imsfv3_scf2iodaTemp.py # 2024-07-12 temporary until GDASApp ioda converter updated.
+        cp ${LANDDADIR}/jedi/ioda/${IODA_CONV} $JEDIWORKDIR
 
-    echo 'do_landDA: calling ioda converter' 
+        echo 'do_landDA: calling ioda converter' 
 
-    python ${IMS_IODA} -i IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc -o ${JEDIWORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc 
-    if [[ $? != 0 ]]; then
-        echo "IMS IODA converter failed"
-        exit 10
-    fi
-  fi #IMS
+        python ${IODA_CONV} -i IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc -o ${JEDIWORKDIR}ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc 
+        if [[ $? != 0 ]]; then
+            echo "IMS IODA converter failed"
+            exit 10
+        fi
+      elif [[ ${OBS_TYPES[$ii]} == "GHCN" ]]; then
 
-done # OBS_TYPES
+        IODA_CONV=ghcn_snod2ioda.py
+
+        cp ${LANDDADIR}/jedi/ioda/${IODA_CONV} $JEDIWORKDIR
+        cp ${OBSDIR}/snow_depth/GHCN/downloaded_data/ghcnd-stations.txt $JEDIWORKDIR
+
+        echo 'do_landDA: calling ioda converter' 
+
+        python ${IODA_CONV} -i ${obsfile} -o ${JEDIWORKDIR}/GHCN_${YYYY}${MM}${DD}${HH}.nc -f ${JEDIWORKDIR}/ghcnd-stations.txt -d ${YYYY}${MM}${DD}${HH}
+        if [[ $? != 0 ]]; then
+            echo "GHCN IODA converter failed"
+            exit 10
+        fi
+     
+      else
+       ln -fs $obsfile  ${OBS_TYPES[$ii]}_${YYYY}${MM}${DD}${HH}.nc
+      fi #OBS_TYPES
+  fi # is not skip
+done # if assim
 
 ################################################
 # 3. DETERMINE REQUESTED JEDI TYPE, CONSTRUCT YAMLS

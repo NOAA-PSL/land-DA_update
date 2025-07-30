@@ -2,8 +2,8 @@ cost function:
   cost type: 3D-Var
   jb evaluation: false
   time window:
-    begin: '2019-11-30T12:00:00Z'
-    length: PT24H
+    begin: 'XXYYYB-XXMB-XXDBTXXHB:00:00Z'
+    length: PTXXWINLENH
     bound to include: end
   geometry:
     fms initialization:
@@ -13,8 +13,8 @@ cost function:
     #layout:
     #- 5
     #- 5
-    npx: 97
-    npy: 97
+    npx: XXREP
+    npy: XXREP
     npz: 127
   analysis variables:
   - totalSnowDepth
@@ -22,7 +22,7 @@ cost function:
     datapath: ./restarts/
     filetype: fms restart
     skip coupler file: true
-    datetime: '2019-12-01T00:00:00Z'
+    datetime: 'XXYYYY-XXMM-XXDDTXXHH:00:00Z'
     state variables:
     - totalSnowDepth
     - vtype
@@ -36,9 +36,9 @@ cost function:
       filtered_orography: orog_filt
       #fraction_of_ice: fice
       fraction_of_land: land_frac
-    filename_sfcd: 20191201.000000.sfc_data.nc
-    filename_cplr: 20191201.000000.coupler.res
-    filename_orog: C96.mx100_oro_data.nc
+    filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
+    filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
+    filename_orog: CXXRES.XXORES_oro_data.nc
   background error:
     covariance model: SABER
     saber central block:
@@ -95,12 +95,12 @@ cost function:
         obsdatain:
           engine:
             type: H5File
-            obsfile: GHCN_2019120100.nc
+            obsfile: GHCN_XXYYYYXXMMXXDDXXHH.nc
             missing file action: warn
         obsdataout:
           engine:
             type: H5File
-            obsfile: output/DA/hofx/var_hofx_ghcn_2019120100.nc
+            obsfile: output/DA/hofx/var_hofx_ghcn_XXYYYYXXMMXXDDXXHH.nc
         simulated variables:
         - totalSnowDepth
       obs operator:
@@ -301,12 +301,12 @@ variational:
       #layout:
       #- 5
       #- 5
-      npx: 97
-      npy: 97
+      npx: XXREP
+      npy: XXREP
       npz: 127
       time invariant fields:
         state fields:
-          datetime: '2019-12-01T00:00:00Z'
+          datetime: 'XXYYYY-XXMM-XXDDTXXHH:00:00Z'
           filetype: fms restart
           skip coupler file: true
           state variables:
@@ -316,7 +316,7 @@ variational:
             filtered_orography: orog_filt
             fraction_of_land: land_frac
           #datapath: 
-          filename_orog: C96.mx100_oro_data.nc
+          filename_orog: CXXRES.XXORES_oro_data.nc
     diagnostics:
       departures: bkgmob
 final:
@@ -330,8 +330,8 @@ final:
         datapath: ./
         prefix: snowinc
         filetype: fms restart
-        filename_sfcd: 20191201.000000.sfc_data.nc
-        filename_cplr: 20191201.000000.coupler.res
+        filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
+        filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
         state variables:
         - totalSnowDepth
         - vtype
@@ -346,7 +346,7 @@ final:
       #layout:
       #- 5
       #- 5
-      npx: 97
-      npy: 97
+      npx: XXREP
+      npy: XXREP
       npz: 127
 final j evaluation: false

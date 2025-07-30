@@ -14,11 +14,21 @@ if [[ -e $gdasdir ]]; then
 fi
 ln -fs $GDASApp_path $gdasdir
 
+# link fix files
+fixdir="./fix"
+if [[ -e $fixdir ]]; then
+  rmdir $fixdir
+fi
+
 # link fv3files
+
 fv3files="jedi/fv3-jedi/Data/fv3files"
 if [[ -e $fv3files ]]; then
   rm $fv3files
 fi
 ln -fs ${GDASApp_path}/build/fv3-jedi/test/Data/fv3files $fv3files
 
+# link ioda converters 
 
+# ghcn
+ln -fs ${GDASApp_path}/sorc/iodaconv/src/land/ghcn_snod2ioda.py jedi/ioda/ghcn_snod2ioda.py 
