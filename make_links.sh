@@ -4,7 +4,8 @@ if [ $# == 1 ]; then
         echo "setting jedi path to input $1"
         GDASApp_path=$1
 else 
-        GDASApp_path="/scratch2/NCEPDEV/land/data/DA/GDASApp_20250207/"
+        # temporary: July 30, 2025. Waiting for new GHCN IODA converter to be merged.
+        GDASApp_path="/scratch4/BMC/gsienkf/Clara.Draper/gerrit-hera/global-workflow/sorc/gdas.cd/" 
 fi 
 
 # create link to GDASApp with executables:
