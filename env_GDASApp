@@ -18,9 +18,11 @@ module purge
 module use $GDASApp_root/modulefiles
 module load GDAS/${MACHINE_ID}.$COMPILER
 
+PYVN=$(python -c 'import sys; print(".".join(sys.version.split(" ")[0].split(".")[0:2]))')
+
 # set pythonpath for ioda converters
 IODA_CONV=${GDASApp_root}/sorc/iodaconv/src/
-IODAPY=${GDASApp_root}/build/lib/python3.11/
+IODAPY=${GDASApp_root}/build/lib/python${PYVN}/
 
 export PYTHONPATH=$PYTHONPATH:${IODA_CONV}:${GDASApp_root}/build/lib/python3.11/:${IODAPY}
 
