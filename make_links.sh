@@ -16,10 +16,7 @@ fi
 ln -fs $GDASApp_path $gdasdir
 
 # link fix files
-fixdir="./fix"
-if [[ -e $fixdir ]]; then
-  rmdir $fixdir
-fi
+
 
 # link fv3files
 
@@ -31,5 +28,5 @@ ln -fs ${GDASApp_path}/build/fv3-jedi/test/Data/fv3files $fv3files
 
 # link ioda converters 
 
-# ghcn
+# ghcn - temporary until IODA converter PR merged. July 30, 2025.
 ln -fs ${GDASApp_path}/sorc/iodaconv/src/land/ghcn_snod2ioda.py jedi/ioda/ghcn_snod2ioda.py 
