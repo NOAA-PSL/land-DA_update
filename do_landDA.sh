@@ -54,15 +54,15 @@ export JEDI_EXECDIR=${JEDI_EXECDIR:-"${GDASApp_root}/build/bin/"}
 JEDI_STATICDIR=${LANDDADIR}/jedi/fv3-jedi/Data/
 
 # option to use apply_incr and IMS_proc execs from GDASApp
-UseGDASAppExec="NO"
+#UseGDASAppExec="YES"
 
-if [[ $UseGDASAppExec == "YES" ]]; then 
+#if [[ $UseGDASAppExec == "YES" ]]; then 
     FIMS_EXECDIR=${LANDDADIR}/GDASApp/build/bin/
     INCR_EXECDIR=${LANDDADIR}/GDASApp/build/bin/
-else
-    FIMS_EXECDIR=${LANDDADIR}/IMS_proc/exec/bin/
-    INCR_EXECDIR=${LANDDADIR}/add_jedi_incr/exec/bin/
-fi
+#else
+#    FIMS_EXECDIR=${LANDDADIR}/IMS_proc/exec/bin/
+#    INCR_EXECDIR=${LANDDADIR}/add_jedi_incr/exec/bin/
+#fi
 
 # storage settings 
 
