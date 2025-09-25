@@ -1,10 +1,9 @@
 # land-DA_update
-Scripts to perfrom the snow DA, to assimilate GHCN station snow depth and IMS snow cover obs, using the JEDI LETKF.
-For the noahMP land surface model.
+Scripts to perfrom the land DA, with the the noahMP land surface model.
 
 To install: 
 
-1. OPTIONAL: Install JEDI fv3-bundle and IODA converters (only if will modifying, otherwise use the default installation). 
+1. Dowload and compile GDASApp (https://github.com/NOAA-EMC/GDASApp). 
 
 2. Fetch submodules
 
@@ -12,7 +11,7 @@ To install:
 
 4. link JEDI files, and compile directories
 
-> make_links.sh
+> make_links.sh LOCATION_OF_YOUR_GDASApp
 > build_all.sh
 
 To run:  (not sure this still works) 
