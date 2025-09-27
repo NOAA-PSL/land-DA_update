@@ -13,6 +13,7 @@ cost function:
     #layout:
     #- 5
     #- 5
+    layout: [XXLX,XXLY]
     npx: XXREP
     npy: XXREP
     npz: 127
@@ -32,7 +33,7 @@ cost function:
     #- fraction_of_ice
     - fraction_of_land
     field io names:
-      totalSnowDepth: snwdph
+      totalSnowDepth: snodl
       filtered_orography: orog_filt
       #fraction_of_ice: fice
       fraction_of_land: land_frac
@@ -301,6 +302,7 @@ variational:
       #layout:
       #- 5
       #- 5
+      layout: [XXLX,XXLY]
       npx: XXREP
       npy: XXREP
       npz: 127
@@ -337,7 +339,7 @@ final:
         - vtype
         - slmsk
         field io names:
-          totalSnowDepth: snwdph
+          totalSnowDepth: snodl
     geometry:
       fms initialization:
         namelist filename: Data/fv3files/fmsmpp.nml
@@ -346,6 +348,7 @@ final:
       #layout:
       #- 5
       #- 5
+      layout: [XXLX,XXLY]
       npx: XXREP
       npy: XXREP
       npz: 127

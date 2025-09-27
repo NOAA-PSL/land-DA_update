@@ -24,8 +24,8 @@ fv3files="jedi/fv3-jedi/Data/fv3files"
 if [[ -e $fv3files ]]; then
   rm $fv3files
 fi
-ln -fs ${GDASApp_path}/build/fv3-jedi/test/Data/fv3files $fv3files
-
+#ln -fs ${GDASApp_path}/build/fv3-jedi/test/Data/fv3files $fv3files
+ln -fs /scratch4/BMC/gsienkf/Clara.Draper/gerrit-hera/global-workflow/fix/gdas/fv3jedi/fv3files $fv3files
 # link ioda converters 
 
 # ghcn - temporary until IODA converter PR merged. July 30, 2025.

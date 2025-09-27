@@ -17,6 +17,7 @@ source $GDASApp_root/ush/module-setup.sh
 module purge
 module use $GDASApp_root/modulefiles
 module load GDAS/${MACHINE_ID}.$COMPILER
+#module load mkl/2024.2.1
 
 PYVN=$(python -c 'import sys; print(".".join(sys.version.split(" ")[0].split(".")[0:2]))')
 
@@ -24,7 +25,7 @@ PYVN=$(python -c 'import sys; print(".".join(sys.version.split(" ")[0].split("."
 IODA_CONV=${GDASApp_root}/sorc/iodaconv/src/
 IODAPY=${GDASApp_root}/build/lib/python${PYVN}/
 
-export PYTHONPATH=$PYTHONPATH:${IODA_CONV}:${GDASApp_root}/build/lib/python3.11/:${IODAPY}
+export PYTHONPATH=$PYTHONPATH:${IODA_CONV}:${IODAPY}:${IODAPY}/pyiodaconv
 
 # turn off exit on error (set in detect_machine.sh)
 set +e 
