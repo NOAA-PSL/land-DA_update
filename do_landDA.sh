@@ -352,6 +352,13 @@ if [[ $do_DA == "NO" && $do_HOFX == "NO" ]]; then
         exit 0 
 fi
 
+if [ $GFSv17 == "YES" ]; then
+    SNOWDEPTHVAR="snodl"
+    cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-land-v17.yaml ${JEDIWORKDIR}/gfs-land-v17.yaml
+else
+    SNOWDEPTHVAR="snwdph"
+fi
+
 # if yaml is specified by user, use that. Otherwise, build the yaml
 if [[ $do_DA == "YES" ]]; then 
 
@@ -399,6 +406,7 @@ if [[ $do_DA == "YES" ]]; then
    sed -i -e "s/XXLY/${LayY}/g" jedi_DA.yaml
    sed -i -e "s/XXIOLX/${IOLayX}/g" jedi_DA.yaml #IO Layout
    sed -i -e "s/XXIOLY/${IOLayY}/g" jedi_DA.yaml
+   sed -i -e "s/XXSNOWDEPTHVAR/${SNOWDEPTHVAR}/g" jedi_DA.yaml
 
 fi
 
@@ -447,6 +455,7 @@ if [[ $do_HOFX == "YES" ]]; then
    sed -i -e "s/XXLY/${LayY}/g" jedi_hofx.yaml
    sed -i -e "s/XXIOLX/${IOLayX}/g" jedi_hofx.yaml #IO Layout
    sed -i -e "s/XXIOLY/${IOLayY}/g" jedi_hofx.yaml
+   sed -i -e "s/XXSNOWDEPTHVAR/${SNOWDEPTHVAR}/g" jedi_hofx.yaml
 
 fi
 
