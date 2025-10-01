@@ -253,8 +253,8 @@ do
         imsres='24km'
         fsuf='asc'
         ascii='ascii'
-     fi                             
-    obsfile=${OBSDIR}/IMS/netcdf/${imsres}/ims${YYYY}${DOY}_${imsres}_v${ims_vsn}.${fsuf}  #${YYYY}/ims${YYYY}${DOY}_${imsres}_v${ims_vsn}.${fsuf}
+     fi
+    obsfile=${OBSDIR}/IMS/netcdf/${imsres}/ims${YYYY}${DOY}_${imsres}_v${ims_vsn}.${fsuf}
   else
      echo "do_landDA: Unknown obs type requested ${OBS_TYPES[$ii]}, exiting" 
      exit 1 
@@ -285,8 +285,8 @@ cat >> fims.nml << EOF
   imsformat=${imsformat},
   imsversion=${ims_vsn},
   imsres=${imsres},
-  IMS_OBS_PATH="${OBSDIR}/IMS/netcdf/${imsres}/",   
-  IMS_IND_PATH="${OBSDIR}/IMS_index_files/",   
+  IMS_OBS_PATH="${OBSDIR}/IMS/netcdf/${imsres}/",
+  IMS_IND_PATH="${OBSDIR}/IMS_index_files/",
   /
 EOF
         echo 'do_landDA: calling fIMS'
