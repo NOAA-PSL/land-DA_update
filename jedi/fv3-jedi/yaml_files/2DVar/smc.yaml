@@ -1,0 +1,145 @@
+output:
+  filetype: fms restart
+  #filename: sfc_anal.nc
+  datapath: ./
+  prefix: sfc_anal
+
+final:
+  diagnostics:
+    departures: [anlmob, oman]
+  prints:
+    frequency: PT3H
+  increment:
+    output:
+      state component:
+        datapath: ./
+        prefix: smcinc
+        filetype: fms restart
+        filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
+        filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
+        state variables:
+        - soilMoistureVolumetric
+        - sheleg
+        - vtype
+        - slmsk # might need to add sheleg? 
+        field io names:
+          soilMoistureVolumetric: smc
+          totalSnowDepth: XXSNOWDEPTHVAR
+    geometry:
+      fms initialization:
+        namelist filename: Data/fv3files/fmsmpp.nml
+        field table filename: Data/fv3files/field_table_gfdl
+      akbk: Data/fv3files/akbk127.nc4
+      #layout:
+      #- 5
+      #- 5
+      layout: [XXLX,XXLY]
+      npx: XXREP
+      npy: XXREP
+      npz: 127
+final j evaluation: false
+variational:
+  minimizer:
+    algorithm: RPCG
+  iterations:
+  - ninner: 50
+    gradient norm reduction: 1e-10
+    geometry:                           # minimization at lower resolution
+      fms initialization:
+        namelist filename: Data/fv3files/fmsmpp.nml
+        field table filename: Data/fv3files/field_table_gfdl
+      akbk: Data/fv3files/akbk127.nc4
+      npx: XXREP
+      npy: XXREP
+      npz: 127
+      ntiles: 6
+      layout: [XXLX,XXLY]
+      #io_layout: [1,1]
+      #field metadata override: Data/fieldmetadata/gfs_v17-land.yaml
+      time invariant fields:
+        state fields:
+          datetime: XXYYYB-XXMB-XXDBTXXHB:00:00Z
+          filetype: fms restart
+          skip coupler file: true
+          state variables:
+          - filtered_orography   # leave for now, but shouldn't need this 
+          - fraction_of_land
+          field io names:
+            filtered_orography: orog_filt 
+            fraction_of_land: land_frac
+          #datapath: /scratch2/NCEPDEV/land/data/fix/20231027/CXXRES/
+          filename_orog: CXXRES.XXORES_oro_data.nc 
+      _resol_name: cXXRES
+    online diagnostics:
+      write increment: true
+      increment:
+        state component:
+          filetype: fms restart
+          datapath: ./
+          prefix: smcinc.XXYYYYXXMMXXDD.XXHH0000
+
+cost function:
+  cost type: 3D-Var
+  time window:
+    begin: XXYYYB-XXMB-XXDBTXXHB:00:00Z
+    length: PTXXWINLENH
+    bound to include: end
+  analysis variables: [soilMoistureVolumetric]
+  geometry:
+    npx: XXREP
+    npy: XXREP
+    npz: 127
+    ntiles: 6
+    layout: [XXLX,XXLY]
+    #io_layout:
+    #- 1
+    #- 1
+    _resol_name: cXXRES
+    akbk: Data/fv3files/akbk127.nc4
+    fms initialization:
+      namelist filename: Data/fv3files/fmsmpp.nml
+      field table filename: Data/fv3files/field_table_gfdl
+    #field metadata override: Data/fieldmetadata/gfs-land.yaml
+
+  background:
+    filetype: fms restart
+    skip coupler file: true
+    datetime: XXYYYY-XXMM-XXDDTXXHH:00:00Z
+    datapath: ./restarts/
+    filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
+    filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
+    filename_orog: CXXRES.XXORES_oro_data.nc
+    state variables:
+    - soilMoistureVolumetric
+    - vtype
+    - slmsk
+    - sheleg
+    - filtered_orography # don't need this 
+    #- fraction_of_ice
+    - fraction_of_land
+    field io names:
+      soilMoistureVolumetric: smc
+      totalSnowDepth: XXSNOWDEPTHVAR
+      filtered_orography: orog_filt # don't need this 
+      #fraction_of_ice: fice
+      fraction_of_land: land_frac
+
+  background error:
+    covariance model: SABER
+    saber central block:
+      saber block name: ID
+    saber outer blocks:
+    - saber block name: BUMP_StdDev
+      read:
+        drivers:
+          compute variance: true
+        variance:
+          explicit stddev: true
+          stddev:
+          - variables:
+            - soilMoistureVolumetric
+            value: 0.05
+
+  observations:
+    obs perturbations: false
+    observers:
