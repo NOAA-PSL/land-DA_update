@@ -229,7 +229,8 @@ do
   elif [ ${OBS_TYPES[$ii]} == "SYNTH" ]; then 
      obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}${HH}.nc
   elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
-     obsfile=$OBSDIR/soil_moisture/SMAP/data_proc/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
+     #obsfile=$OBSDIR/soil_moisture/SMAP/data_proc/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
+     obsfile=${BASEDIR}/OBS/soil_moisture/SMAP/data_proc/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
   elif [ ${OBS_TYPES[$ii]} == "IMS" ]; then 
      DOY=$(date -d "${YYYY}-${MM}-${DD}" +%j)
      echo DOY is ${DOY}
@@ -342,7 +343,7 @@ do
    elif [ ${JEDI_TYPES[$ii]} == "HOFX" ]; then
          export do_HOFX="YES" 
    elif [ ${JEDI_TYPES[$ii]} != "SKIP" ]; then
-         echo "do_landDA:Unknown obs action ${JEDI_TYPES[$ii]}, exiting" 
+         echo "do_landDA: Unknown obs action ${JEDI_TYPES[$ii]}, exiting"
          exit 1
    fi
 done
