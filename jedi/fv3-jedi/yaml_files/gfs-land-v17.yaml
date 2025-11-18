@@ -10,6 +10,17 @@ field metadata:
 - long name: vtype
   interpolation type: nearest
 
+- long name: sheleg
+  interpolation type: nearest
+
+- long name: stc
+  interpolation type: nearest
+  io file: surface
+
+- long name: soilMoistureVolumetric
+  io name: smc
+  io file: surface
+
 - long name: fraction_of_ice
   io name: fice
   interpolation type: nearest

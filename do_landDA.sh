@@ -343,7 +343,7 @@ do
    elif [ ${JEDI_TYPES[$ii]} == "HOFX" ]; then
          export do_HOFX="YES" 
    elif [ ${JEDI_TYPES[$ii]} != "SKIP" ]; then
-         echo "do_landDA:Unknown obs action ${JEDI_TYPES[$ii]}, exiting" 
+         echo "do_landDA: Unknown obs action ${JEDI_TYPES[$ii]}, exiting"
          exit 1
    fi
 done
