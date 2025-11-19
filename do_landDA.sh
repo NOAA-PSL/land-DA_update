@@ -31,7 +31,6 @@ echo "reading DA settings from $config_file"
 
 source $config_file 
 
-GFSv17=${GFSv17:-"NO"}
 num_tiles=${num_tiles:-6}
 ensemble_size=${ensemble_size:-1}
 NPROC_JEDI=${NPROC_JEDI:-6}
@@ -230,8 +229,7 @@ do
   elif [ ${OBS_TYPES[$ii]} == "SYNTH" ]; then 
      obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}${HH}.nc
   elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
-     #obsfile=$OBSDIR/soil_moisture/SMAP/data_proc/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
-     obsfile=${BASEDIR}/OBS/soil_moisture/SMAP/data_proc/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
+     obsfile=$OBSDIR/soil_moisture/SMAP/data_proc/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
   elif [ ${OBS_TYPES[$ii]} == "IMS" ]; then 
      DOY=$(date -d "${YYYY}-${MM}-${DD}" +%j)
      echo DOY is ${DOY}
@@ -354,12 +352,9 @@ if [[ $do_DA == "NO" && $do_HOFX == "NO" ]]; then
         exit 0 
 fi
 
-if [ $GFSv17 == "YES" ]; then
-    SNOWDEPTHVAR="snodl"
-    cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-land-v17.yaml ${JEDIWORKDIR}/gfs-land-v17.yaml
-else
-    SNOWDEPTHVAR="snwdph"
-fi
+SNOWDEPTHVAR="snodl"
+SWEVAR="weasdl"
+cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-land-v17.yaml ${JEDIWORKDIR}/gfs-land-v17.yaml
 
 # if yaml is specified by user, use that. Otherwise, build the yaml
 if [[ $do_DA == "YES" ]]; then 
@@ -604,10 +599,7 @@ if [[ $do_DA == "YES" ]]; then
         inc_path="./"
     fi
 
-    frac_grid=.false.
-    if [[ $GFSv17 == "YES" ]]; then
-        frac_grid=.true.
-    fi
+    frac_grid=.true.
 
   if [[ $analVar == "snow" ]]; then
 cat << EOF > apply_incr_nml
