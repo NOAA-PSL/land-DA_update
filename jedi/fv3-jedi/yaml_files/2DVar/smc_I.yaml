@@ -18,15 +18,16 @@ final:
         filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
         filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
         state variables:
-        - smc
-        - slc
+        - soilMoistureVolumetric
+          #- slc
         - stc
-        - snwdph
+        - totalSnowDepth
         - sheleg
         - vtype
         - slmsk
-        #field io names:
-          #totalSnowDepth: XXSNOWDEPTHVAR
+        field io names:
+          soilMoistureVolumetric: smc
+          totalSnowDepth: snodl
     geometry:
       fms initialization:
         namelist filename: Data/fv3files/fmsmpp.nml
@@ -86,7 +87,6 @@ cost function:
     begin: XXYYYB-XXMB-XXDBTXXHB:00:00Z
     length: PTXXWINLENH
     bound to include: end
-  analysis variables: [slc, stc]   # using slc to keep in line with current GSI analysis
   geometry:
     npx: XXREP
     npy: XXREP
@@ -103,8 +103,8 @@ cost function:
       field table filename: Data/fv3files/field_table_gfdl
     #field metadata override: Data/fieldmetadata/gfs-soilMoisture.yaml
   analysis variables:
-  - slc
-  - stc
+  - soilMoistureVolumetric  #smc, slc
+    #- stc
 
   background:
     filetype: fms restart
@@ -115,30 +115,27 @@ cost function:
     filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
     filename_orog: CXXRES.XXORES_oro_data.nc
     state variables:
-    - smc
-    - slc
+    - soilMoistureVolumetric
+      #- slc
     - stc
-    - snwdph
+    - totalSnowDepth
     - sheleg
     - vtype
     - slmsk
     - filtered_orography
-    - fraction_of_ice
+      #- fraction_of_ice
     - fraction_of_land
     field io names:
-      #totalSnowDepth: XXSNOWDEPTHVAR
+      totalSnowDepth: snodl
       filtered_orography: orog_filt
-      fraction_of_ice: fice
+        #fraction_of_ice: fice
       fraction_of_land: land_frac
+      soilMoistureVolumetric: smc
 
   background error:
     covariance model: SABER
     saber central block:
-
-  background error:
-    covariance model: SABER
-    saber central block:
-    - saber block name: ID
+      saber block name: ID
     saber outer blocks:
     - saber block name: BUMP_StdDev
       read:
@@ -148,11 +145,11 @@ cost function:
           explicit stddev: true
           stddev:
           - variables:
-            - slc
+            - soilMoistureVolumetric  #smc
             value: 0.1
-          - variables:
-            - stc
-            value: 0.5
+              #- variables:
+              #- stc
+              #value: 0.5
 
   observations:
     obs perturbations: false
