@@ -230,6 +230,7 @@ do
      obsfile=$OBSDIR/synthetic_noahmp/IODA.synthetic_gswp_obs.${YYYY}${MM}${DD}${HH}.nc
   elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
      obsfile=$OBSDIR/soil_moisture/SMAP/data_proc/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
+     obsfile=/scratch3/NCEPDEV/land/Tseganeh.Gichamo/SMAP_data_proc/v5/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
   elif [ ${OBS_TYPES[$ii]} == "IMS" ]; then 
      DOY=$(date -d "${YYYY}-${MM}-${DD}" +%j)
      echo DOY is ${DOY}
@@ -353,8 +354,7 @@ if [[ $do_DA == "NO" && $do_HOFX == "NO" ]]; then
 fi
 
 SNOWDEPTHVAR="snodl"
-SWEVAR="weasdl"
-cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-land-v17.yaml ${JEDIWORKDIR}/gfs-land-v17.yaml
+#cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-land-v17.yaml ${JEDIWORKDIR}/gfs-land-v17.yaml
 
 # if yaml is specified by user, use that. Otherwise, build the yaml
 if [[ $do_DA == "YES" ]]; then 

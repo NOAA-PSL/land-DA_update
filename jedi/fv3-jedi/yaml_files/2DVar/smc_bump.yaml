@@ -19,6 +19,7 @@ final:
         filename_cplr: XXYYYYXXMMXXDD.XXHH0000.coupler.res
         state variables:
         - soilMoistureVolumetric
+        - slc
         - stc
         - totalSnowDepth
         - sheleg
@@ -86,7 +87,7 @@ cost function:
     begin: XXYYYB-XXMB-XXDBTXXHB:00:00Z
     length: PTXXWINLENH
     bound to include: end
-  analysis variables: [soilMoistureVolumetric]  #slc, stc]   # use slc to keep in line with current GSI analysis?
+  analysis variables: [soilMoistureVolumetric]  #slc, stc]   # using slc to keep in line with current GSI analysis
   geometry:
     npx: XXREP
     npy: XXREP
@@ -113,7 +114,7 @@ cost function:
     filename_orog: CXXRES.XXORES_oro_data.nc
     state variables:
     - soilMoistureVolumetric
-      #- slc
+    - slc
     - stc
     - totalSnowDepth
     - sheleg
@@ -137,18 +138,18 @@ cost function:
       #- smc
       calibration:    #read:
         general:
-          universe length-scale: 5000000.0
+          universe length-scale: 500000.0
         drivers:
           multivariate strategy: univariate
           compute nicas: true     #read global nicas: true
           write global nicas: true
         nicas:
-          resolution: 4
+          resolution: 6
           explicit length-scales: true
           horizontal length-scale:
           - groups:
             - soilMoistureVolumetric
-            value: 1000000.0
+            value: 250000.0
           vertical length-scale:
           - groups:
             - soilMoistureVolumetric
