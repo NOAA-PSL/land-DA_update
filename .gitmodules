@@ -7,7 +7,7 @@
 	path = add_jedi_incr
 	url = https://github.com/NOAA-EMC/land-apply_jedi_incr.git
 	branch = develop
-[submodule "jcb/gdas"]
-        path = jcb_gdas
+[submodule "jcb-gdas"]
+        path = jcb-gdas
         url = https://github.com/NOAA-EMC/jcb-gdas
         branch = develop
