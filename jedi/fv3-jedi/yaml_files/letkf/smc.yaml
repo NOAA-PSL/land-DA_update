@@ -1,16 +1,15 @@
 geometry:
   fms initialization:
     namelist filename: Data/fv3files/fmsmpp.nml
-    field table filename: Data/fv3files/field_table_lam_cmaq
-  akbk: Data/fv3files/akbkXXNPZ.nc4
+    field table filename: Data/fv3files/field_table
+  akbk: Data/fv3files/akbk127.nc4
+  layout: [XXLX,XXLY]
   npx: XXREP
   npy: XXREP
-  npz: XXNPZ
-  ntiles: XXNTIL
-  layout: [XXLX,XXLY] #[4,4]
-  io_layout: [XXIOLX,XXIOLY] #[1,1]
+  npz: 127
+  #field metadata override: Data/fieldmetadata/gfs-land.yaml 
 
- time invariant fields:
+  time invariant fields:
     state fields:
       datetime: XXYYYB-XXMB-XXDBTXXHB:00:00Z
       filetype: fms restart
@@ -20,7 +19,7 @@ geometry:
       - fraction_of_land
       field io names: &field_io_names
         filtered_orography: orog_filt
-        fraction_of_land: land_frac
+        fraction_of_land: land_frac 
         totalSnowDepth: snodl
         soilMoistureVolumetric: smc
         fraction_of_ice: fice
@@ -37,7 +36,7 @@ geometry:
   _resol_name: cXXRES
 
 time window:
-  begin: 'XXYYYB-XXMB-XXDBTXXHB:00:00Z'
+  begin: XXYYYB-XXMB-XXDBTXXHB:00:00Z
   length: PTXXWINLENH
   bound to include: end
 
@@ -61,9 +60,9 @@ driver:
   save posterior mean: true
   save posterior mean increment: true
   save posterior ensemble: true
-  save posterior ensemble increments: true 
+  save posterior ensemble increments: true
 # update obs config is set to true by default (which also implies halo distribution is used)
-# need set to false here when halo distribution is NOT used 
+# need set to false here when halo distribution is NOT used
 #update obs config with geometry info: false
   run as observer only: XXHOFX
   save prior variance: true
@@ -79,28 +78,30 @@ local ensemble DA:
 output:
   date: XXYYYY-XXMM-XXDDTXXHH:00:00Z
   filetype: fms restart
-  datapath: output/DA/jedi_anl/mem%{member}%  
+  datapath: output/DA/jedi_anl/mem%{member}%
   prefix: jedi_anl
   filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
   #filename_cplr: coupler.res
-  state variables: [snwdph,vtype,slmsk] 
-  #,sheleg,snowxy,sneqvoxy,zsnsoxy,tsnoxy,snicexy,snliqxy,stc,smc,slc,tgxy]
+  state variables: [soilMoistureVolumetric,totalSnowDepth,vtype,slmsk,sheleg,stc]
+  field io names: *field_io_names
 
 output ensemble increments:
   date: XXYYYY-XXMM-XXDDTXXHH:00:00Z #*date
   filetype: fms restart
   datapath: output/DA/jedi_incr/mem%{member}%
   filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc  #xainc.sfc_data.nc
-  prefix: snowinc  #land_inc
-  state variables: [snwdph,vtype,slmsk]
- 
+  prefix: sfc_inc
+  state variables: [soilMoistureVolumetric,totalSnowDepth,vtype,slmsk]
+  field io names: *field_io_names
+
 output increment:
   date: XXYYYY-XXMM-XXDDTXXHH:00:00Z #*date
   filetype: fms restart
   datapath: output/DA/jedi_incr/mem%{member}%
   filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
-  prefix: snowinc
-  state variables: [snwdph,vtype,slmsk]
+  prefix: sfc_inc
+  state variables: [soilMoistureVolumetric,totalSnowDepth,vtype,slmsk]
+  field io names: *field_io_names
 
 output variance prior:
   date: XXYYYY-XXMM-XXDDTXXHH:00:00Z #*date
@@ -108,7 +109,8 @@ output variance prior:
   datapath: mem%{member}%
   filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
   prefix: prior_var
-  state variables: [snwdph,vtype,slmsk]
+  state variables: [soilMoistureVolumetric,totalSnowDepth,vtype,slmsk]
+  field io names: *field_io_names
 
 output variance posterior:
   date: XXYYYY-XXMM-XXDDTXXHH:00:00Z #*date
@@ -116,7 +118,8 @@ output variance posterior:
   datapath: mem%{member}%
   filename_sfcd: XXYYYYXXMMXXDD.XXHH0000.sfc_data.nc
   prefix: posterior_var
-  state variables: [snwdph,vtype,slmsk]
+  state variables: [soilMoistureVolumetric,totalSnowDepth,vtype,slmsk]
+  field io names: *field_io_names
 
 observations:
-  observers:
+  observers:                              

@@ -404,7 +404,8 @@ if [[ $do_DA == "YES" ]]; then
    sed -i -e "s/XXIOLX/${IOLayX}/g" jedi_DA.yaml #IO Layout
    sed -i -e "s/XXIOLY/${IOLayY}/g" jedi_DA.yaml
    sed -i -e "s/XXSNOWDEPTHVAR/${SNOWDEPTHVAR}/g" jedi_DA.yaml
-
+   sed -i -e "s/XXNENS/${ensemble_size}/g" jedi_DA.yaml
+   
 fi
 
 if [[ $do_HOFX == "YES" ]]; then 
@@ -453,7 +454,7 @@ if [[ $do_HOFX == "YES" ]]; then
    sed -i -e "s/XXIOLX/${IOLayX}/g" jedi_hofx.yaml #IO Layout
    sed -i -e "s/XXIOLY/${IOLayY}/g" jedi_hofx.yaml
    sed -i -e "s/XXSNOWDEPTHVAR/${SNOWDEPTHVAR}/g" jedi_hofx.yaml
-
+   sed -i -e "s/XXNENS/${ensemble_size}/g" jedi_hofx.yaml
 fi
 
 ###############################################################
@@ -461,14 +462,11 @@ fi
 ###############################################################
 
 JEDI_EXEC="gdas.x"
-if [[ ${DAalg} == '2DVar' ]]; then
+SOLVER="localensembleda"   #Default solver 
+if [[ ${DAalg} == '2DVar' ]]; then SOLVER="variational" ; fi
 
-    SOLVER="variational"
-
-elif [[ ${DAalg} == 'letkfoi' ]]; then
+if [[ ${DAalg} == 'letkfoi' ]]; then
 #To-do: make this section generic (currently assumes snow)
-
-    SOLVER="letkf"
     
     B=30  # back ground error std for LETKFOI
 
@@ -492,64 +490,6 @@ elif [[ ${DAalg} == 'letkfoi' ]]; then
     if [[ $? != 0 ]]; then
         echo "letkf create ensemble failed"
         exit 10
-    fi
-
-elif [[ ${DAalg} == 'letkfoi_smc' ]]; then
-# To-do : combine this with the above
-
-    SOLVER="letkf"
-    
-    cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/gfs-soilMoisture.yaml ${JEDIWORKDIR}/gfs-soilMoisture.yaml
-
-elif [[ ${DAalg} == 'letkf' ]]; then
-
-    SOLVER="letkf"
-
-    if [[ $do_DA == "YES" && $YAML_DA == "construct" ]];then
-
-        cat ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAalg}/bkghead.yaml >> jedi_DA.yaml
-
-        bkg1mem=${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAalg}/bkg1mem.yaml     # ${JEDIWORKDIR}/bkg1mem.yaml
-
-        for ie in $(seq $ensemble_size)
-        do
-            cp $bkg1mem backgroundens.yaml
-            mem_ens="mem`printf %03i $ie`"
-            sed -i -e "s#XXMEM#${mem_ens}#g" backgroundens.yaml
-            cat backgroundens.yaml >> jedi_DA.yaml
-        done
-        
-        sed -i -e "s/XXYYYY/${YYYY}/g" jedi_DA.yaml
-        sed -i -e "s/XXMM/${MM}/g" jedi_DA.yaml
-        sed -i -e "s/XXDD/${DD}/g" jedi_DA.yaml
-        sed -i -e "s/XXHH/${HH}/g" jedi_DA.yaml
-    	sed -i -e "s/XXRES/${RES}/g" jedi_DA.yaml
-        sed -i -e "s/XXORES/${ORES}/g" jedi_DA.yaml  
-        
-    fi
-
-    if [[ $do_HOFX == "YES" && $YAML_HOFX == "construct" ]];then
-        
-        cat ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAalg}/bkghead.yaml >> jedi_hofx.yaml
-
-        bkg1mem=${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAalg}/bkg1mem.yaml     # ${JEDIWORKDIR}/bkg1mem.yaml
-        # cp ${LANDDADIR}/jedi/fv3-jedi/yaml_files/${DAalg}/bkg1mem.yaml ${JEDIWORKDIR}/bkg1mem.yaml
-        
-        for ie in $(seq $ensemble_size)
-        do
-            cp $bkg1mem backgroundens.yaml
-            mem_ens="mem`printf %03i $ie`"
-            sed -i -e "s#XXMEM#${mem_ens}#g" backgroundens.yaml
-            cat backgroundens.yaml >> jedi_hofx.yaml
-        done
-
-        sed -i -e "s/XXYYYY/${YYYY}/g" jedi_hofx.yaml
-        sed -i -e "s/XXMM/${MM}/g" jedi_hofx.yaml
-        sed -i -e "s/XXDD/${DD}/g" jedi_hofx.yaml
-        sed -i -e "s/XXHH/${HH}/g" jedi_hofx.yaml
-	    sed -i -e "s/XXRES/${RES}/g" jedi_hofx.yaml
-        sed -i -e "s/XXORES/${ORES}/g" jedi_hofx.yaml
-        
     fi
 
 fi
