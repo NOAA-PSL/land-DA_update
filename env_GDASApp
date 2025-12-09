@@ -2,13 +2,10 @@
 # selected lines, taken from GDASApp/build.sh
 
 # to do - make compiler an optional argument
-# move JEDI_EXECDIR to script
 
 # get GDAS directory
 export dir_root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 export GDASApp_root=${dir_root}/GDASApp/
-
-# environment for GDASApp 
 
 COMPILER="${COMPILER:-intel}"
 source $GDASApp_root/ush/detect_machine.sh
@@ -17,15 +14,21 @@ source $GDASApp_root/ush/module-setup.sh
 module purge
 module use $GDASApp_root/modulefiles
 module load GDAS/${MACHINE_ID}.$COMPILER
-#module load mkl/2024.2.1
+##module load mkl/2024.2.1
+status=$?
+if [[ ${status} -ne 0 ]]; then
+    exit "error loading modules ${status}"
+fi
 
 PYVN=$(python -c 'import sys; print(".".join(sys.version.split(" ")[0].split(".")[0:2]))')
 
 # set pythonpath for ioda converters
 IODA_CONV=${GDASApp_root}/sorc/iodaconv/src/
 IODAPY=${GDASApp_root}/build/lib/python${PYVN}/
+HOMEgfs=${HOMEgfs:-"/scratch3/NCEPDEV/da/Tseganeh.Gichamo/global-workflow"}
+WXFLOW=$HOMEgfs/sorc/wxflow/src
+PYGFS=$HOMEgfs/ush/python
 
-export PYTHONPATH=$PYTHONPATH:${IODA_CONV}:${IODAPY}:${IODAPY}/pyiodaconv
-
+export PYTHONPATH=${IODA_CONV}:${IODAPY}:${IODAPY}/pyiodaconv:${WXFLOW}:${PYGFS}:$PYTHONPATH
 # turn off exit on error (set in detect_machine.sh)
-set +e 
+set +e
