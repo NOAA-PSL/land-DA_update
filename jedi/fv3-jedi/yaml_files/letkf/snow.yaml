@@ -9,7 +9,6 @@ geometry:
   ntiles: XXNTIL
   layout: [XXLX,XXLY] #[4,4]
   io_layout: [XXIOLX,XXIOLY] #[1,1]
-  #field metadata override: Data/fieldmetadata/gfs-land.yaml  #snow.yaml  
 
  time invariant fields:
     state fields:
