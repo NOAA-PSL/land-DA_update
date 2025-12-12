@@ -31,20 +31,31 @@ echo "reading DA settings from $config_file"
 
 source $config_file 
 
-num_tiles=${num_tiles:-6}
-ensemble_size=${ensemble_size:-1}
+# set executable directories
+source ${LANDDADIR}/env_GDASApp
+#echo ${PYTHONPATH}
+
+ntiles=${ntiles:-6}
+
 NPROC_JEDI=${NPROC_JEDI:-6}
-LayX=${LayX:-1}
-LayY=${LayY:-1}
-IOLayX=${IOLayX:-1}
-IOLayY=${IOLayY:-1}
+
+layout_x=${layout_x:-1}
+layout_y=${layout_y:-1}
+io_layout_x=${io_layout_x:-1}
+io_layout_y=${io_layout_y:-1}
+ens_size=${ens_size:-1}
+export NMEM_ENS=${ens_size}
+
+
+export layout_x=1
+export layout_y=1
+export io_layout_x="1"
+export io_layout_y="1"
 
 LOGDIR=${OUTDIR}/DA/logs/
 OBSDIR=${OBSDIR:-"/scratch4/NCEPDEV/land/data/DA/"}
 
 # set executable directories
-source ${LANDDADIR}/env_GDASApp
-#echo ${PYTHONPATH}
 export JEDI_EXECDIR=${JEDI_EXECDIR:-"${GDASApp_root}/build/bin/"}
 
 # create local copy of JEDI_STATICDIR, so can over-ride default files 
@@ -107,11 +118,12 @@ HB=`echo $DABEGIN | cut -c9-10`
 
 export PDY=`echo $THISDATE | cut -c1-8`
 export cyc=`echo $THISDATE | cut -c9-10`
+export cycle="t$cyc}z"
 
 export assim_freq=${PCYC_DEL}
 
 # make sure letkf settings are consistent
-if [[ ${DAalg} == 'letkf' && "$ensemble_size" -lt 2 ]]; then
+if [[ ${DAalg} == 'letkf' && "$ens_size" -lt 2 ]]; then
     echo "Error! LETKF requires at least 2 ens members. Exiting"
     exit
 fi
@@ -131,18 +143,15 @@ if [[ ! -e ${OUTDIR}/DA ]]; then
     mkdir ${OUTDIR}/DA/logs
     mkdir ${OUTDIR}/DA/hofx
     mkdir ${OUTDIR}/DA/jedi_anl
-    if [[ "$ensemble_size" -gt 1  ]]; then            
-       for ie in $(seq 0 $ensemble_size)     
+    mkdir ${OUTDIR}/DA/jedi_conf
+    if [[ "$ens_size" -gt 1  ]]; then            
+       for ie in $(seq 0 $ens_size)     
        do
            mem_ens="mem`printf %03i $ie`"
            mkdir ${OUTDIR}/DA/jedi_incr/${mem_ens}     
            mkdir ${OUTDIR}/DA/jedi_anl/${mem_ens}
        done    
     fi   
-
-    #for jcbgdas outs
-    mkdir ${OUTDIR}/comout
-    mkdir ${OUTDIR}/conf  
 fi 
 
 if [[ ! -e $JEDIWORKDIR ]]; then 
@@ -150,16 +159,16 @@ if [[ ! -e $JEDIWORKDIR ]]; then
     mkdir $JEDIWORKDIR      
     mkdir ${JEDIWORKDIR}/restarts     
 
-    if [[ "$ensemble_size" -gt 1  ]]; then  
-        for ie in $(seq 0 $ensemble_size)
+    if [[ "$ens_size" -gt 1  ]]; then  
+        for ie in $(seq 0 $ens_size)
         do
             mem_ens="mem`printf %03i $ie`"
             ln -s $WORKDIR/${mem_ens} $JEDIWORKDIR/${mem_ens}               
-            ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}/${mem_ens} 
+            ln -s ${FIXorog}/${CASE}/${TSTUB}* ${JEDIWORKDIR}/${mem_ens} 
         done   
     fi 
-    ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}
-    ln -s ${TPATH}/${TSTUB}* ${JEDIWORKDIR}/restarts/ # to-do. change to only need one copy.
+    ln -s ${FIXorog}/${CASE}/${TSTUB}* ${JEDIWORKDIR}
+    ln -s ${FIXorog}/${CASE}/${TSTUB}* ${JEDIWORKDIR}/restarts/ # to-do. change to only need one copy.
 
     ln -s ${OUTDIR}  ${JEDIWORKDIR}/output 
 
@@ -174,16 +183,16 @@ mem_ens="mem000"
 RSTRDIR=${WORKDIR}/${mem_ens}
 
 if  [[ $SAVE_TILE == "YES" ]]; then          
-    for tile in $(seq 1 $num_tiles)
+    for tile in $(seq 1 $ntiles)
     do 
     cp ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${RSTRDIR}/${FILEDATE}.sfc_data_back.tile${tile}.nc
     done    
     
-    if [[ "$ensemble_size" -gt 1  ]]; then 
-        for ie in $(seq 0 $ensemble_size)
+    if [[ "$ens_size" -gt 1  ]]; then 
+        for ie in $(seq 0 $ens_size)
         do
             mem_ens="mem`printf %03i $ie`"     
-            for tile in $(seq 1 $num_tiles) 
+            for tile in $(seq 1 $ntiles) 
             do 
             cp ${WORKDIR}/${mem_ens}/${FILEDATE}.sfc_data.tile${tile}.nc  ${WORKDIR}/${mem_ens}/${FILEDATE}.sfc_data_back.tile${tile}.nc
             done    
@@ -193,7 +202,7 @@ fi
 
 #stage restarts for applying JEDI update (files will get directly updated)
 # for LETKF, mem000 (ensemble mean) used in IMS Calc 
-for tile in $(seq 1 $num_tiles) 
+for tile in $(seq 1 $ntiles) 
 do
     ln -fs ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc ${JEDIWORKDIR}/restarts/${FILEDATE}.sfc_data.tile${tile}.nc
 done
@@ -216,9 +225,9 @@ else #  if not present, need to create coupler.res for JEDI
 
 fi 
 
-if [[ "$ensemble_size" -gt 1  ]]; then  
+if [[ "$ens_size" -gt 1  ]]; then  
     
-    for ie in $(seq 0 $ensemble_size)  
+    for ie in $(seq 0 $ens_size)  
     do
         mem_ens="mem`printf %03i $ie`"
         cp ${cres_file} ${JEDIWORKDIR}/${mem_ens}/${FILEDATE}.coupler.res
@@ -258,7 +267,7 @@ do
     #obsfile=$OBSDIR/soil_moisture/SMAP/data_proc/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
 #TODO: move data_proc to OBSDIR
      obsfile=/scratch3/NCEPDEV/land/Tseganeh.Gichamo/SMAP_data_proc/v5/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
-     echo "- smap_soilm" >> ${OBS_LIST_YAML}
+     echo "- SMAP" >> ${OBS_LIST_YAML}
   else
      echo "do_landDA: Unknown obs type requested ${OBS_TYPES[$ii]}, exiting" 
      exit 1 
@@ -274,7 +283,7 @@ do
 
   # get the obs
   if [[ ${JEDI_TYPES[$ii]} != "SKIP" ]]; then
-#      elif [[ ${OBS_TYPES[$ii]} == "GHCN" ]]; then
+
     if [ ${OBS_TYPES[$ii]} == "GHCN" ]; then
                 
       IODA_CONV=ghcn_snod2ioda.py
@@ -289,10 +298,10 @@ do
           echo "GHCN IODA converter failed"
           exit 10
       fi
-    fi     
-#      else
-#       ln -fs $obsfile  ${OBS_TYPES[$ii]}_${YYYY}${MM}${DD}${HH}.nc
-#      fi #OBS_TYPES
+
+    else
+       ln -fs $obsfile  gdas.t${HH}z.${OBS_TYPES[$ii]}.nc  #${OBS_TYPES[$ii]}_${YYYY}${MM}${DD}${HH}.nc
+    fi #OBS_TYPES
   fi # is not skip
 done # if assim
 
@@ -300,15 +309,15 @@ done # if assim
 # 3. DETERMINE REQUESTED JEDI TYPE
 ################################################
 
-export do_DA="NO"
+do_DA="NO"
 do_HOFX="NO"
 
 for ii in "${!OBS_TYPES[@]}"; # loop through requested obs
 do
    if [ ${JEDI_TYPES[$ii]} == "DA" ]; then 
-         export do_DA="YES" 
+         do_DA="YES" 
    elif [ ${JEDI_TYPES[$ii]} == "HOFX" ]; then
-         export do_HOFX="YES" 
+         do_HOFX="YES" 
    elif [ ${JEDI_TYPES[$ii]} != "SKIP" ]; then
          echo "do_landDA: Unknown obs action ${JEDI_TYPES[$ii]}, exiting"
          exit 1
@@ -316,7 +325,7 @@ do
 done
 
 if [[ $do_DA == "NO" && $do_HOFX == "NO" ]]; then 
-        echo "do_landDA:No obs found, not calling JEDI" 
+        echo "do_landDA: No obs found, not calling JEDI" 
         exit 0 
 fi
 
@@ -328,11 +337,10 @@ JEDI_EXEC="gdas.x"
 SOLVER="localensembleda"   #Default solver 
 if [[ ${DAalg} == '2DVar' ]]; then SOLVER="variational" ; fi
 
-#if [[ $do_DA == "YES" || $do_HOFX == "YES" ]]; then
-if [[ "$analVar" == "snow" ]]; then
+
+if [[ "$analType" == "snow" ]]; then
 
     SNOWDEPTHVAR="snodl"	
-    export OBS_FILE=$obsfile
     
     ${SCRgfs}/exglobal_snow_analysis.py
     status=$?
@@ -340,8 +348,15 @@ if [[ "$analVar" == "snow" ]]; then
         exit "snow analysis failed ${status}"
     fi
 
-elif [[ "$analVar" == "smc" ]]; then 
-    echo "smc da goes here"
+elif [[ "$analType" == "smc" ]]; then 
+    
+    SOILANLVAR="soilMoistureVolumetric"
+
+    ${LANDDADIR}/soil_analysis.py
+    status=$?
+    if [[ "${status}" -ne 0 ]]; then
+        exit "soil analysis failed ${status}"
+    fi
 else
    echo " error! unsupported analysis variable $anlvar"
    exit 1
@@ -362,7 +377,7 @@ fi
 
 # keep increments
 if [ $SAVE_INCR == "YES" ] && [ $do_DA == "YES" ]; then
-   if [[ "$ensemble_size" -eq 1  ]]; then
+   if [[ "$ens_size" -eq 1  ]]; then
     yes |cp -u ${JEDIWORKDIR}/snowinc.${FILEDATE}.sfc_data.tile*.nc  ${OUTDIR}/DA/jedi_incr/
    fi
 fi
