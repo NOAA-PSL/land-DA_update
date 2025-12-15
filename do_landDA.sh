@@ -118,7 +118,7 @@ HB=`echo $DABEGIN | cut -c9-10`
 
 export PDY=`echo $THISDATE | cut -c1-8`
 export cyc=`echo $THISDATE | cut -c9-10`
-export cycle="t$cyc}z"
+export cycle="t${cyc}z"
 
 export assim_freq=${PCYC_DEL}
 
@@ -248,26 +248,26 @@ do
   # get the obs file name 
   if [ ${OBS_TYPES[$ii]} == "SNOCVR" ]; then
      obsfile=$OBSDIR/snow_depth/SNOCVR/data_proc/v3/${YYYY}${MM}/snocvr_${YYYY}${MM}${DD}_${HH}00.nc
-     echo "- snocvr" >> ${OBS_LIST_YAML}
+     obs_list_i="snocvr"
   elif [ ${OBS_TYPES[$ii]} == "SFCSNO" ]; then
      obsfile=$OBSDIR/snow_depth/GTS/data_proc/${YYYY}${MM}/sfcsno_snow_${YYYY}${MM}${DD}${HH}.nc4
-     echo "- sfcsno" >> ${OBS_LIST_YAML}
+     obs_list_i="sfcsno"  
   elif [ ${OBS_TYPES[$ii]} == "MADIS" ]; then
      obsfile=$OBSDIR/snow_depth/MADIS/data_proc/v3/${YYYY}/madis_snow_${YYYY}${MM}${DD}_${HH}00.nc
-     echo "- madis_snow" >> ${OBS_LIST_YAML}
+     obs_list_i="madis_snow"  
   elif [ ${OBS_TYPES[$ii]} == "IMS" ]; then 
      DOY=$(date -d "${YYYY}-${MM}-${DD}" +%j)
      #echo "IMS will be assimilated for DOY ${DOY}"
      obsfile=${OBSDIR}/IMS/netcdf/${imsres}/ims${YYYY}${DOY}_${imsres}_v${ims_vsn}.${fsuf}
-     echo "- ims_snow" >> ${OBS_LIST_YAML}
+     obs_list_i="ims_snow"  
   elif [ ${OBS_TYPES[$ii]} == "GHCN" ]; then
      obsfile=$OBSDIR/snow_depth/GHCN/processed_data/${YYYY}/${YYYY}${MM}${DD}.csv
-     echo "- ghcn_snow" >> ${OBS_LIST_YAML}
+     obs_list_i="ghcn_snow"  
   elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
     #obsfile=$OBSDIR/soil_moisture/SMAP/data_proc/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
 #TODO: move data_proc to OBSDIR
      obsfile=/scratch3/NCEPDEV/land/Tseganeh.Gichamo/SMAP_data_proc/v5/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
-     echo "- SMAP" >> ${OBS_LIST_YAML}
+     obs_list_i="smap_soil"  
   else
      echo "do_landDA: Unknown obs type requested ${OBS_TYPES[$ii]}, exiting" 
      exit 1 
@@ -281,6 +281,8 @@ do
     JEDI_TYPES[$ii]="SKIP"
   fi
 
+  echo "- ${obs_list_i}" >> ${OBS_LIST_YAML}
+  
   # get the obs
   if [[ ${JEDI_TYPES[$ii]} != "SKIP" ]]; then
 
@@ -300,7 +302,7 @@ do
       fi
 
     else
-       ln -fs $obsfile  gdas.t${HH}z.${OBS_TYPES[$ii]}.nc  #${OBS_TYPES[$ii]}_${YYYY}${MM}${DD}${HH}.nc
+       ln -fs $obsfile  ${JEDIWORKDIR}/gdas.t${HH}z.${obs_list_i}.nc  #${OBS_TYPES[$ii]}_${YYYY}${MM}${DD}${HH}.nc
     fi #OBS_TYPES
   fi # is not skip
 done # if assim
@@ -333,10 +335,10 @@ fi
 # 4. Run snow analysis (includes init, run jedi, add increments)
 ######################################################################
 
-JEDI_EXEC="gdas.x"
-SOLVER="localensembleda"   #Default solver 
-if [[ ${DAalg} == '2DVar' ]]; then SOLVER="variational" ; fi
-
+export SOLVER="localensembleda"   #Default solver 
+if [[ ${DAalg} == '2DVar' ]]; then 
+	export SOLVER="variational" 
+fi
 
 if [[ "$analType" == "snow" ]]; then
 

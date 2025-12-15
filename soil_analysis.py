@@ -27,7 +27,8 @@ if __name__ == '__main__':
     anl.execute('soilanlvar')
 
     # Add increments
-    anl.add_increments()
+    anl.execute('soilanladdinc')
+#    anl.add_increments()
 
     # Finalize analysis
     anl.finalize()

@@ -5,7 +5,9 @@
 
 # get GDAS directory
 export dir_root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
 export GDASApp_root=${dir_root}/GDASApp/
+HOMEdir=${HOMEdir:-"$(dirname '${GDASApp_root}')"}   #/../"}
 
 COMPILER="${COMPILER:-intel}"
 source $GDASApp_root/ush/detect_machine.sh
@@ -25,10 +27,10 @@ PYVN=$(python -c 'import sys; print(".".join(sys.version.split(" ")[0].split("."
 # set pythonpath for ioda converters
 IODA_CONV=${GDASApp_root}/sorc/iodaconv/src/
 IODAPY=${GDASApp_root}/build/lib/python${PYVN}/
-HOMEgfs=${HOMEgfs:-"/scratch3/NCEPDEV/da/Tseganeh.Gichamo/global-workflow"}
-WXFLOW=$HOMEgfs/sorc/wxflow/src
-PYGFS=$HOMEgfs/ush/python
+WXFLOW=$HOMEdir/wxflow/src
+JCB=${GDASApp_root}/sorc/jcb/src
+#PYGFS=$HOMEdir
 
-export PYTHONPATH=${IODA_CONV}:${IODAPY}:${IODAPY}/pyiodaconv:${WXFLOW}:${PYGFS}:$PYTHONPATH
+export PYTHONPATH=${IODA_CONV}:${IODAPY}:${IODAPY}/pyiodaconv:${WXFLOW}:${JCB}:${HOMEdir}:$PYTHONPATH
 # turn off exit on error (set in detect_machine.sh)
 set +e
