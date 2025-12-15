@@ -16,7 +16,7 @@ source $GDASApp_root/ush/module-setup.sh
 module purge
 module use $GDASApp_root/modulefiles
 module load GDAS/${MACHINE_ID}.$COMPILER
-##module load mkl/2024.2.1
+
 status=$?
 if [[ ${status} -ne 0 ]]; then
     exit "error loading modules ${status}"
