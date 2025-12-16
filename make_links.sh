@@ -3,8 +3,7 @@
 if [ $# == 1 ]; then 
         echo "setting jedi path to input $1"
         GDASApp_path=$1
-else 
-       	#GDASApp_path="/scratch3/NCEPDEV/da/Tseganeh.Gichamo/global-workflow/sorc/gdas.cd/" 
+else 	
         GDASApp_path="/scratch4/NCEPDEV/land/APPS/GDASApp/20251216/"
 fi 
 
@@ -38,7 +37,8 @@ fi
 ln -fs ${GDASApp_path}/sorc/iodaconv/src/land/ghcn_snod2ioda.py jedi/ioda/ghcn_snod2ioda.py
 
 # Add "HOMEgfs" components needed for snow
-HOMEgfs=/scratch3/NCEPDEV/da/Tseganeh.Gichamo/land-offline_workflow/HOMEgfs
+HOMEgfs="$(dirname "$(pwd)")/HOMEgfs" 
+echo "homegfs: $HOMEgfs"  
 if [[ -e  "${HOMEgfs}/parm/gdas" ]]; then
   echo "removing homegfs/parm/gdas"
   rm "${HOMEgfs}/parm/gdas"
