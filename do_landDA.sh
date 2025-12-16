@@ -338,7 +338,7 @@ if [[ "$analType" == "snow" ]]; then
 
     SNOWDEPTHVAR="snodl"	
     
-    ${SCRgfs}/exglobal_snow_analysis.py
+    ${LANDDADIR}/snow_analysis.py
     status=$?
     if [[ "${status}" -ne 0 ]]; then 
         exit "snow analysis failed ${status}"

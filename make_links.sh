@@ -74,3 +74,9 @@ if [[ -e  "${HOMEgfs}/fix/gdas/snow" ]]; then
   rm "${HOMEgfs}/fix/gdas/snow"
 fi
 ln -fs ${snow} ${HOMEgfs}/fix/gdas/snow
+
+if [[ -e  "${HOMEgfs}/fix/gdas/fv3jedi" ]]; then
+  echo "removing homegfs/fix/gdas/fv3jedi"
+  rm "${HOMEgfs}/fix/gdas/fv3jedi"
+fi
+ln -fs ${fv3jedi} ${HOMEgfs}/fix/gdas/fv3jedi
