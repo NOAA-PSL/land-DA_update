@@ -18,17 +18,17 @@ if __name__ == '__main__':
     config = cast_strdict_as_dtypedict(os.environ)
 
     # Instantiate the analysis task
-    anl = SoilAnalysis(config)
+    soil_anl = SoilAnalysis(config)
 
     # Initialize JEDI (2DVar) analysis
-    anl.initialize()
+    soil_anl.initialize()
 
     # Execute JEDI 
-    anl.execute('soilanlvar')
+    soil_anl.execute('soilanlvar')
 
     # Add increments
-    anl.execute('soilanladdinc')
+    soil_anl.execute('soilanladdinc')
 #    anl.add_increments()
 
     # Finalize analysis
-    anl.finalize()
+    soil_anl.finalize()
