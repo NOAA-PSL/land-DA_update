@@ -46,12 +46,6 @@ io_layout_y=${io_layout_y:-1}
 ens_size=${ens_size:-1}
 export NMEM_ENS=${ens_size}
 
-
-export layout_x=1
-export layout_y=1
-export io_layout_x="1"
-export io_layout_y="1"
-
 LOGDIR=${OUTDIR}/DA/logs/
 OBSDIR=${OBSDIR:-"/scratch4/NCEPDEV/land/data/DA/"}
 
