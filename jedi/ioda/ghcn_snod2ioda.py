@@ -1,1 +1,1 @@
-/scratch3/NCEPDEV/da/Tseganeh.Gichamo/global-workflow/sorc/gdas.cd//sorc/iodaconv/src/land/ghcn_snod2ioda.py
+/scratch4/NCEPDEV/land/APPS/GDASApp//sorc/iodaconv/src/land/ghcn_snod2ioda.py
