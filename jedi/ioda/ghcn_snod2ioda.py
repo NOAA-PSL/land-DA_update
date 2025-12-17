@@ -1,1 +1,1 @@
-/scratch4/BMC/gsienkf/Clara.Draper/gerrit-hera/global-workflow/sorc/gdas.cd//sorc/iodaconv/src/land/ghcn_snod2ioda.py
+/scratch4/NCEPDEV/land/APPS/GDASApp/20251216//sorc/iodaconv/src/land/ghcn_snod2ioda.py
