@@ -251,17 +251,16 @@ do
      obs_list_i="madis_snow"  
   elif [ ${OBS_TYPES[$ii]} == "IMS" ]; then 
      DOY=$(date -d "${YYYY}-${MM}-${DD}" +%j)
-     #echo "IMS will be assimilated for DOY ${DOY}"
-     obsfile=${OBSDIR}/IMS/netcdf/${imsres}/ims${YYYY}${DOY}_${imsres}_v${ims_vsn}.${fsuf}
+     obsfile=${COMINobsproc_prfx}/gdas.${YYYY}${MM}${DD}/${HH}/atmos/gdas.t${HH}z.imssnow96.asc
+     cp $obsfile $JEDIWORKDIR/gdas.t${HH}z.imssnow96.asc
      obs_list_i="ims_snow"  
   elif [ ${OBS_TYPES[$ii]} == "GHCN" ]; then
      obsfile=$OBSDIR/snow_depth/GHCN/processed_data/${YYYY}/${YYYY}${MM}${DD}.csv
      obs_list_i="ghcn_snow"  
   elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
-    #obsfile=$OBSDIR/soil_moisture/SMAP/data_proc/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
-#TODO: move data_proc to OBSDIR
-     obsfile=/scratch3/NCEPDEV/land/Tseganeh.Gichamo/SMAP_data_proc/v5/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
-     obs_list_i="smap_soil"  
+#TODO: move to obsdir/soil_moisture
+     obsfile=$OBSDIR/SMAP/data_proc/v5/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
+     obs_list_i="smap_soil"     
   else
      echo "do_landDA: Unknown obs type requested ${OBS_TYPES[$ii]}, exiting" 
      exit 1 
