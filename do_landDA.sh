@@ -246,9 +246,6 @@ do
   elif [ ${OBS_TYPES[$ii]} == "SFCSNO" ]; then
      obsfile=$OBSDIR/snow_depth/GTS/data_proc/${YYYY}${MM}/sfcsno_snow_${YYYY}${MM}${DD}${HH}.nc4
      obs_list_i="sfcsno"  
-  elif [ ${OBS_TYPES[$ii]} == "MADIS" ]; then
-     obsfile=$OBSDIR/snow_depth/MADIS/data_proc/v3/${YYYY}/madis_snow_${YYYY}${MM}${DD}_${HH}00.nc
-     obs_list_i="madis_snow"  
   elif [ ${OBS_TYPES[$ii]} == "IMS" ]; then 
      DOY=$(date -d "${YYYY}-${MM}-${DD}" +%j)
      obsfile=${COMINobsproc_prfx}/gdas.${YYYY}${MM}${DD}/${HH}/atmos/gdas.t${HH}z.imssnow96.asc
@@ -256,7 +253,11 @@ do
      obs_list_i="ims_snow"  
   elif [ ${OBS_TYPES[$ii]} == "GHCN" ]; then
      obsfile=$OBSDIR/snow_depth/GHCN/processed_data/${YYYY}/${YYYY}${MM}${DD}.csv
-     obs_list_i="ghcn_snow"  
+     obs_list_i="ghcn_snow"
+  elif [ ${OBS_TYPES[$ii]} == "MADIS" ]; then
+     obsfile=${COMINobsproc_prfx}/gdas.${YYYY}${MM}${DD}/${HH}/atmos/gdas.t${HH}z.snocvr_snow.nc4
+     cp $obsfile $JEDIWORKDIR
+     obs_list_i="madis_snow"  
   elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
 #TODO: move to obsdir/soil_moisture
      obsfile=$OBSDIR/SMAP/data_proc/v5/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
