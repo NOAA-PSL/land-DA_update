@@ -164,7 +164,10 @@ if [[ ! -e $JEDIWORKDIR ]]; then
     ln -s ${FIXorog}/${CASE}/${TSTUB}* ${JEDIWORKDIR}
     ln -s ${FIXorog}/${CASE}/${TSTUB}* ${JEDIWORKDIR}/restarts/ # to-do. change to only need one copy.
 
-    ln -s ${OUTDIR}  ${JEDIWORKDIR}/output 
+    ln -s ${OUTDIR}  ${JEDIWORKDIR}/output
+
+    # separate obscomin than workdir(DATA)
+    mkdir ${JEDIWORKDIR}/COMIN_OBS 
 
 fi
 
@@ -237,45 +240,61 @@ echo "updating obs list. File ${OBS_LIST_YAML} will be overwritten"
 echo "observations:" >> ${OBS_LIST_YAML}
 
 for ii in "${!OBS_TYPES[@]}"; # loop through requested obs
-do 
+do  #TODO: ignore file not found errors in cp ?
 
   # get the obs file name 
-  if [ ${OBS_TYPES[$ii]} == "SNOCVR" ]; then
-     obsfile=$OBSDIR/snow_depth/SNOCVR/data_proc/v3/${YYYY}${MM}/snocvr_${YYYY}${MM}${DD}_${HH}00.nc
-     obs_list_i="snocvr"
-  elif [ ${OBS_TYPES[$ii]} == "IMS" ]; then 
+  if [ ${OBS_TYPES[$ii]} == "IMS" ]; then 
      DOY=$(date -d "${YYYY}-${MM}-${DD}" +%j)
      obsfile=${COMINobsproc_prfx}/gdas.${YYYY}${MM}${DD}/${HH}/atmos/gdas.t${HH}z.imssnow96.asc
      obs_list_i="ims_snow"  
-     cp $obsfile $JEDIWORKDIR/gdas.t${HH}z.imssnow96.asc
+     cp $obsfile $COMIN_OBS/gdas.t${HH}z.imssnow96.asc
   elif [ ${OBS_TYPES[$ii]} == "GHCN" ]; then
      obsfile=$OBSDIR/snow_depth/GHCN/processed_data/${YYYY}/${YYYY}${MM}${DD}.csv
      obs_list_i="ghcn_snow"
   elif [ ${OBS_TYPES[$ii]} == "MADIS" ]; then
      obsfile=${COMINobsproc_prfx}/gdas.${YYYY}${MM}${DD}/${HH}/atmos/gdas.t${HH}z.snocvr_snow.nc4
      obs_list_i="madis_snow"  
-     cp $obsfile $JEDIWORKDIR
+     cp $obsfile $COMIN_OBS
   elif [ ${OBS_TYPES[$ii]} == "SFCSNO" ]; then
      #obsfile=$OBSDIR/snow_depth/GTS/data_proc/${YYYY}${MM}/sfcsno_snow_${YYYY}${MM}${DD}${HH}.nc4
      obsfile=${COMINobsproc_prfx}/gdas.${YYYY}${MM}${DD}/${HH}/atmos/gdas.t${HH}z.sfcsno.tm00.bufr_d
      obs_list_i="sfcsno"
-     cp $obsfile ${JEDIWORKDIR}            #/gdas.t${HH}z.${obs_list_i}.nc4
+     cp $obsfile ${COMIN_OBS}            #/gdas.t${HH}z.${obs_list_i}.nc4
+  elif [ ${OBS_TYPES[$ii]} == "SNOCVR_SNOMAD" ]; then
+     obsfile=${COMINobsproc_prfx}/gdas.${YYYY}${MM}${DD}/${HH}/atmos/gdas.t${HH}z.snocvr.tm00.bufr_d
+     [ -e $obsfile ] && cp $obsfile ${COMIN_OBS}
+     obsfile2=${COMINobsproc_prfx}/gdas.${YYYY}${MM}${DD}/${HH}/atmos/gdas.t${HH}z.snomad.tm00.bufr_d
+     [ -e $obsfile2 ] && cp $obsfile2 ${COMIN_OBS}
+     obs_list_i="snocvr_snomad"
   elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
 #TODO: move to obsdir/soil_moisture
-     obsfile=$OBSDIR/SMAP/data_proc/v5/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
-     obs_list_i="smap_soil"     
-     $obsfile  ${JEDIWORKDIR}/gdas.t${HH}z.${obs_list_i}.nc
+     obsfile=$OBSDIR/SMAP/data_proc/v5/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc     
+     cp $obsfile  $COMIN_OBS/gdas.t${HH}z.${obs_list_i}.nc
+     obs_list_i="smap_soil"
   else
      echo "do_landDA: Unknown obs type requested ${OBS_TYPES[$ii]}, exiting" 
      exit 1 
   fi
 
   # check obs are available
-  if [[ -e $obsfile ]]; then
-    echo "do_landDA: ${OBS_TYPES[$ii]} observations found: $obsfile"
-  else
-    echo "${OBS_TYPES[$ii]} observations not found: $obsfile"
-    JEDI_TYPES[$ii]="SKIP"
+  if [ ${OBS_TYPES[$ii]} == "SNOCVR_SNOMAD" ]; then
+      if [[ -e $obsfile && -e $obsfile2 ]]; then
+	  echo "${OBS_TYPES[$ii]} both observations found: $obsfile and $obsfile2"
+      elif [[ -e $obsfile ]]; then
+          echo "do_landDA: ${OBS_TYPES[$ii]} observations found: $obsfile"
+      elif [[ -e $obsfile2 ]]; then
+          echo "do_landDA: ${OBS_TYPES[$ii]} observations found: $obsfile2"
+      else
+          echo "${OBS_TYPES[$ii]} observations not found: $obsfile or $obsfile2"
+          JEDI_TYPES[$ii]="SKIP"
+      fi
+  else       #TODO because of cp error, this section might never be executed 
+      if [[ -e $obsfile ]]; then
+          echo "do_landDA: ${OBS_TYPES[$ii]} observations found: $obsfile"
+      else
+          echo "${OBS_TYPES[$ii]} observations not found: $obsfile"
+          JEDI_TYPES[$ii]="SKIP"
+      fi
   fi
 
   echo "- ${obs_list_i}" >> ${OBS_LIST_YAML}
@@ -286,13 +305,13 @@ do
     if [ ${OBS_TYPES[$ii]} == "GHCN" ]; then
                 
       IODA_CONV=ghcn_snod2ioda.py
-      obsfile_out=${JEDIWORKDIR}/gdas.t${HH}z.ghcn_snow.nc
+      obsfile_out=${COMIN_OBS}/gdas.t${HH}z.ghcn_snow.nc
   
-      cp ${LANDDADIR}/jedi/ioda/${IODA_CONV} $JEDIWORKDIR
-      cp ${OBSDIR}/snow_depth/GHCN/downloaded_data/ghcnd-stations.txt $JEDIWORKDIR
+      cp ${LANDDADIR}/jedi/ioda/${IODA_CONV} $COMIN_OBS
+      cp ${OBSDIR}/snow_depth/GHCN/downloaded_data/ghcnd-stations.txt $COMIN_OBS
   
       echo 'do_landDA: calling ioda converter' 
-      python ${IODA_CONV} -i ${obsfile} -o ${obsfile_out} -f ${JEDIWORKDIR}/ghcnd-stations.txt -d ${YYYY}${MM}${DD}${HH}
+      python ${IODA_CONV} -i ${obsfile} -o ${obsfile_out} -f ${COMIN_OBS}/ghcnd-stations.txt -d ${YYYY}${MM}${DD}${HH}
       if [[ $? != 0 ]]; then
           echo "GHCN IODA converter failed"
           exit 10
@@ -311,7 +330,7 @@ do_HOFX="NO"
 for ii in "${!OBS_TYPES[@]}"; # loop through requested obs
 do
    if [ ${JEDI_TYPES[$ii]} == "DA" ]; then 
-         do_DA="YES" 
+         do_DA="YES"
    elif [ ${JEDI_TYPES[$ii]} == "HOFX" ]; then
          do_HOFX="YES" 
    elif [ ${JEDI_TYPES[$ii]} != "SKIP" ]; then
