@@ -31,6 +31,6 @@ WXFLOW=$HOMEdir/wxflow/src
 JCB=${GDASApp_root}/sorc/jcb/src
 #PYGFS=$HOMEdir
 
-export PYTHONPATH=${IODA_CONV}:${IODAPY}:${IODAPY}/pyiodaconv:${WXFLOW}:${JCB}:${HOMEdir}:$PYTHONPATH
+export PYTHONPATH=${IODA_CONV}:${IODAPY}:${IODAPY}/pyiodaconv:${IODAPY}/site-packages/:${WXFLOW}:${JCB}:${HOMEdir}:$PYTHONPATH
 # turn off exit on error (set in detect_machine.sh)
 set +e
