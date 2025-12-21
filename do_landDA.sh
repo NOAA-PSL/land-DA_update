@@ -257,7 +257,7 @@ do
      cp $obsfile $JEDIWORKDIR
   elif [ ${OBS_TYPES[$ii]} == "SFCSNO" ]; then
      #obsfile=$OBSDIR/snow_depth/GTS/data_proc/${YYYY}${MM}/sfcsno_snow_${YYYY}${MM}${DD}${HH}.nc4
-     obsfile=${COMINobsproc_prfx}/gdas.${YYYY}${MM}${DD}/${HH}/atmos/gdas.t${HH}z.tm00.bufr_d
+     obsfile=${COMINobsproc_prfx}/gdas.${YYYY}${MM}${DD}/${HH}/atmos/gdas.t${HH}z.sfcsno.tm00.bufr_d
      obs_list_i="sfcsno"
      cp $obsfile ${JEDIWORKDIR}            #/gdas.t${HH}z.${obs_list_i}.nc4
   elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
