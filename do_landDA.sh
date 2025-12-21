@@ -249,19 +249,20 @@ do
   elif [ ${OBS_TYPES[$ii]} == "IMS" ]; then 
      DOY=$(date -d "${YYYY}-${MM}-${DD}" +%j)
      obsfile=${COMINobsproc_prfx}/gdas.${YYYY}${MM}${DD}/${HH}/atmos/gdas.t${HH}z.imssnow96.asc
-     cp $obsfile $JEDIWORKDIR/gdas.t${HH}z.imssnow96.asc
      obs_list_i="ims_snow"  
+     cp $obsfile $JEDIWORKDIR/gdas.t${HH}z.imssnow96.asc
   elif [ ${OBS_TYPES[$ii]} == "GHCN" ]; then
      obsfile=$OBSDIR/snow_depth/GHCN/processed_data/${YYYY}/${YYYY}${MM}${DD}.csv
      obs_list_i="ghcn_snow"
   elif [ ${OBS_TYPES[$ii]} == "MADIS" ]; then
      obsfile=${COMINobsproc_prfx}/gdas.${YYYY}${MM}${DD}/${HH}/atmos/gdas.t${HH}z.snocvr_snow.nc4
-     cp $obsfile $JEDIWORKDIR
      obs_list_i="madis_snow"  
+     cp $obsfile $JEDIWORKDIR
   elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
 #TODO: move to obsdir/soil_moisture
      obsfile=$OBSDIR/SMAP/data_proc/v5/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc
      obs_list_i="smap_soil"     
+     $obsfile  ${JEDIWORKDIR}/gdas.t${HH}z.${obs_list_i}.nc
   else
      echo "do_landDA: Unknown obs type requested ${OBS_TYPES[$ii]}, exiting" 
      exit 1 
@@ -294,9 +295,6 @@ do
           echo "GHCN IODA converter failed"
           exit 10
       fi
-
-    else
-       ln -fs $obsfile  ${JEDIWORKDIR}/gdas.t${HH}z.${obs_list_i}.nc  #${OBS_TYPES[$ii]}_${YYYY}${MM}${DD}${HH}.nc
     fi #OBS_TYPES
   fi # is not skip
 done # if assim
