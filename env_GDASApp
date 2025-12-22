@@ -7,7 +7,7 @@
 export dir_root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 export GDASApp_root=${dir_root}/GDASApp/
-HOMEdir=${HOMEdir:-"$(dirname '${GDASApp_root}')"}   #/../"}
+HOMEdir=${HOMEdir:-"$(dirname "$(pwd)")"}   #/../"}
 
 COMPILER="${COMPILER:-intel}"
 source $GDASApp_root/ush/detect_machine.sh
@@ -21,16 +21,19 @@ status=$?
 if [[ ${status} -ne 0 ]]; then
     exit "error loading modules ${status}"
 fi
+module list 
 
 PYVN=$(python -c 'import sys; print(".".join(sys.version.split(" ")[0].split(".")[0:2]))')
 
 # set pythonpath for ioda converters
-IODA_CONV=${GDASApp_root}/sorc/iodaconv/src/
-IODAPY=${GDASApp_root}/build/lib/python${PYVN}/
+IODA_CONV=${GDASApp_root}/sorc/iodaconv/src
+IODAPY=${GDASApp_root}/build/lib/python${PYVN}
 WXFLOW=$HOMEdir/wxflow/src
 JCB=${GDASApp_root}/sorc/jcb/src
 #PYGFS=$HOMEdir
+BUFR=${IODAPY}/site-packages  #this has to com before iodaconv (has bufr dir)
 
-export PYTHONPATH=${IODA_CONV}:${IODAPY}:${IODAPY}/pyiodaconv:${IODAPY}/site-packages/:${WXFLOW}:${JCB}:${HOMEdir}:$PYTHONPATH
+export PYTHONPATH=${BUFR}:${IODA_CONV}:${IODAPY}:${IODAPY}/pyiodaconv:${WXFLOW}:${JCB}:${HOMEdir}:$PYTHONPATH
+
 # turn off exit on error (set in detect_machine.sh)
 set +e
