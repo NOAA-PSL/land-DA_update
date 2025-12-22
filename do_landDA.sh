@@ -311,7 +311,7 @@ do  #TODO: ignore file not found errors in cp ?
       cp ${OBSDIR}/snow_depth/GHCN/downloaded_data/ghcnd-stations.txt $COMIN_OBS
   
       echo 'do_landDA: calling ioda converter' 
-      python ${IODA_CONV} -i ${obsfile} -o ${obsfile_out} -f ${COMIN_OBS}/ghcnd-stations.txt -d ${YYYY}${MM}${DD}${HH}
+      python ${COMIN_OBS}/${IODA_CONV} -i ${obsfile} -o ${obsfile_out} -f ${COMIN_OBS}/ghcnd-stations.txt -d ${YYYY}${MM}${DD}${HH}
       if [[ $? != 0 ]]; then
           echo "GHCN IODA converter failed"
           exit 10
