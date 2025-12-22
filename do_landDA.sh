@@ -165,8 +165,8 @@ if [[ ! -e $JEDIWORKDIR ]]; then
     ln -s ${FIXorog}/${CASE}/${TSTUB}* ${JEDIWORKDIR}/restarts/ # to-do. change to only need one copy.
 
     ln -s ${OUTDIR}  ${JEDIWORKDIR}/output
-
-    # separate obscomin than workdir(DATA)
+	
+    # separate obscom_in from workdir(DATA)
     mkdir ${JEDIWORKDIR}/COMIN_OBS 
 
 fi
