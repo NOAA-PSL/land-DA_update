@@ -4,7 +4,7 @@ if [ $# == 1 ]; then
         echo "setting jedi path to input $1"
         GDASApp_path=$1
 else 	
-        GDASApp_path="/scratch4/NCEPDEV/land/APPS/GDASApp/20251216/"
+        GDASApp_path="/scratch4/NCEPDEV/land/APPS/GDASApp/20260122/" #"/scratch3/NCEPDEV/da/Tseganeh.Gichamo/global-workflow/sorc/gdas.cd/"
 fi 
 
 # create link to GDASApp with executables:
@@ -34,7 +34,8 @@ ln -fs $fv3jedi/fv3files  $fv3files
 if [[ -e jedi/ioda/ghcn_snod2ioda.py ]]; then 
   rm jedi/ioda/ghcn_snod2ioda.py
 fi
-ln -fs ${GDASApp_path}/sorc/iodaconv/src/land/ghcn_snod2ioda.py jedi/ioda/ghcn_snod2ioda.py
+#ln -fs ${GDASApp_path}/sorc/iodaconv/src/land/ghcn_snod2ioda.py jedi/ioda/ghcn_snod2ioda.py
+ln -fs ${GDASApp_path}/ush/snow/ghcn_snod2ioda.py jedi/ioda/ghcn_snod2ioda.py
 
 # Add "HOMEgfs" components needed for snow
 HOMEgfs="$(dirname "$(pwd)")/HOMEgfs" 

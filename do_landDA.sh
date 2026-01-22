@@ -247,10 +247,11 @@ do  #TODO: ignore file not found errors in cp ?
      DOY=$(date -d "${YYYY}-${MM}-${DD}" +%j)
      obsfile=${COMINobsproc_prfx}/gdas.${YYYY}${MM}${DD}/${HH}/atmos/gdas.t${HH}z.imssnow96.asc
      obs_list_i="ims_snow"  
-     cp $obsfile $COMIN_OBS/gdas.t${HH}z.imssnow96.asc
+     cp $obsfile $COMIN_OBS/gdas.t${HH}z.imssnow96.asc  
   elif [ ${OBS_TYPES[$ii]} == "GHCN" ]; then
      obsfile=$OBSDIR/snow_depth/GHCN/processed_data/${YYYY}/${YYYY}${MM}${DD}.csv
      obs_list_i="ghcn_snow"
+     cp $obsfile $COMIN_OBS/gdas.t${HH}z.ghcn_snow.csv 
   elif [ ${OBS_TYPES[$ii]} == "MADIS" ]; then
      obsfile=${COMINobsproc_prfx}/gdas.${YYYY}${MM}${DD}/${HH}/atmos/gdas.t${HH}z.snocvr_snow.nc4
      obs_list_i="madis_snow"  
@@ -269,8 +270,8 @@ do  #TODO: ignore file not found errors in cp ?
   elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
 #TODO: move to obsdir/soil_moisture
      obsfile=$OBSDIR/SMAP/data_proc/v5/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc     
-     cp $obsfile  $COMIN_OBS/gdas.t${HH}z.${obs_list_i}.nc
      obs_list_i="smap_soil"
+     cp $obsfile  $COMIN_OBS/gdas.t${HH}z.${obs_list_i}.nc
   else
      echo "do_landDA: Unknown obs type requested ${OBS_TYPES[$ii]}, exiting" 
      exit 1 
@@ -357,7 +358,7 @@ if [[ "$analType" == "snow" ]]; then
 
     SNOWDEPTHVAR="snodl"	
     
-    ${LANDDADIR}/snow_analysis.py
+    ${LANDDADIR}/exglobal_snow_analysis.py   #${LANDDADIR}/snow_analysis.py
     status=$?
     if [[ "${status}" -ne 0 ]]; then 
         exit "snow analysis failed ${status}"
