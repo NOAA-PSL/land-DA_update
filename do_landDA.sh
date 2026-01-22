@@ -300,25 +300,6 @@ do  #TODO: ignore file not found errors in cp ?
 
   echo "- ${obs_list_i}" >> ${OBS_LIST_YAML}
   
-  # get the obs
-  if [[ ${JEDI_TYPES[$ii]} != "SKIP" ]]; then
-
-    if [ ${OBS_TYPES[$ii]} == "GHCN" ]; then
-                
-      IODA_CONV=ghcn_snod2ioda.py
-      obsfile_out=${COMIN_OBS}/gdas.t${HH}z.ghcn_snow.nc
-  
-      cp ${LANDDADIR}/jedi/ioda/${IODA_CONV} $COMIN_OBS
-      cp ${OBSDIR}/snow_depth/GHCN/downloaded_data/ghcnd-stations.txt $COMIN_OBS
-  
-      echo 'do_landDA: calling ioda converter' 
-      python ${COMIN_OBS}/${IODA_CONV} -i ${obsfile} -o ${obsfile_out} -f ${COMIN_OBS}/ghcnd-stations.txt -d ${YYYY}${MM}${DD}${HH}
-      if [[ $? != 0 ]]; then
-          echo "GHCN IODA converter failed"
-          exit 10
-      fi
-    fi #OBS_TYPES
-  fi # is not skip
 done # if assim
 
 ################################################
