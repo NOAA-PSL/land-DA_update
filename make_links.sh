@@ -4,7 +4,7 @@ if [ $# == 1 ]; then
         echo "setting jedi path to input $1"
         GDASApp_path=$1
 else 	
-        GDASApp_path="/scratch4/NCEPDEV/land/APPS/GDASApp/20260122/" #"/scratch3/NCEPDEV/da/Tseganeh.Gichamo/global-workflow/sorc/gdas.cd/"
+        GDASApp_path="/scratch4/NCEPDEV/land/APPS/GDASApp/20260123/" #"/scratch3/NCEPDEV/da/Tseganeh.Gichamo/global-workflow/sorc/gdas.cd/"
 fi 
 
 # create link to GDASApp with executables:
