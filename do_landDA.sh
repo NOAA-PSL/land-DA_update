@@ -50,7 +50,7 @@ LOGDIR=${OUTDIR}/DA/logs/
 OBSDIR=${OBSDIR:-"/scratch4/NCEPDEV/land/data/DA/"}
 
 # set executable directories
-export JEDI_EXECDIR=${JEDI_EXECDIR:-"${GDASApp_root}/install/bin/"}
+export JEDI_EXECDIR=${JEDI_EXECDIR:-"${GDASApp_root}/build/bin/"}
 
 # create local copy of JEDI_STATICDIR, so can over-ride default files 
 # (March 2024, using own fieldMetaData override file)
