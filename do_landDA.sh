@@ -289,7 +289,7 @@ do  #TODO: ignore file not found errors in cp ?
           echo "${OBS_TYPES[$ii]} observations not found: $obsfile or $obsfile2"
           JEDI_TYPES[$ii]="SKIP"
       fi
-  else       #TODO because of cp error, this section might never be executed 
+  else       #TODO because of copy error, this section might never be executed 
       if [[ -e $obsfile ]]; then
           echo "do_landDA: ${OBS_TYPES[$ii]} observations found: $obsfile"
       else
