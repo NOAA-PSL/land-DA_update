@@ -25,7 +25,7 @@ if __name__ == '__main__':
     snow_ens_anl.initialize()
 
     # Calculate ensemble mean
-    snow_ens_anl.execute('esnowanlensmean')
+#    snow_ens_anl.execute('esnowanlensmean')
 
     # stage ensemble mean backgrounds
 
@@ -42,7 +42,8 @@ if __name__ == '__main__':
         snow_ens_anl.prepare_GHCN()
 
     # Execute JEDI snow analysis
-    snow_ens_anl.execute('snowensanlvar')
+#    snow_ens_anl.execute('snowensanlvar')
+    snow_ens_anl.execute('snowensanlletkf')
 
     # Add increments
     snow_ens_anl.add_increments()
