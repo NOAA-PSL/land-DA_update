@@ -342,8 +342,13 @@ fi
 if [[ "$analType" == "snow" ]]; then
 
     SNOWDEPTHVAR="snodl"	
-    
-    ${LANDDADIR}/exglobal_snowens_analysis.py   #exglobal_snow_analysis.py  
+    if [[ "${do_enkf}" == "YES" ]]; then
+	export TASK_CONFIG_YAML=${TASK_CONFIG_YAML_ENS}
+	${LANDDADIR}/exglobal_snow_letkf_analysis.py         #exglobal_snowens_analysis.py
+    else
+	export TASK_CONFIG_YAML=${TASK_CONFIG_YAML_DET}
+	${LANDDADIR}/exglobal_snow_analysis.py  
+    fi
     status=$?
     if [[ "${status}" -ne 0 ]]; then 
         exit "snow analysis failed ${status}"
