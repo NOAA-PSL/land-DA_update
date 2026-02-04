@@ -60,8 +60,10 @@ export JEDI_EXECDIR=${JEDI_EXECDIR:-"${GDASApp_root}/build/bin/"}
 # (March 2024, using own fieldMetaData override file)
 JEDI_STATICDIR=${LANDDADIR}/jedi/fv3-jedi/Data/
 
-# option to use apply_incr and IMS_proc execs from GDASApp
-UseGDASAppExec="NO"
+# set to "YES" to use apply_incr and IMS_proc execs from GDASAppa
+# set to "NO" to use apply_incr and IMS_proc execs from workflow provided directory
+# Currently only support "YES" as of 01/28/2026
+UseGDASAppExec="YES"
 
 if [[ $UseGDASAppExec == "YES" ]]; then 
     FIMS_EXECDIR=${LANDDADIR}/GDASApp/build/bin/
@@ -375,15 +377,26 @@ fi
 ################################################
 
 # keep IMS IODA file
-if [ $SAVE_IMS == "YES"  ]; then
+if [ $SAVE_IMS == "YES"  ] && [ $UseGDASAppExec == "NO" ]; then
   if [[ -e ${JEDIWORKDIR}/ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc ]]; then
     yes |cp -u ${JEDIWORKDIR}/ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc ${OUTDIR}/DA/IMSproc/
   fi
 fi
 
+if [ $SAVE_IMS == "YES"  ] && [ $UseGDASAppExec == "YES" ]; then
+  if [[ -e ${JEDIWORKDIR}/obs/gdas.t00z.ims_snow.tm00.nc ]]; then
+    yes |cp -u ${JEDIWORKDIR}/obs/gdas.t00z.ims_snow.tm00.nc ${OUTDIR}/DA/IMSproc/ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc
+  fi
+fi
+
+# keep diag files
+if [ $SAVE_HOFX == "YES"  ] && [ $UseGDASAppExec == "YES" ]; then
+    yes |cp -u ${JEDIWORKDIR}/diags/diag_*${YYYY}${MM}${DD}*.nc ${OUTDIR}/DA/jedi_anl/
+fi
+
 # keep increments
-if [ $SAVE_INCR == "YES" ] && [ $do_DA == "YES" ]; then
-   if [[ "$ensemble_size" -eq 1  ]]; then
+if [ $SAVE_INCR == "YES" ] && [ $do_DA == "YES" ] && [ $UseGDASAppExec == "NO" ]; then
+   if [[ "$ens_size" -eq 1  ]]; then
     yes |cp -u ${JEDIWORKDIR}/snowinc.${FILEDATE}.sfc_data.tile*.nc  ${OUTDIR}/DA/jedi_incr/
    fi
 fi
