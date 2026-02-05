@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# exglobal_snowens_analysis.py
-# This script creates an SnowEnsAnalysis class,
-# which will compute the ensemble mean of the snow forecast,
-# run a 2DVar analysis, and provide increments
-# to create an ensemble of snow analyses
+# exglobal_snow_letkf_analysis.py
+# (adapted from exglobal_snowens_analysis.py)
+# This script creates an SnowEnsAnalysis class instance from snow_letkf_analysis,
+# which will process snow observations, run a LETKF analysis, and add increments 
+# to background ensmbles to create an ensemble of snow analyses
 import os
 
 from wxflow import Logger, cast_strdict_as_dtypedict
