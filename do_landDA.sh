@@ -43,8 +43,12 @@ layout_x=${layout_x:-1}
 layout_y=${layout_y:-1}
 io_layout_x=${io_layout_x:-1}
 io_layout_y=${io_layout_y:-1}
-ens_size=${ens_size:-1}
-export NMEM_ENS=${ens_size}
+export ensemble_size=${ensemble_size:-1}   #TODO: use ens_size
+export ens_size=${ensemble_size}
+export NMEM_ENS=${ensemble_size}
+export NMEM_ENS_MAX=${NMEM_ENS}
+export mem_offset=0
+export ntiles=${num_tiles}  #TODO: remove redundancy
 
 LOGDIR=${OUTDIR}/DA/logs/
 OBSDIR=${OBSDIR:-"/scratch4/NCEPDEV/land/data/DA/"}
@@ -119,7 +123,7 @@ export cycle="t${cyc}z"
 export assim_freq=${PCYC_DEL}
 
 # make sure letkf settings are consistent
-if [[ ${DAalg} == 'letkf' && "$ens_size" -lt 2 ]]; then
+if [[ ${DAalg} == 'letkf' && "$ensemble_size" -lt 2 ]]; then
     echo "Error! LETKF requires at least 2 ens members. Exiting"
     exit
 fi
@@ -140,8 +144,8 @@ if [[ ! -e ${OUTDIR}/DA ]]; then
     mkdir ${OUTDIR}/DA/hofx
     mkdir ${OUTDIR}/DA/jedi_anl
     mkdir ${OUTDIR}/DA/jedi_conf
-    if [[ "$ens_size" -gt 1  ]]; then            
-       for ie in $(seq 0 $ens_size)     
+    if [[ "$ensemble_size" -gt 1  ]]; then            
+       for ie in $(seq 0 $ensemble_size)     
        do
            mem_ens="mem`printf %03i $ie`"
            mkdir ${OUTDIR}/DA/jedi_incr/${mem_ens}     
@@ -155,8 +159,8 @@ if [[ ! -e $JEDIWORKDIR ]]; then
     mkdir $JEDIWORKDIR      
     mkdir ${JEDIWORKDIR}/restarts     
 
-    if [[ "$ens_size" -gt 1  ]]; then  
-        for ie in $(seq 0 $ens_size)
+    if [[ "$ensemble_size" -gt 1  ]]; then  
+        for ie in $(seq 0 $ensemble_size)
         do
             mem_ens="mem`printf %03i $ie`"
             ln -s $WORKDIR/${mem_ens} $JEDIWORKDIR/${mem_ens}               
@@ -187,8 +191,8 @@ if  [[ $SAVE_TILE == "YES" ]]; then
     cp ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${RSTRDIR}/${FILEDATE}.sfc_data_back.tile${tile}.nc
     done    
     
-    if [[ "$ens_size" -gt 1  ]]; then 
-        for ie in $(seq 0 $ens_size)
+    if [[ "$ensemble_size" -gt 1  ]]; then 
+        for ie in $(seq 0 $ensemble_size)
         do
             mem_ens="mem`printf %03i $ie`"     
             for tile in $(seq 1 $ntiles) 
@@ -224,9 +228,9 @@ else #  if not present, need to create coupler.res for JEDI
 
 fi 
 
-if [[ "$ens_size" -gt 1  ]]; then  
+if [[ "$ensemble_size" -gt 1  ]]; then  
     
-    for ie in $(seq 0 $ens_size)  
+    for ie in $(seq 0 $ensemble_size)  
     do
         mem_ens="mem`printf %03i $ie`"
         cp ${cres_file} ${JEDIWORKDIR}/${mem_ens}/${FILEDATE}.coupler.res
@@ -340,8 +344,13 @@ fi
 if [[ "$analType" == "snow" ]]; then
 
     SNOWDEPTHVAR="snodl"	
-    
-    ${LANDDADIR}/exglobal_snow_analysis.py   #${LANDDADIR}/snow_analysis.py
+    if [[ "${do_enkf}" == "YES" ]]; then
+	    export TASK_CONFIG_YAML=${TASK_CONFIG_YAML_ENS}
+	    ${LANDDADIR}/exglobal_snow_letkf_analysis.py         #exglobal_snowens_analysis.py
+    else
+	    export TASK_CONFIG_YAML=${TASK_CONFIG_YAML_DET}
+	    ${LANDDADIR}/exglobal_snow_analysis.py  
+    fi
     status=$?
     if [[ "${status}" -ne 0 ]]; then 
         exit "snow analysis failed ${status}"
