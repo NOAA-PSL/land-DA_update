@@ -278,6 +278,10 @@ do  #TODO: ignore file not found errors in cp ?
      obsfile=$OBSDIR/SMAP/data_proc/v5/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc     
      obs_list_i="smap_soil"
      cp $obsfile  $COMIN_OBS/gdas.t${HH}z.${obs_list_i}.nc
+  elif [ ${OBS_TYPES[$ii]} == "T2m" ]; then
+     obsfile=$OBSDIR/ioda_adpsfc.nc
+     obs_list_i="adpsfc_airTemperature_181"
+     cp $obsfile $COMIN_OBS/gdas.t${HH}z.${obs_list_i}.nc
   else
      echo "do_landDA: Unknown obs type requested ${OBS_TYPES[$ii]}, exiting" 
      exit 1 
@@ -360,13 +364,36 @@ elif [[ "$analType" == "smc" ]]; then
     
     SOILANLVAR="soilMoistureVolumetric"
 
-    ${LANDDADIR}/soil_analysis.py
+    if [[ "${do_enkf}" == "YES" ]]; then
+            export TASK_CONFIG_YAML=${TASK_CONFIG_YAML_ENS}
+            ${LANDDADIR}/exglobal_soil_letkf_analysis.py         #exglobal_soilens_analysis.py
+    else
+            export TASK_CONFIG_YAML=${TASK_CONFIG_YAML_DET}
+            ${LANDDADIR}/exglobal_soil_analysis.py
+    fi
+
     status=$?
     if [[ "${status}" -ne 0 ]]; then
         exit "soil analysis failed ${status}"
     fi
+elif [[ "$analType" == "stc" ]]; then
+
+    SOILANLVAR="stc"
+
+    if [[ "${do_enkf}" == "YES" ]]; then
+            export TASK_CONFIG_YAML=${TASK_CONFIG_YAML_ENS}
+            ${LANDDADIR}/exglobal_soil_letkf_analysis.py         #exglobal_snowens_analysis.py
+    else
+            export TASK_CONFIG_YAML=${TASK_CONFIG_YAML_DET}
+            ${LANDDADIR}/exglobal_soil_analysis.py
+    fi
+
+    status=$?
+    if [[ "${status}" -ne 0 ]]; then
+        exit "soil letkf analysis failed ${status}"
+    fi
 else
-   echo " error! unsupported analysis variable $anlvar"
+   echo " error! unsupported analysis type $analType"
    exit 1
 fi
 #fi

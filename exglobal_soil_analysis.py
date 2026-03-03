@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     # Add increments
     soil_anl.execute('soilanladdinc')
-#    anl.add_increments()
+#   soilanl.add_increments()
 
     # Finalize analysis
     soil_anl.finalize()
