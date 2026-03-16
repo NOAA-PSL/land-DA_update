@@ -5,7 +5,6 @@ if [ $# == 1 ]; then
         GDASApp_path=$1
 else 	
         GDASApp_path="/scratch4/NCEPDEV/land/APPS/GDASApp/20260316/"
-	#/scratch3/NCEPDEV/da/Tseganeh.Gichamo/global-workflow/sorc/gdas.cd/"
 fi 
 
 # create link to GDASApp with executables:
