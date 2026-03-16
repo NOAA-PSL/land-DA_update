@@ -24,7 +24,7 @@ if __name__ == '__main__':
     # Initialize JEDI 2DVar soil analysis
     soil_letkf_anl.initialize()
 
-    # stage ensemble mean backgrounds ??why?
+    # stage ensemble mean backgrounds: TODO: thjis is already done in init?
 
     # Process Obs (if applicable)
 #    if soil_letkf_anl.task_config.DO_OBSNAME:   #insert_OBSNAME_here#:
@@ -34,8 +34,9 @@ if __name__ == '__main__':
     soil_letkf_anl.execute('soilletkfanl')
 
     # Add increments
-    soil_letkf_anl.execute('soilletkfaddinc')
-#    soil_letkf_anl.add_increments()
+#    if soil_letkf_anl.task_config.DO_INC:   #TODO: recentering and adding inc
+#        soil_letkf_anl.execute('soilletkfaddinc')
+#        soil_letkf_anl.add_increments()
 
     # Finalize JEDI soil analysis
     soil_letkf_anl.finalize()

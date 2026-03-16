@@ -84,7 +84,7 @@ SAVE_HOFX=${SAVE_HOFX:-"NO"} # "YES" to save hofx
 
 
 echo 'THISDATE in land DA, '$THISDATE
-
+cd $JEDIWORKDIR
 ################################################
 # 0. FORMAT DATE STRINGS AND STAGE RESTARTS
 ################################################
@@ -279,8 +279,8 @@ do  #TODO: ignore file not found errors in cp ?
      obs_list_i="smap_soil"
      cp $obsfile  $COMIN_OBS/gdas.t${HH}z.${obs_list_i}.nc
   elif [ ${OBS_TYPES[$ii]} == "T2m" ]; then
-     obsfile=$OBSDIR/ioda_adpsfc.nc
-     obs_list_i="adpsfc_airTemperature_181"
+     obsfile=$OBSDIR/gdas.${YYYY}${MM}${DD}/${HH}/atmos/gdas.t${HH}z.adpsfc_air_temperature_at_2m_181_gsi.nc
+     obs_list_i="adpsfc_air_temperature_at_2m_181_gsi"
      cp $obsfile $COMIN_OBS/gdas.t${HH}z.${obs_list_i}.nc
   else
      echo "do_landDA: Unknown obs type requested ${OBS_TYPES[$ii]}, exiting" 
