@@ -31,4 +31,5 @@ if __name__ == '__main__':
 #   soilanl.add_increments()
 
     # Finalize analysis
-    soil_anl.finalize()
+    # archiving has a 'bug' needs fixing
+#    soil_anl.finalize()
