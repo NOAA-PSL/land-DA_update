@@ -84,7 +84,7 @@ SAVE_HOFX=${SAVE_HOFX:-"NO"} # "YES" to save hofx
 
 
 echo 'THISDATE in land DA, '$THISDATE
-cd $JEDIWORKDIR
+
 ################################################
 # 0. FORMAT DATE STRINGS AND STAGE RESTARTS
 ################################################
