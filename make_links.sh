@@ -5,6 +5,7 @@ if [ $# == 1 ]; then
         GDASApp_path=$1
 else 	
         GDASApp_path="/scratch4/NCEPDEV/land/APPS/GDASApp/20260316/"
+	#"/gpfs/f6/land-cpu/proj-shared/APPS/GDASApp/Land_GDASApp/"
 fi 
 
 # create link to GDASApp with executables:
@@ -25,12 +26,6 @@ fv3jedi=/scratch3/NCEPDEV/global/role.glopara/fix/gdas/fv3jedi/20241115
 ln -fs $fv3jedi/fv3files  $fv3files
 #ln -fs $fv3jedi/fieldmetadata jedi/fv3-jedi/Data/fieldmetadata
 #ln -fs $fv3jedi/fieldsets jedi/fv3-jedi/Data/fieldsets
-
-# link ioda converters for ghcn
-if [[ -e jedi/ioda/ghcn_snod2ioda.py ]]; then 
-  rm jedi/ioda/ghcn_snod2ioda.py
-fi
-ln -fs ${GDASApp_path}/ush/snow/ghcn_snod2ioda.py jedi/ioda/ghcn_snod2ioda.py
 
 # Add "HOMEgfs" components needed for snow
 HOMEgfs="$(dirname "$(pwd)")/HOMEgfs" 
