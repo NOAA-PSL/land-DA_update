@@ -18,7 +18,7 @@ elif if [[ ${MACHINE_ID} == 'gaeac6' ]] then
     fv3jedi=/gpfs/f6/drsa-precip3/world-shared/role.glopara/fix/gdas/fv3jedi/20241115
 else
     echo "Land offline workflow currently supported only on URSA and GAEA C6"
-    exit
+    exit 1
 fi
 
 # create link to GDASApp with executables:
@@ -63,6 +63,7 @@ fi
 ln -fs ${snow} ${HOMEgfs}/fix/gdas/snow
 
 # the old jed/Data/fv3files is no longer being used
+# instead user fv3jedi subdirs if needed
 if [[ -e  "${HOMEgfs}/fix/gdas/fv3jedi" ]]; then
   echo "removing homegfs/fix/gdas/fv3jedi"
   rm "${HOMEgfs}/fix/gdas/fv3jedi"
