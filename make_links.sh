@@ -37,7 +37,13 @@ if [[ -e  "${HOMEgfs}/parm/gdas" ]]; then
 fi
 ln -fs ${GDASApp_path}/parm ${HOMEgfs}/parm/gdas
 
-# link fix/orog and fv3jedi
+# link fix and fv3files
+
+fv3files="jedi/fv3-jedi/Data/fv3files"
+if [[ -e $fv3files ]]; then
+  rm $fv3files
+fi
+ln -fs $fv3jedi/fv3files  $fv3files
 
 if [[ -e  "${HOMEgfs}/fix/orog" ]]; then
   echo "removing homegfs/fix/orog"
@@ -62,8 +68,7 @@ if [[ -e  "${HOMEgfs}/fix/gdas/snow" ]]; then
 fi
 ln -fs ${snow} ${HOMEgfs}/fix/gdas/snow
 
-# the old jed/Data/fv3files is no longer being used
-# instead user fv3jedi subdirs if needed
+# if using default fv3jedi
 if [[ -e  "${HOMEgfs}/fix/gdas/fv3jedi" ]]; then
   echo "removing homegfs/fix/gdas/fv3jedi"
   rm "${HOMEgfs}/fix/gdas/fv3jedi"
