@@ -32,4 +32,4 @@ if __name__ == '__main__':
 
     # Finalize analysis
     # archiving has a 'bug' needs fixing
-#    soil_anl.finalize()
+    soil_anl.finalize()
