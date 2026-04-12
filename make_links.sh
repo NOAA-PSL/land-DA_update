@@ -4,14 +4,14 @@ source detect_machine.sh
 
 if [[ ${MACHINE_ID} == 'ursa' ]]; then
     echo "linking GDASApp lib paths on URSA"
-    GDASApp_path=/scratch4/NCEPDEV/land/APPS/GDASApp/20260316
+    GDASApp_path=/scratch4/NCEPDEV/land/APPS/Land_GDASApp
     fixorog=/scratch3/NCEPDEV/global/role.glopara/fix/orog/20240917
     obs=/scratch3/NCEPDEV/global/role.glopara/fix/gdas/obs/20240213
     snow=/scratch3/NCEPDEV/global/role.glopara/fix/gdas/snow/20241210
     fv3jedi=/scratch3/NCEPDEV/global/role.glopara/fix/gdas/fv3jedi/20241115
 elif [[ ${MACHINE_ID} == 'gaeac6' ]]; then
     echo "linking GDASApp lib paths on GAEA C6"
-    GDASApp_path=/gpfs/f6/land-cpu/scratch/Tseganeh.Gichamo/Land_GDASApp   #/gpfs/f6/land-cpu/proj-shared/APPS/Land_GDASApp
+    GDASApp_path=/gpfs/f6/land-cpu/proj-shared/APPS/Land_GDASApp
     fixorog=/gpfs/f6/drsa-precip3/world-shared/role.glopara/fix/orog/20240917
     obs=/gpfs/f6/drsa-precip3/world-shared/role.glopara/fix/gdas/obs/20240213
     snow=/gpfs/f6/drsa-precip3/world-shared/role.glopara/fix/gdas/snow/20241210
