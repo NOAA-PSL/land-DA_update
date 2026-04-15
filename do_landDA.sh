@@ -1,4 +1,4 @@
-#!/bin/bash -le
+#!/bin/bash -e
 # script to run the land DA. Currently only option is the snow LETKFOI.
 #
 # 1. stage the restarts. 
@@ -260,7 +260,7 @@ do  #TODO: ignore file not found errors in cp ?
      obs_list_i="smap_soil"
      cp $obsfile  $COMIN_OBS/gdas.t${HH}z.${obs_list_i}.nc
   elif [ ${OBS_TYPES[$ii]} == "T2m" ]; then
-     obsfile=$OBSDIR/gdas.${YYYY}${MM}${DD}/${HH}/atmos/gdas.t${HH}z.adpsfc_air_temperature_at_2m_181_gsi.nc
+     obsfile=$OBSDIR/T2m/gdas.${YYYY}${MM}${DD}/${HH}/atmos/gdas.t${HH}z.adpsfc_air_temperature_at_2m_181_gsi.nc
      obs_list_i="adpsfc_air_temperature_at_2m_181_gsi"
      cp $obsfile $COMIN_OBS/gdas.t${HH}z.${obs_list_i}.nc
   else
