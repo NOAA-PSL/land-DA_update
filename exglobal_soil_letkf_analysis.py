@@ -36,7 +36,7 @@ if __name__ == '__main__':
     # Add increments
 #    if soil_letkf_anl.task_config.DO_INC:   #TODO: recentering and adding inc
 #        soil_letkf_anl.execute('soilletkfaddinc')
-#        soil_letkf_anl.add_increments()
+    soil_letkf_anl.add_increments()
 
     # Finalize JEDI soil analysis
     soil_letkf_anl.finalize()

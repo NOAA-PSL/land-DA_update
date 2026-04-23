@@ -256,7 +256,7 @@ do  #TODO: ignore file not found errors in cp ?
      obs_list_i="snocvr_snomad"
   elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
 #TODO: move to obsdir/soil_moisture
-     obsfile=$OBSDIR/SMAP/data_proc/v5/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc     
+     obsfile=$OBSDIR/SMAP/data_proc/v6/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc     
      obs_list_i="smap_soil"
      cp $obsfile  $COMIN_OBS/gdas.t${HH}z.${obs_list_i}.nc
   elif [ ${OBS_TYPES[$ii]} == "T2m" ]; then
