@@ -1,4 +1,4 @@
-#!/bin/bash -le
+#!/bin/bash -e
 # script to run the land DA. Currently only option is the snow LETKFOI.
 #
 # 1. stage the restarts. 
@@ -125,7 +125,7 @@ export assim_freq=${PCYC_DEL}
 # make sure letkf settings are consistent
 if [[ ${DAalg} == 'letkf' && "$ensemble_size" -lt 2 ]]; then
     echo "Error! LETKF requires at least 2 ens members. Exiting"
-    exit
+    exit 10
 fi
 
 
@@ -154,23 +154,11 @@ if [[ ! -e ${OUTDIR}/DA ]]; then
     fi   
 fi 
 
+# update 4.8.26: the DATA/bkg, DATA/anl...in jcb-gdas replace most 
+# of the previous jediworkdir subdirs
 if [[ ! -e $JEDIWORKDIR ]]; then 
 
     mkdir $JEDIWORKDIR      
-    mkdir ${JEDIWORKDIR}/restarts     
-
-    if [[ "$ensemble_size" -gt 1  ]]; then  
-        for ie in $(seq 0 $ensemble_size)
-        do
-            mem_ens="mem`printf %03i $ie`"
-            ln -s $WORKDIR/${mem_ens} $JEDIWORKDIR/${mem_ens}               
-            ln -s ${FIXorog}/${CASE}/${TSTUB}* ${JEDIWORKDIR}/${mem_ens} 
-        done   
-    fi 
-    ln -s ${FIXorog}/${CASE}/${TSTUB}* ${JEDIWORKDIR}
-    ln -s ${FIXorog}/${CASE}/${TSTUB}* ${JEDIWORKDIR}/restarts/ # to-do. change to only need one copy.
-
-    ln -s ${OUTDIR}  ${JEDIWORKDIR}/output
 	
     # separate obscom_in from workdir(DATA)
     mkdir ${JEDIWORKDIR}/COMIN_OBS 
@@ -179,16 +167,12 @@ fi
 
 cd $JEDIWORKDIR 
 
-
 FILEDATE=${YYYY}${MM}${DD}.${HH}0000
-
-mem_ens="mem000"
-RSTRDIR=${WORKDIR}/${mem_ens}
 
 if  [[ $SAVE_TILE == "YES" ]]; then          
     for tile in $(seq 1 $ntiles)
     do 
-    cp ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${RSTRDIR}/${FILEDATE}.sfc_data_back.tile${tile}.nc
+        cp ${WORKDIR}/${FILEDATE}.sfc_data.tile${tile}.nc  ${WORKDIR}/${FILEDATE}.sfc_data_back.tile${tile}.nc
     done    
     
     if [[ "$ensemble_size" -gt 1  ]]; then 
@@ -203,17 +187,14 @@ if  [[ $SAVE_TILE == "YES" ]]; then
     fi
 fi 
 
-#stage restarts for applying JEDI update (files will get directly updated)
+# update 4.8.26: restarts staged by jcb-gdas now
 # for LETKF, mem000 (ensemble mean) used in IMS Calc 
-for tile in $(seq 1 $ntiles) 
-do
-    ln -fs ${RSTRDIR}/${FILEDATE}.sfc_data.tile${tile}.nc ${JEDIWORKDIR}/restarts/${FILEDATE}.sfc_data.tile${tile}.nc
-done
 
-cres_file=${JEDIWORKDIR}/restarts/${FILEDATE}.coupler.res
-if [[ -e  ${RSTRDIR}/${FILEDATE}.coupler.res ]]; then 
-    cp ${RSTRDIR}/${FILEDATE}.coupler.res $cres_file
-else #  if not present, need to create coupler.res for JEDI 
+# copy or, if not present, create coupler.res for JEDI
+# TODO: this may be done near vector2tile
+cres_file=${WORKDIR}/${FILEDATE}.coupler.res
+if [[ ! -e $cres_file ]]; then 
+
     cp ${LANDDADIR}/template.coupler.res $cres_file
 
     sed -i -e "s/XXYYYY/${YYYY}/g" $cres_file
@@ -233,7 +214,7 @@ if [[ "$ensemble_size" -gt 1  ]]; then
     for ie in $(seq 0 $ensemble_size)  
     do
         mem_ens="mem`printf %03i $ie`"
-        cp ${cres_file} ${JEDIWORKDIR}/${mem_ens}/${FILEDATE}.coupler.res
+        cp ${cres_file} ${WORKDIR}/${mem_ens}/${FILEDATE}.coupler.res
     done
 fi
 
@@ -275,9 +256,13 @@ do  #TODO: ignore file not found errors in cp ?
      obs_list_i="snocvr_snomad"
   elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
 #TODO: move to obsdir/soil_moisture
-     obsfile=$OBSDIR/SMAP/data_proc/v5/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc     
+     obsfile=$OBSDIR/SMAP/data_proc/v6/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc     
      obs_list_i="smap_soil"
      cp $obsfile  $COMIN_OBS/gdas.t${HH}z.${obs_list_i}.nc
+  elif [ ${OBS_TYPES[$ii]} == "T2m" ]; then
+     obsfile=$OBSDIR/T2m/gdas.${YYYY}${MM}${DD}/${HH}/atmos/gdas.t${HH}z.adpsfc_air_temperature_at_2m_181_gsi.nc
+     obs_list_i="adpsfc_air_temperature_at_2m_181_gsi"
+     cp $obsfile $COMIN_OBS/gdas.t${HH}z.${obs_list_i}.nc
   else
      echo "do_landDA: Unknown obs type requested ${OBS_TYPES[$ii]}, exiting" 
      exit 1 
@@ -360,20 +345,43 @@ elif [[ "$analType" == "smc" ]]; then
     
     SOILANLVAR="soilMoistureVolumetric"
 
-    ${LANDDADIR}/soil_analysis.py
+    if [[ "${do_enkf}" == "YES" ]]; then
+            export TASK_CONFIG_YAML=${TASK_CONFIG_YAML_ENS}
+            ${LANDDADIR}/exglobal_soil_letkf_analysis.py         #exglobal_soilens_analysis.py
+    else
+            export TASK_CONFIG_YAML=${TASK_CONFIG_YAML_DET}
+            ${LANDDADIR}/exglobal_soil_analysis.py
+    fi
+
     status=$?
     if [[ "${status}" -ne 0 ]]; then
         exit "soil analysis failed ${status}"
     fi
+elif [[ "$analType" == "stc" ]]; then
+
+    SOILANLVAR="stc"
+
+    if [[ "${do_enkf}" == "YES" ]]; then
+            export TASK_CONFIG_YAML=${TASK_CONFIG_YAML_ENS}
+            ${LANDDADIR}/exglobal_soil_letkf_analysis.py         #exglobal_snowens_analysis.py
+    else
+            export TASK_CONFIG_YAML=${TASK_CONFIG_YAML_DET}
+            ${LANDDADIR}/exglobal_soil_analysis.py
+    fi
+
+    status=$?
+    if [[ "${status}" -ne 0 ]]; then
+        exit "soil letkf analysis failed ${status}"
+    fi
 else
-   echo " error! unsupported analysis variable $anlvar"
+   echo " error! unsupported analysis type $analType"
    exit 1
 fi
 #fi
 
 
 ################################################
-# 7. CLEAN UP
+# 5. ARCHIVE & CLEAN UP
 ################################################
 
 # keep IMS IODA file

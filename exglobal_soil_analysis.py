@@ -26,9 +26,11 @@ if __name__ == '__main__':
     # Execute JEDI 
     soil_anl.execute('soilanlvar')
 
-    # Add increments
-    soil_anl.execute('soilanladdinc')
-#    anl.add_increments()
+    # Add increments & and smc/stc consistency adj
+    soil_anl.add_increments()
+
+    #uses JEDI's add inc--no smc/stc adj
+    #soil_anl.execute('soilanladdinc')
 
     # Finalize analysis
     soil_anl.finalize()

@@ -9,10 +9,11 @@ export GDASApp_root=${dir_root}/GDASApp/
 HOMEdir=${HOMEdir:-"$(dirname "$(pwd)")"}   
 
 COMPILER="${COMPILER:-intel}"
-source $GDASApp_root/ush/detect_machine.sh
-source $GDASApp_root/ush/module-setup.sh
 
 module purge
+
+source $GDASApp_root/ush/detect_machine.sh
+source $GDASApp_root/ush/module-setup.sh
 module use $GDASApp_root/modulefiles
 module load GDAS/${MACHINE_ID}.$COMPILER
 
