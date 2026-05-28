@@ -1,9 +1,0 @@
-[submodule "IMS_proc"]
-	path = IMS_proc
-	url = https://github.com/NOAA-EMC/land-SCF_proc.git
-	branch = develop
-
-[submodule "add_jedi_incr"]
-	path = add_jedi_incr
-	url = https://github.com/NOAA-EMC/land-apply_jedi_incr.git
-	branch = develop
