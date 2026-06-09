@@ -11,7 +11,7 @@ if [[ ${MACHINE_ID} == 'ursa' ]]; then
     fv3jedi=/scratch3/NCEPDEV/global/role.glopara/fix/gdas/fv3jedi/20241115
 elif [[ ${MACHINE_ID} == 'gaeac6' ]]; then
     echo "linking GDASApp lib paths on GAEA C6"
-    GDASApp_path=/gpfs/f6/land-cpu/proj-shared/APPS/Land_GDASApp
+    GDASApp_path=/gpfs/f6/land-cpu/world-shared/APPS/Land_GDASApp
     fixorog=/gpfs/f6/drsa-precip3/world-shared/role.glopara/fix/orog/20240917
     obs=/gpfs/f6/drsa-precip3/world-shared/role.glopara/fix/gdas/obs/20240213
     snow=/gpfs/f6/drsa-precip3/world-shared/role.glopara/fix/gdas/snow/20241210
