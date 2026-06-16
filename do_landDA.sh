@@ -60,7 +60,7 @@ export JEDI_EXECDIR=${JEDI_EXECDIR:-"${GDASApp_root}/build/bin/"}
 # (March 2024, using own fieldMetaData override file)
 JEDI_STATICDIR=${LANDDADIR}/jedi/fv3-jedi/Data/
 
-# As of 01/28/202 opnly GDASAPPExec supported 
+# As of 01/28/202 only GDASAPPExec supported 
 FIMS_EXECDIR=${LANDDADIR}/GDASApp/build/bin/
 INCR_EXECDIR=${LANDDADIR}/GDASApp/build/bin/
 
