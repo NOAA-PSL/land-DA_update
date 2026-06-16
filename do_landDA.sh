@@ -60,18 +60,9 @@ export JEDI_EXECDIR=${JEDI_EXECDIR:-"${GDASApp_root}/build/bin/"}
 # (March 2024, using own fieldMetaData override file)
 JEDI_STATICDIR=${LANDDADIR}/jedi/fv3-jedi/Data/
 
-# set to "YES" to use apply_incr and IMS_proc execs from GDASAppa
-# set to "NO" to use apply_incr and IMS_proc execs from workflow provided directory
-# Currently only support "YES" as of 01/28/2026
-UseGDASAppExec="YES"
-
-if [[ $UseGDASAppExec == "YES" ]]; then 
-    FIMS_EXECDIR=${LANDDADIR}/GDASApp/build/bin/
-    INCR_EXECDIR=${LANDDADIR}/GDASApp/build/bin/
-else
-    FIMS_EXECDIR=${LANDDADIR}/IMS_proc/exec/bin/
-    INCR_EXECDIR=${LANDDADIR}/add_jedi_incr/exec/bin/
-fi
+# As of 01/28/202 opnly GDASAPPExec supported 
+FIMS_EXECDIR=${LANDDADIR}/GDASApp/build/bin/
+INCR_EXECDIR=${LANDDADIR}/GDASApp/build/bin/
 
 # storage settings 
 
@@ -120,7 +111,7 @@ export PDY=`echo $THISDATE | cut -c1-8`
 export cyc=`echo $THISDATE | cut -c9-10`
 export cycle="t${cyc}z"
 
-export assim_freq=${PCYC_DEL}
+export assim_freq=${assim_freq:-PCYC_DEL}
 
 # make sure letkf settings are consistent
 if [[ ${DAalg} == 'letkf' && "$ensemble_size" -lt 2 ]]; then
@@ -255,10 +246,37 @@ do  #TODO: ignore file not found errors in cp ?
      [ -e $obsfile2 ] && cp $obsfile2 ${COMIN_OBS}
      obs_list_i="snocvr_snomad"
   elif [ ${OBS_TYPES[$ii]} == "SMAP" ]; then
+
 #TODO: move to obsdir/soil_moisture
-     obsfile=$OBSDIR/SMAP/data_proc/v6/${YYYY}/smap_${YYYY}${MM}${DD}T${HH}00.nc     
+     if [[ "${HH}" == "06" ]]; then 
+	     HL="00"
+     elif [[ "${HH}" == "18" ]]; then
+	     HL="12"
+     else
+	     HL="${HH}"
+     fi
+     obsfile=$OBSDIR/SMAP/data_proc/v6/${YYYY}/smap_soill1_${YYYY}${MM}${DD}T${HL}00.nc    
      obs_list_i="smap_soil"
      cp $obsfile  $COMIN_OBS/gdas.t${HH}z.${obs_list_i}.nc
+#     #For SMAP L3 with varied obs time through the day
+#     for it in $(seq -2 2)
+#     do
+#	 ofseth=$((it * assim_freq)) 
+#	 echo "ofseth $ofseth"
+#	 LDATE=`${INCDATE} $THISDATE $ofseth`
+#         YYYL=`echo $LDATE | cut -c1-4`
+#         ML=`echo $LDATE | cut -c5-6`
+#         DL=`echo $LDATE | cut -c7-8`
+#         HL=`echo $LDATE | cut -c9-10`
+#         obsfilei=$OBSDIR/SMAP/data_proc/v6/${YYYL}/smap_soill1_${YYYL}${ML}${DL}T${HL}00.nc
+#	 if [ -f $obsfilei ]; then 
+#	     cp $obsfilei  $COMIN_OBS/gdas.t${HH}z.h${ofseth}.${obs_list_i}.nc
+#	     obsfile=$obsfilei
+#         else
+#             echo "file $obsfilei doesn't exist. Continuing without it"
+#	 fi
+#     done
+
   elif [ ${OBS_TYPES[$ii]} == "T2m" ]; then
      obsfile=$OBSDIR/T2m/gdas.${YYYY}${MM}${DD}/${HH}/atmos/gdas.t${HH}z.adpsfc_air_temperature_at_2m_181_gsi.nc
      obs_list_i="adpsfc_air_temperature_at_2m_181_gsi"
@@ -379,35 +397,32 @@ else
 fi
 #fi
 
-
-################################################
-# 5. ARCHIVE & CLEAN UP
-################################################
-
-# keep IMS IODA file
-if [ $SAVE_IMS == "YES"  ] && [ $UseGDASAppExec == "NO" ]; then
-  if [[ -e ${JEDIWORKDIR}/ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc ]]; then
-    yes |cp -u ${JEDIWORKDIR}/ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc ${OUTDIR}/DA/IMSproc/
-  fi
+#Copy analysis=bkg+inc back to workdir
+if [[ "$ensemble_size" -gt 1  ]]; then
+    for ie in $(seq 1 $ensemble_size)
+    do
+        mem_ens="mem`printf %03i $ie`"
+        for tile in $(seq 1 $ntiles)
+        do
+        cp ${JEDIWORKDIR}/anl/${mem_ens}/${FILEDATE}.sfc_data.tile${tile}.nc  ${WORKDIR}/${mem_ens}/
+        done
+    done
+    #TODO: ensmean outputs (anl and incr based on yaml settings)
+else
+     for tile in $(seq 1 $ntiles)
+     do
+        cp ${JEDIWORKDIR}/anl/${FILEDATE}.sfc_data.tile${tile}.nc  ${WORKDIR}/
+     done	
 fi
 
-if [ $SAVE_IMS == "YES"  ] && [ $UseGDASAppExec == "YES" ]; then
+# keep IMS IODA file
+if [ $SAVE_IMS == "YES"  ]; then
   if [[ -e ${JEDIWORKDIR}/obs/gdas.t00z.ims_snow.tm00.nc ]]; then
     yes |cp -u ${JEDIWORKDIR}/obs/gdas.t00z.ims_snow.tm00.nc ${OUTDIR}/DA/IMSproc/ioda.IMSscf.${YYYY}${MM}${DD}.${TSTUB}.nc
   fi
 fi
 
-# keep diag files
-if [ $SAVE_HOFX == "YES"  ] && [ $UseGDASAppExec == "YES" ]; then
-    yes |cp -u ${JEDIWORKDIR}/diags/diag_*${YYYY}${MM}${DD}*.nc ${OUTDIR}/DA/jedi_anl/
-fi
-
-# keep increments
-if [ $SAVE_INCR == "YES" ] && [ $do_DA == "YES" ] && [ $UseGDASAppExec == "NO" ]; then
-   if [[ "$ens_size" -eq 1  ]]; then
-    yes |cp -u ${JEDIWORKDIR}/snowinc.${FILEDATE}.sfc_data.tile*.nc  ${OUTDIR}/DA/jedi_incr/
-   fi
-fi
+#Diag and inc files are now saved to OUTDIR by snow_det_config
 
 # clean up 
 if [[ $KEEPJEDIDIR == "NO" ]]; then
