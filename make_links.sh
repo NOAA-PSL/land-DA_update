@@ -39,11 +39,11 @@ ln -fs ${GDASApp_path}/parm ${HOMEgfs}/parm/gdas
 
 # link fix and fv3files
 
-fv3files="jedi/fv3-jedi/Data/fv3files"
-if [[ -e $fv3files ]]; then
-  rm $fv3files
-fi
-ln -fs $fv3jedi/fv3files  $fv3files
+#fv3files="jedi/fv3-jedi/Data/fv3files"
+#if [[ -e $fv3files ]]; then
+#  rm $fv3files
+#fi
+#ln -fs $fv3jedi/fv3files  $fv3files
 
 if [[ -e  "${HOMEgfs}/fix/orog" ]]; then
   echo "removing homegfs/fix/orog"
